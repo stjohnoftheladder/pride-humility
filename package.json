@@ -1,0 +1,21 @@
+{
+  "name": "pride-humility",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pride vs. Humility — an Undertale-style Orthodox pilgrimage prototype (hybrid: 3D exploration + 2D battle screens), built on the wizard-castle pipeline.",
+  "scripts": {
+    "gen": "node tools/gen-sprites.js && node tools/gen-textures.js",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node tests/run.mjs"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1",
+    "vite": "^8.2.1"
+  }
+}

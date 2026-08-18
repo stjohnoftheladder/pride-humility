@@ -1,0 +1,246 @@
+{
+  "cell": 64,
+  "animations": {
+    "heart_idle.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "tempter_idle.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "tempter_walk.png": {
+      "frames": 6,
+      "cols": 6,
+      "rows": 1,
+      "cell": 64
+    },
+    "tempter_attack.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "tempter_death.png": {
+      "frames": 5,
+      "cols": 5,
+      "rows": 1,
+      "cell": 64
+    },
+    "brother_idle.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "brother_walk.png": {
+      "frames": 6,
+      "cols": 6,
+      "rows": 1,
+      "cell": 64
+    },
+    "brother_attack.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "brother_forgiven.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "brother_death.png": {
+      "frames": 5,
+      "cols": 5,
+      "rows": 1,
+      "cell": 64
+    },
+    "pride_idle.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "pride_walk.png": {
+      "frames": 6,
+      "cols": 6,
+      "rows": 1,
+      "cell": 64
+    },
+    "pride_attack.png": {
+      "frames": 6,
+      "cols": 6,
+      "rows": 1,
+      "cell": 64
+    },
+    "pride_death.png": {
+      "frames": 8,
+      "cols": 8,
+      "rows": 1,
+      "cell": 64
+    },
+    "elder_idle.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "torch_idle.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "banner_idle.png": {
+      "frames": 2,
+      "cols": 2,
+      "rows": 1,
+      "cell": 64
+    },
+    "shard_idle.png": {
+      "frames": 2,
+      "cols": 2,
+      "rows": 1,
+      "cell": 64
+    },
+    "prayer_shield_idle.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "beam_idle.png": {
+      "frames": 2,
+      "cols": 2,
+      "rows": 1,
+      "cell": 64
+    },
+    "explosion_idle.png": {
+      "frames": 6,
+      "cols": 6,
+      "rows": 1,
+      "cell": 64
+    },
+    "puff_idle.png": {
+      "frames": 4,
+      "cols": 4,
+      "rows": 1,
+      "cell": 64
+    },
+    "shadow_idle.png": {
+      "frames": 1,
+      "cols": 1,
+      "rows": 1,
+      "cell": 64
+    }
+  },
+  "actors": {
+    "heart": {
+      "anims": {
+        "idle": "heart_idle.png"
+      },
+      "height": 0.7,
+      "shadow": false
+    },
+    "tempter": {
+      "anims": {
+        "idle": "tempter_idle.png",
+        "walk": "tempter_walk.png",
+        "attack": "tempter_attack.png",
+        "death": "tempter_death.png"
+      },
+      "height": 2,
+      "shadow": true
+    },
+    "brother": {
+      "anims": {
+        "idle": "brother_idle.png",
+        "walk": "brother_walk.png",
+        "attack": "brother_attack.png",
+        "forgiven": "brother_forgiven.png",
+        "death": "brother_death.png"
+      },
+      "height": 2.2,
+      "shadow": true
+    },
+    "pride": {
+      "anims": {
+        "idle": "pride_idle.png",
+        "walk": "pride_walk.png",
+        "attack": "pride_attack.png",
+        "death": "pride_death.png"
+      },
+      "height": 3,
+      "shadow": true
+    },
+    "elder": {
+      "anims": {
+        "idle": "elder_idle.png"
+      },
+      "height": 2.2,
+      "shadow": true
+    },
+    "torch": {
+      "anims": {
+        "idle": "torch_idle.png"
+      },
+      "height": 1.25,
+      "shadow": false
+    },
+    "banner": {
+      "anims": {
+        "idle": "banner_idle.png"
+      },
+      "height": 2.6,
+      "shadow": false
+    },
+    "shard": {
+      "anims": {
+        "idle": "shard_idle.png"
+      },
+      "height": 1,
+      "shadow": false
+    },
+    "prayer_shield": {
+      "anims": {
+        "idle": "prayer_shield_idle.png"
+      },
+      "height": 1.6,
+      "shadow": false
+    },
+    "beam": {
+      "anims": {
+        "idle": "beam_idle.png"
+      },
+      "height": 3.4,
+      "shadow": false
+    },
+    "explosion": {
+      "anims": {
+        "idle": "explosion_idle.png"
+      },
+      "height": 2.4,
+      "shadow": false
+    },
+    "puff": {
+      "anims": {
+        "idle": "puff_idle.png"
+      },
+      "height": 1.8,
+      "shadow": false
+    },
+    "shadow": {
+      "anims": {
+        "idle": "shadow_idle.png"
+      },
+      "height": 1,
+      "shadow": false
+    }
+  }
+}

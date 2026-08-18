@@ -1,0 +1,12 @@
+{
+  "size": 256,
+  "materials": [
+    "stone_wall",
+    "stone_floor",
+    "wood_floor",
+    "gold",
+    "icon",
+    "brick",
+    "wax_emissive"
+  ]
+}
