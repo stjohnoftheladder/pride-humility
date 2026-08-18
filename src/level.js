@@ -5,6 +5,30 @@ import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE } from './config.js';
 import { Materials } from './textures.js';
 import { AnimatedSprite } from './SpriteSystem.js';
 
+function makeWayfindingLabel(text) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(18, 13, 7, 0.94)';
+  ctx.strokeStyle = '#f3d276';
+  ctx.lineWidth = 8;
+  ctx.fillRect(8, 8, 496, 112);
+  ctx.strokeRect(8, 8, 496, 112);
+  ctx.fillStyle = '#f3d276';
+  ctx.font = 'bold 42px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 256, 64);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.magFilter = THREE.NearestFilter;
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+  sprite.scale.set(6.4, 1.6, 1);
+  return sprite;
+}
+
 export class Level {
   constructor(scene, materials) {
     this.scene = scene;
@@ -107,6 +131,100 @@ export class Level {
 
     this.group.add(story);
     this.storytelling = story;
+  }
+
+  /** A destination, not a bright patch on a wall: a gold ladder held inside
+   * a pointed gate. The label, floor path, and descending light appear only
+   * once Pride has been resolved. */
+  addLadderGate() {
+    const p = this.spawns.L[0];
+    if (!p) return;
+    const gate = new THREE.Group();
+    gate.name = 'ladder-gate-landmark';
+    const z = p.z + 1.28;
+    const gold = new THREE.MeshStandardMaterial({
+      color: PALETTE.goldDim,
+      emissive: PALETTE.accent,
+      emissiveIntensity: 0.65,
+      metalness: 0.7,
+      roughness: 0.28,
+    });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x090604, roughness: 1 });
+
+    const doorway = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 5.8), dark);
+    doorway.name = 'ladder-dark-doorway';
+    doorway.position.set(p.x, 3.0, z + 0.06);
+    gate.add(doorway);
+
+    for (const x of [-2.35, 2.35]) {
+      const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.3, 5.1, 0.32), gold);
+      pillar.position.set(p.x + x, 2.55, z);
+      gate.add(pillar);
+    }
+    for (const [x, angle] of [[-1.18, -0.52], [1.18, 0.52]]) {
+      const crown = new THREE.Mesh(new THREE.BoxGeometry(0.28, 2.72, 0.32), gold);
+      crown.position.set(p.x + x, 5.35, z);
+      crown.rotation.z = angle;
+      gate.add(crown);
+    }
+
+    // The Ladder itself is unmistakable even before its wayfinding light wakes.
+    for (const x of [-0.72, 0.72]) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.18, 4.4, 0.22), gold);
+      rail.position.set(p.x + x, 2.55, z - 0.18);
+      gate.add(rail);
+    }
+    for (let i = 0; i < 7; i++) {
+      const rung = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.15, 0.24), gold);
+      rung.position.set(p.x, 0.7 + i * 0.62, z - 0.2);
+      gate.add(rung);
+    }
+
+    const guidance = new THREE.Group();
+    guidance.name = 'ladder-guidance';
+    guidance.visible = false;
+    const pathMat = new THREE.MeshBasicMaterial({
+      color: PALETTE.gold,
+      transparent: true,
+      opacity: 0.38,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    for (let i = 0; i < 7; i++) {
+      const step = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 1.15), pathMat);
+      step.name = `ladder-path-${i + 1}`;
+      step.rotation.x = -Math.PI / 2;
+      step.rotation.z = Math.PI / 4;
+      step.position.set(p.x, 0.055, p.z - 1.1 - i * 1.45);
+      guidance.add(step);
+    }
+    const beam = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.75, 2.0, 6.6, 18, 1, true),
+      new THREE.MeshBasicMaterial({
+        color: PALETTE.gold,
+        transparent: true,
+        opacity: 0.12,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    );
+    beam.name = 'ladder-light-beam';
+    beam.position.set(p.x, 3.3, p.z - 0.15);
+    guidance.add(beam);
+    const label = makeWayfindingLabel('THE LADDER  ↑');
+    label.name = 'ladder-label';
+    label.position.set(p.x, 6.05, z - 0.35);
+    guidance.add(label);
+    gate.add(guidance);
+    this.group.add(gate);
+    this.ladderGate = gate;
+    this.ladderGuidance = guidance;
+    this.ladderPathMaterial = pathMat;
+  }
+
+  setLadderRevealed(revealed) {
+    if (this.ladderGuidance) this.ladderGuidance.visible = !!revealed;
   }
 
   build() {
@@ -274,6 +392,7 @@ export class Level {
     gateLight.position.y = 2.2;
     this.group.add(gateLight);
     this.gateLight = gateLight;
+    this.addLadderGate();
 
     // the elder sits in candle-light so he is plainly visible
     const pastoral = new THREE.Group();
@@ -384,6 +503,9 @@ export class Level {
       const l = this.candleLights[i];
       const base = l.userData.flickerBase ?? 20;
       l.intensity = base * (1 + Math.sin(time * 11 + i * 2.7) * 0.08 + Math.sin(time * 27 + i * 5.1) * 0.04);
+    }
+    if (this.ladderGuidance?.visible && this.ladderPathMaterial) {
+      this.ladderPathMaterial.opacity = 0.32 + Math.sin(time * 2.4) * 0.1;
     }
     // the Ladder gate shines brighter as grace grows (set externally)
     if (camera) {

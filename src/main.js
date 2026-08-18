@@ -94,6 +94,7 @@ async function boot() {
   scene.add(camera);
 
   const branch = Branch.load();
+  level.setLadderRevealed(!!branch.encountersDone.pride);
   const battle = new BattleSystem();
 
   const v = validateLevel();
@@ -151,9 +152,8 @@ async function boot() {
     state = 'battle';
     battleEncounterId = id;
     hud.setRoom(def.room);
-    // free the mouse for the battle (pointer lock would trap it — the user
-    // couldn't click the help panel); also hide the monastery so only the
-    // 2D screen shows
+    // Free the mouse for the battle and hide the monastery so only the 2D
+    // screen shows.
     player.unlock();
     player.clearKeys();
     hud.hidePrompt();
@@ -171,6 +171,7 @@ async function boot() {
       const we = level.worldEnemies[id];
       if (we) { we.sprite.mesh.visible = false; we.shadow.mesh.visible = false; }
       branch.encountersDone[id] = outcome;
+      if (id === 'pride') level.setLadderRevealed(true);
       armed[id] = false;
       const o = def.outcomes?.[outcome] ?? {};
       if (o.grace) branch.addGrace(o.grace);
@@ -187,8 +188,8 @@ async function boot() {
           defeated: 'The Brother lies still. The way opens, and the cell keeps its cold.',
         },
         pride: {
-          spared: 'The darkness thins. The Ladder gate receives a quiet light.',
-          defeated: 'The shadow breaks. Its crown-shaped darkness follows you toward the gate.',
+          spared: 'The darkness thins. Follow the gold path to THE LADDER.',
+          defeated: 'The shadow breaks. Follow the gold path to THE LADDER.',
         },
       };
       hud.message(thresholdMessages[id]?.[outcome] ?? 'The threshold is passed.', 2600);
@@ -321,15 +322,18 @@ async function boot() {
   hud.onConfess = () => confess();
 
   // ----- update ------------------------------------------------------------------------
-  function roomLabel() {
+  function isInRoom(r) {
     const x = Math.floor(player.pos.x / 3), z = Math.floor(player.pos.z / 3);
-    const inRoom = (r) => x >= r.x && x < r.x + r.w && z >= r.y && z < r.y + r.h;
+    return x >= r.x && x < r.x + r.w && z >= r.y && z < r.y + r.h;
+  }
+
+  function roomLabel() {
     const { court, chapel, tempter, brother, ladder } = LEVEL_CFG.rooms;
-    if (inRoom(court)) return 'The Gate Court';
-    if (inRoom(chapel)) return 'The Chapel';
-    if (inRoom(tempter)) return 'The Tempter\u2019s Chamber';
-    if (inRoom(brother)) return 'The Brother\u2019s Cell';
-    if (inRoom(ladder)) return 'The Ladder Chamber';
+    if (isInRoom(court)) return 'The Gate Court';
+    if (isInRoom(chapel)) return 'The Chapel';
+    if (isInRoom(tempter)) return 'The Tempter\u2019s Chamber';
+    if (isInRoom(brother)) return 'The Brother\u2019s Cell';
+    if (isInRoom(ladder)) return 'The Ladder Chamber';
     return 'The Pilgrim Way';
   }
 
@@ -354,6 +358,7 @@ async function boot() {
       else if (armed.pride && near('P', 2.6)) promptText = 'Face the Demon of Pride — press E';
       else if (near('E', 2.6)) promptText = 'Speak with the Elder — press E';
       else if (near('A', 2.6)) promptText = 'Confess at the altar — press E';
+      else if (branch.encountersDone.pride && isInRoom(LEVEL_CFG.rooms.ladder)) promptText = 'Follow the gold path to THE LADDER';
       if (promptText) hud.showPrompt(promptText); else hud.hidePrompt();
 
       if (near('L', 1.6) && branch.encountersDone.pride) {

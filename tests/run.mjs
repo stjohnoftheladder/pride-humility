@@ -251,6 +251,31 @@ async function runInteractionRegressions(browser) {
     JSON.stringify(pastoral),
   );
 
+  const ladderLandmark = await page.evaluate(() => {
+    const level = window.__game.level;
+    const before = level.ladderGuidance.visible;
+    level.setLadderRevealed(true);
+    const result = {
+      gate: level.ladderGate?.name,
+      guidance: level.ladderGuidance?.name,
+      parts: level.ladderGuidance?.children.map((c) => c.name) ?? [],
+      before,
+      after: level.ladderGuidance.visible,
+    };
+    level.setLadderRevealed(false);
+    return result;
+  });
+  check(
+    'world: the Ladder is a gate landmark with revealed label, beam, and path',
+    ladderLandmark.gate === 'ladder-gate-landmark'
+      && ladderLandmark.guidance === 'ladder-guidance'
+      && ladderLandmark.parts.includes('ladder-label')
+      && ladderLandmark.parts.includes('ladder-light-beam')
+      && ladderLandmark.parts.filter((n) => n.startsWith('ladder-path-')).length === 7
+      && !ladderLandmark.before && ladderLandmark.after,
+    JSON.stringify(ladderLandmark),
+  );
+
   const intentionalConfession = await page.evaluate(async () => {
     const g = window.__game;
     g.teleport(74.4, 13.5);
