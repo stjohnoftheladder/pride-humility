@@ -272,19 +272,42 @@ async function runInteractionRegressions(browser) {
     g.battle.round = 0;
     g.battle._openMenu();
     const lockedText = document.getElementById('battle-condition').textContent;
+    const menuHint = document.getElementById('battle-hints').textContent;
     g.battle.prayActions = 1;
     g.battle.round = 2;
     g.battle._openMenu();
     const readyText = document.getElementById('battle-condition').textContent;
-    g.key('KeyZ');
+    g.key('KeyD'); g.key('KeyD'); g.key('KeyD');
+    g.key('Enter');
+    const submenuHint = document.getElementById('battle-hints').textContent;
+    g.key('Escape');
+    const returnedHint = document.getElementById('battle-hints').textContent;
+    g.battle._openMenu();
+    g.key('Enter');
     const phase = g.battle.phase;
     g.branch.hp = 10;
     g.battle.enemyHp = 100;
     g.battle._resolveFight(1);
+    const dodgeHint = document.getElementById('battle-hints').textContent;
+    const startX = g.battle.heartPos.x;
+    g.battle.keys.KeyD = true;
+    g.battle._updateEnemyTurn(0.25);
+    g.battle.keys.KeyD = false;
+    const movedX = g.battle.heartPos.x;
+    const dialogBefore = document.getElementById('battle-dialog').innerHTML;
+    g.key('Enter');
+    const dialogAfter = document.getElementById('battle-dialog').innerHTML;
     return {
       phase,
       lockedText,
       readyText,
+      menuHint,
+      submenuHint,
+      returnedHint,
+      dodgeHint,
+      startX,
+      movedX,
+      enemyEnterDidNothing: dialogBefore === dialogAfter,
       hp: g.branch.hp,
       pride: g.branch.pride,
       forceMomentum: g.battle.forceMomentum,
@@ -299,6 +322,21 @@ async function runInteractionRegressions(browser) {
     'choice: MERCY requirements become explicit and announce readiness',
     choice.lockedText.includes('MERCY CLOSED') && choice.readyText.includes('MERCY READY'),
     JSON.stringify({ locked: choice.lockedText, ready: choice.readyText }),
+  );
+  check(
+    'input: battle hints show only controls that work in the current phase',
+    choice.menuHint.includes('ENTER') && !choice.menuHint.includes('back')
+      && choice.submenuHint.includes('ESC') && choice.submenuHint.includes('back')
+      && !choice.returnedHint.includes('back')
+      && choice.dodgeHint.includes('WASD') && choice.dodgeHint.includes('SPACE')
+      && !choice.dodgeHint.includes('ENTER') && !choice.dodgeHint.includes('back')
+      && choice.enemyEnterDidNothing,
+    JSON.stringify(choice),
+  );
+  check(
+    'input: WASD moves the heart during 2D dodging',
+    choice.movedX > choice.startX,
+    `x ${choice.startX.toFixed(2)} → ${choice.movedX.toFixed(2)}`,
   );
   check(
     'temptation: accurate FIGHT grants immediate relief with long-term pride',

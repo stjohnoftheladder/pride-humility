@@ -42,6 +42,7 @@ export class Hud {
       battleHelp: $('battle-help'),
       battleHelpBtn: $('battle-help-btn'),
       battleCondition: $('battle-condition'),
+      battleHints: $('battle-hints'),
       prompt: $('engage-prompt'),
       mute: $('mute-btn'),
       fps: $('fps'),
@@ -147,6 +148,7 @@ export class Hud {
     this.el.battle.classList.remove('show');
     this.showFightBar(false);
     this.setBattleCondition('');
+    this.setBattleHints('');
   }
 
   battleDialog(html) { this.el.battleDialog.innerHTML = html; }
@@ -187,6 +189,9 @@ export class Hud {
     if (!this.el.battleCondition) return;
     this.el.battleCondition.textContent = text;
     this.el.battleCondition.classList.toggle('ready', ready);
+  }
+  setBattleHints(text) {
+    if (this.el.battleHints) this.el.battleHints.textContent = text;
   }
   showFightBar(show) {
     if (this.el.fightBar) this.el.fightBar.style.display = show ? 'block' : 'none';

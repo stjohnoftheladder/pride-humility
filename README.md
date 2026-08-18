@@ -58,7 +58,8 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 | Context | Input |
 |---|---|
 | Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Space` jump · `Shift` run |
-| Battle | `←→↑↓` move the heart · `Z`/`Enter` confirm · `X` back · hold `Space` to pray |
+| Battle dodge | `WASD` move the heart · hold `Space` to pray |
+| Battle choices | `WASD` choose · `Enter` act · `Esc` returns from a submenu |
 | Global | `Esc` pause · `♪ sound` mute (top right) |
 
 ## Asset pipeline

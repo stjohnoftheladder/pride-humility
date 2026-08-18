@@ -192,6 +192,7 @@ export class BattleSystem {
     this.hud.battleEnemy(def.name);
     this.hud.battleSetHp(branch.hp, PLAYER_HP_MAX);
     this.hud.setPrayer(100);
+    this.hud.setBattleHints('ENTER · continue');
     // first battle: show "The Way of Battle" instructions (dismissable, non-blocking)
     if (localStorage.getItem('ph-battle-help') !== '1') {
       this.helpTimer = 8;
@@ -255,12 +256,10 @@ export class BattleSystem {
       this._dismissHelp(); // any key dismisses; the key still processes below
     }
     if (this.phase === 'intro') {
-      if (e.code === 'KeyZ' || e.code === 'Enter' || e.code === 'Space') this._advanceDialog();
+      if (e.code === 'KeyZ' || e.code === 'Enter') this._advanceDialog();
       return;
     }
     if (this.phase === 'enemy') {
-      // Space is the prayer key — only Z/Enter advance the dialogue
-      if (e.code === 'KeyZ' || e.code === 'Enter') this._advanceDialog();
       return;
     }
     if (this.phase === 'menu') this._menuKey(e.code);
@@ -353,6 +352,7 @@ export class BattleSystem {
     this.menuIdx = 0;
     this.subIdx = 0;
     this.heart.mesh.visible = false;
+    this.hud.setBattleHints('WASD · choose     ENTER · act');
     this._renderMenu();
   }
 
@@ -375,16 +375,16 @@ export class BattleSystem {
     const items = this._menuItems();
     if (this._submode) {
       const sub = this._subItems();
-      if (code === 'ArrowUp') { this.subIdx = (this.subIdx + sub.length - 1) % sub.length; this._renderSub(); }
-      else if (code === 'ArrowDown') { this.subIdx = (this.subIdx + 1) % sub.length; this._renderSub(); }
+      if (code === 'ArrowUp' || code === 'KeyW') { this.subIdx = (this.subIdx + sub.length - 1) % sub.length; this._renderSub(); }
+      else if (code === 'ArrowDown' || code === 'KeyS') { this.subIdx = (this.subIdx + 1) % sub.length; this._renderSub(); }
       else if (code === 'KeyZ' || code === 'Enter') { this._chooseSub(sub[this.subIdx]?.id); }
-      else if (code === 'KeyX' || code === 'Escape') { this._submode = null; this._renderMenu(); }
+      else if (code === 'Escape') { this._submode = null; this.hud.setBattleHints('WASD · choose     ENTER · act'); this._renderMenu(); }
       return;
     }
-    if (code === 'ArrowLeft') { this.menuIdx = (this.menuIdx + items.length - 1) % items.length; this._renderMenu(); }
-    else if (code === 'ArrowRight') { this.menuIdx = (this.menuIdx + 1) % items.length; this._renderMenu(); }
-    else if (code === 'ArrowUp') { this.menuIdx = (this.menuIdx + items.length - 1) % items.length; this._renderMenu(); }
-    else if (code === 'ArrowDown') { this.menuIdx = (this.menuIdx + 1) % items.length; this._renderMenu(); }
+    if (code === 'ArrowLeft' || code === 'KeyA') { this.menuIdx = (this.menuIdx + items.length - 1) % items.length; this._renderMenu(); }
+    else if (code === 'ArrowRight' || code === 'KeyD') { this.menuIdx = (this.menuIdx + 1) % items.length; this._renderMenu(); }
+    else if (code === 'ArrowUp' || code === 'KeyW') { this.menuIdx = (this.menuIdx + items.length - 1) % items.length; this._renderMenu(); }
+    else if (code === 'ArrowDown' || code === 'KeyS') { this.menuIdx = (this.menuIdx + 1) % items.length; this._renderMenu(); }
     else if (code === 'KeyZ' || code === 'Enter') this._choose(this._menuItems()[this.menuIdx].id);
   }
 
@@ -399,6 +399,7 @@ export class BattleSystem {
   _renderSub() {
     const sub = this._subItems();
     this.hud.renderMenu(this._menuItems(), this._submode === 'alms' ? 'alms' : 'mercy', sub, this.subIdx);
+    this.hud.setBattleHints('W / S · choose     ENTER · act     ESC · back');
     this._renderMercyCondition();
   }
 
@@ -411,6 +412,7 @@ export class BattleSystem {
       this.barDir = 1;
       this.barT = 0;
       this.hud.showFightBar(true);
+      this.hud.setBattleHints('ENTER · strike');
       this._say('Choose your moment.');
     } else if (id === 'pray') {
       branch.addGrace(3);
@@ -514,6 +516,7 @@ export class BattleSystem {
     this.ctx.audio.enemyDie();
     this._say(this._who(this.def.lines?.defeated ?? 'The enemy crumbles into dust.'));
     this.done = { outcome: 'defeated' };
+    this.hud.setBattleHints('');
   }
 
   // ------------------------------------------------------------ enemy turn
@@ -524,6 +527,7 @@ export class BattleSystem {
     this.enemyTalk = true;
     this.heart.mesh.visible = true;
     this.enemy.setAnimation('attack', { fps: 8 });
+    this.hud.setBattleHints('WASD · move     hold SPACE · pray');
     this._say(`<span class="who">${this.def.name}</span><br>${this.def.lines?.round?.(this.round, this.ctx.branch) ?? '\u2026'}`);
   }
 
@@ -627,6 +631,7 @@ export class BattleSystem {
       this.heart.setAlpha(0.4);
       this.ctx.audio.fallSting();
       this.done = { outcome: 'fell' };
+      this.hud.setBattleHints('');
     }
   }
 
@@ -685,6 +690,7 @@ export class BattleSystem {
     this.ctx.audio.mercy();
     this._say(this._who(this.def.lines?.spared ?? '\u201CGo in peace.\u201D'));
     this.done = { outcome: 'spared' };
+    this.hud.setBattleHints('');
   }
 
   // ------------------------------------------------------------- effects
