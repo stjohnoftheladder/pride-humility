@@ -276,13 +276,82 @@ export class Level {
     this.gateLight = gateLight;
 
     // the elder sits in candle-light so he is plainly visible
+    const pastoral = new THREE.Group();
+    pastoral.name = 'pastoral-landmarks';
     if (this.spawns.E.length) {
       const elderLight = new THREE.PointLight(0xffb45e, 30, 8, 2);
       elderLight.position.copy(this.spawns.E[0]);
       elderLight.position.y = 1.8;
       this.group.add(elderLight);
       this.trackFlicker(elderLight, 30);
+
+      const elder = new AnimatedSprite('elder', 2.55);
+      elder.mesh.position.copy(this.spawns.E[0]);
+      elder.mesh.position.y = 1.32;
+      elder.setAnimation('idle', { fps: 6 });
+      const elderShadow = new AnimatedSprite('shadow', 1.45);
+      elderShadow.mesh.position.copy(this.spawns.E[0]);
+      elderShadow.mesh.position.y = 0.06;
+      elderShadow.setAnimation('idle');
+      elder.mesh.name = 'elder-visible';
+      elderShadow.mesh.name = 'elder-shadow';
+      pastoral.add(elder.mesh, elderShadow.mesh);
+      this.animSprites.push(elder, elderShadow);
+      this.elder = elder;
+      this.addCollider(this.spawns.E[0].x, this.spawns.E[0].z, 0.8, 0.8, 2.4);
     }
+
+    if (this.spawns.A.length) {
+      const p = this.spawns.A[0];
+      const altar = new THREE.Group();
+      altar.name = 'confession-altar';
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(1.35, 0.78, 2.35),
+        this.mat.get('stone_wall'),
+      );
+      base.position.set(p.x, 0.39, p.z);
+      const top = new THREE.Mesh(
+        new THREE.BoxGeometry(1.48, 0.12, 2.5),
+        this.mat.get('gold'),
+      );
+      top.position.set(p.x, 0.84, p.z);
+      const crossVertical = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 1.25, 0.14),
+        this.mat.get('gold'),
+      );
+      crossVertical.position.set(p.x, 1.55, p.z);
+      const crossHorizontal = new THREE.Mesh(
+        new THREE.BoxGeometry(0.13, 0.14, 0.82),
+        this.mat.get('gold'),
+      );
+      crossHorizontal.position.set(p.x, 1.68, p.z);
+      const rug = new THREE.Mesh(
+        new THREE.PlaneGeometry(4.2, 2.4),
+        this.mat.get('icon'),
+      );
+      rug.rotation.x = -Math.PI / 2;
+      rug.rotation.z = Math.PI / 2;
+      rug.position.set(p.x - 2.4, 0.045, p.z);
+      altar.add(base, top, crossVertical, crossHorizontal, rug);
+
+      for (const dz of [-0.72, 0.72]) {
+        const candle = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.07, 0.08, 0.48, 8),
+          this.mat.get('wax_emissive'),
+        );
+        candle.position.set(p.x - 0.35, 1.13, p.z + dz);
+        altar.add(candle);
+      }
+      const altarLight = new THREE.PointLight(PALETTE.gold, 32, 9, 2);
+      altarLight.position.set(p.x - 0.45, 2.0, p.z);
+      this.group.add(altarLight);
+      this.trackFlicker(altarLight, 32);
+      pastoral.add(altar);
+      this.altar = altar;
+      this.addCollider(p.x, p.z, 1.35, 2.35, 0.9);
+    }
+    this.group.add(pastoral);
+    this.pastoralLandmarks = pastoral;
 
     // the three thresholds wait visibly in their rooms, so the pilgrim sees
     // who is coming before stumbling into the encounter

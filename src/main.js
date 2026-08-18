@@ -352,15 +352,7 @@ async function boot() {
       if (armed.tempter && near('K')) startEncounter('tempter');
       else if (armed.brother && near('B')) startEncounter('brother');
       else if (armed.pride && near('P')) startEncounter('pride');
-      else if (near('E', 1.7) && elderCooldown <= 0) {
-        hud.message(ELDER_LINES[elderIdx % ELDER_LINES.length], 3200);
-        if (elderIdx < ELDER_LINES.length) branch.addGrace(2);
-        elderIdx++;
-        elderCooldown = 6;
-      } else if (near('A', 1.5) && confessCooldown <= 0) {
-        state = 'confess';
-        hud.showConfess('\u201CConfess your wanderings, child, and be restored.\u201D');
-      } else if (near('L', 1.6) && branch.encountersDone.pride) {
+      else if (near('L', 1.6) && branch.encountersDone.pride) {
         finishEnding();
       }
       elderCooldown = Math.max(0, elderCooldown - dt);

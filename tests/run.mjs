@@ -68,6 +68,7 @@ async function resetState(page) {
     g.branch.pride = 0; g.branch.grace = 0;
     g.branch.flags = {}; g.branch.encountersDone = {};
     g.branch.confessionGraceReceived = false;
+    g.branch.confessions = 0; g.branch.prayerUses = 0;
     g.branch.hp = 20; g.branch.items = { bread: 2, water: 3 };
     g.setState('explore');
   });
@@ -129,6 +130,7 @@ async function runJourney(browser, mode) {
       for (let i = 0; i < 2; i++) {
         g.teleport(76.5, 13.5);
         await new Promise((r) => setTimeout(r, 350));
+        g.key('KeyE');
         document.getElementById('confess-btn').click();
         await new Promise((r) => setTimeout(r, 250));
       }
@@ -206,11 +208,48 @@ async function runInteractionRegressions(browser) {
     JSON.stringify(story),
   );
 
+  const pastoral = await page.evaluate(() => {
+    const level = window.__game.level;
+    return {
+      group: level.pastoralLandmarks?.name,
+      children: level.pastoralLandmarks?.children.map((c) => c.name) ?? [],
+      elderVisible: level.elder?.mesh.visible,
+      altarVisible: level.altar?.visible,
+    };
+  });
+  check(
+    'world: elder and confession altar are visible landmarks',
+    pastoral.group === 'pastoral-landmarks'
+      && pastoral.children.includes('elder-visible')
+      && pastoral.children.includes('confession-altar')
+      && pastoral.elderVisible && pastoral.altarVisible,
+    JSON.stringify(pastoral),
+  );
+
+  const intentionalConfession = await page.evaluate(async () => {
+    const g = window.__game;
+    g.teleport(74.4, 13.5);
+    await new Promise((r) => setTimeout(r, 220));
+    const before = g.state();
+    g.key('KeyE');
+    const after = g.state();
+    document.getElementById('confess-btn').click();
+    return { before, after };
+  });
+  check(
+    'world: confession requires an intentional E press',
+    intentionalConfession.before === 'explore' && intentionalConfession.after === 'confess',
+    JSON.stringify(intentionalConfession),
+  );
+
+  await resetState(page);
+
   const confession = await page.evaluate(async () => {
     const g = window.__game;
     for (let i = 0; i < 2; i++) {
       g.teleport(76.5, 13.5);
       await new Promise((r) => setTimeout(r, 350));
+      g.key('KeyE');
       document.getElementById('confess-btn').click();
       await new Promise((r) => setTimeout(r, 250));
     }
