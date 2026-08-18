@@ -194,7 +194,7 @@ export class BattleSystem {
     this.hud.battleEnemy(def.name);
     this.hud.battleSetHp(branch.hp, PLAYER_HP_MAX);
     this.hud.setPrayer(100);
-    this.hud.setBattleHints('ENTER · continue');
+    this.hud.setBattleHints('ENTER/SPACE · continue');
     this._say(esc(this._introLines()[0] ?? ''));
     this.dialogDone = false;
   }
@@ -242,7 +242,7 @@ export class BattleSystem {
     this.keys[e.code] = down;
     if (!down) return;
     if (this.phase === 'intro') {
-      if (e.code === 'KeyZ' || e.code === 'Enter') this._advanceDialog();
+      if (e.code === 'KeyZ' || e.code === 'Enter' || e.code === 'Space') this._advanceDialog();
       return;
     }
     if (this.phase === 'enemy') {
@@ -250,7 +250,7 @@ export class BattleSystem {
     }
     if (this.phase === 'menu') this._menuKey(e.code);
     else if (this.phase === 'fight') {
-      if (e.code === 'KeyZ' || e.code === 'Enter') this._resolveFight();
+      if (e.code === 'KeyZ' || e.code === 'Enter' || e.code === 'Space') this._resolveFight();
     }
   }
 
@@ -332,7 +332,7 @@ export class BattleSystem {
   _openMenu() {
     this.menuIdx = 0;
     this.heart.mesh.visible = false;
-    this.hud.setBattleHints('WASD · choose     ENTER · act');
+    this.hud.setBattleHints('WASD · choose     ENTER/SPACE · act');
     this._renderMenu();
   }
 
@@ -356,7 +356,7 @@ export class BattleSystem {
     else if (code === 'ArrowRight' || code === 'KeyD') { this.menuIdx = (this.menuIdx + 1) % items.length; this._renderMenu(); }
     else if (code === 'ArrowUp' || code === 'KeyW') { this.menuIdx = (this.menuIdx + items.length - 1) % items.length; this._renderMenu(); }
     else if (code === 'ArrowDown' || code === 'KeyS') { this.menuIdx = (this.menuIdx + 1) % items.length; this._renderMenu(); }
-    else if (code === 'KeyZ' || code === 'Enter') this._choose(this._menuItems()[this.menuIdx].id);
+    else if (code === 'KeyZ' || code === 'Enter' || code === 'Space') this._choose(this._menuItems()[this.menuIdx].id);
   }
 
   _choose(id) {
@@ -368,7 +368,7 @@ export class BattleSystem {
       this.barDir = 1;
       this.barT = 0;
       this.hud.showFightBar(true);
-      this.hud.setBattleHints('ENTER · strike');
+      this.hud.setBattleHints('ENTER/SPACE · strike');
       this._say('Choose your moment.');
     } else if (id === 'alms') {
       if (branch.provisions > 0) {

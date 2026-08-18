@@ -1,5 +1,8 @@
 # Pride & Humility — a pilgrimage
 
+**Play it live:** https://pride-humility.pages.dev
+**Source:** https://github.com/stjohnoftheladder/pride-humility
+
 An Undertale-style **pride vs. humility** prototype rooted in Eastern Orthodox
 teaching, built as a **hybrid**: 3D first-person pilgrimage exploration
 (three.js) with turn-based **2D battle screens** (heart-in-the-box dodging,
@@ -28,6 +31,12 @@ Test suite (builds, serves, plays both journeys with keyboard-only input):
 
 ```bash
 npm test
+```
+
+Deploy to the live site (Cloudflare Pages):
+
+```bash
+npm run build && npx wrangler pages deploy dist --project-name pride-humility --branch main
 ```
 
 ## The game
@@ -60,7 +69,7 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 |---|---|
 | Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact |
 | Battle dodge | `WASD` move the heart · hold `Space` to pray |
-| Battle choices | `WASD` choose · `Enter` act |
+| Battle choices | `WASD` choose · `Enter`/`Space` act · `X` back |
 | Global | `Esc` pause · `♪ sound` mute (top right) |
 
 ## Asset pipeline
