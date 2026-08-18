@@ -110,6 +110,7 @@ src/
 tools/                 asset generators (shared pipeline)
 tests/run.mjs          Playwright: both full journeys + endings + no console errors
 vite.config.js         Vite 8/Rolldown split for the cacheable Three.js chunk
+.github/workflows/     CI: test gate (ci.yml) + auto-deploy to Pages (deploy.yml)
 THEOLOGY.md            mechanic → Orthodox source mapping
 HANDOFF.md             designer handoff (Corey)
 ```
