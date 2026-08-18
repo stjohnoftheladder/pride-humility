@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "playwright": "^1.62.1",
-    "vite": "^8.2.1"
+    "vite": "^8.2.1",
+    "wrangler": "^4.87.0"
   }
 }
