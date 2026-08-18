@@ -183,6 +183,18 @@ async function runInteractionRegressions(browser) {
     `yaw ${openingYaw.toFixed(2)}`,
   );
 
+  const lookAxes = await page.evaluate(() => {
+    const camera = window.__game.camera;
+    camera.rotation.y += 0.7;
+    camera.rotation.x -= 0.4;
+    return { order: camera.rotation.order, roll: camera.rotation.z };
+  });
+  check(
+    'input: combined mouse look keeps the horizon level',
+    lookAxes.order === 'YXZ' && Math.abs(lookAxes.roll) < 1e-9,
+    JSON.stringify(lookAxes),
+  );
+
   const story = await page.evaluate(() => {
     const group = window.__game.level.storytelling;
     return { name: group?.name, rooms: group?.children.map((c) => c.name) ?? [] };

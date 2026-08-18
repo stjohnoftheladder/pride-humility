@@ -76,6 +76,10 @@ async function boot() {
   scene.fog = new THREE.Fog(PALETTE.nightSky, 9, 40);
 
   const camera = new THREE.PerspectiveCamera(75, 640 / 360, 0.1, 80);
+  // First-person look must yaw around the world-up axis before applying local
+  // pitch. The default XYZ order couples these rotations and makes the horizon
+  // sway diagonally after combined horizontal/vertical mouse movement.
+  camera.rotation.order = 'YXZ';
 
   const audio = new AudioFX();
   const hud = new Hud();
