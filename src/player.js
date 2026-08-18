@@ -2,7 +2,7 @@
 // No combat — exploration only.
 import * as THREE from 'three';
 import {
-  PLAYER_R, VIEW_H, GRAVITY, JUMP_V, WALK_SPEED, RUN_SPEED, ACCEL, FRICTION,
+  PLAYER_R, VIEW_H, GRAVITY, WALK_SPEED, RUN_SPEED, ACCEL, FRICTION,
 } from './config.js';
 
 export class Player {
@@ -47,9 +47,8 @@ export class Player {
 
   onKey(e, down) {
     const k = e.code;
-    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'Space', 'ShiftLeft', 'ShiftRight'].includes(k)) {
+    if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight'].includes(k)) {
       this.keys[k] = down;
-      if (k === 'Space' && down) e.preventDefault();
     }
   }
 
@@ -75,11 +74,6 @@ export class Player {
     this.vel.z += (wz * maxSpeed - this.vel.z) * k;
 
     this.vel.y -= GRAVITY * dt;
-    if (this.keys.Space && this.onGround) {
-      this.vel.y = JUMP_V;
-      this.onGround = false;
-    }
-
     let nx = this.pos.x + this.vel.x * dt;
     let nz = this.pos.z + this.vel.z * dt;
     let ny = this.pos.y + this.vel.y * dt;

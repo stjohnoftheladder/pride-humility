@@ -69,7 +69,8 @@ async function resetState(page) {
     g.branch.flags = {}; g.branch.encountersDone = {};
     g.branch.confessionGraceReceived = false;
     g.branch.confessions = 0; g.branch.prayerUses = 0;
-    g.branch.hp = 20; g.branch.items = { bread: 2, water: 3 };
+    g.branch.hp = 20; g.branch.provisions = 3;
+    document.getElementById('meters').classList.remove('revealed');
     g.setState('explore');
   });
 }
@@ -87,14 +88,25 @@ async function spareBattle(page, prays, waits) {
   return page.evaluate(async ({ prays, waits }) => {
     const g = window.__game;
     const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-    for (let i = 0; i < prays; i++) { g.key('ArrowRight'); g.key('KeyZ'); g.tickBattle(500, true); }
-    for (let i = 0; i < waits; i++) {
-      g.key('ArrowRight'); g.key('ArrowRight'); g.key('ArrowRight'); g.key('KeyZ');
-      g.key('ArrowDown'); g.key('KeyZ');
-      g.tickBattle(500, true);
+    const dodgeTurn = (pray) => {
+      const directions = ['KeyD', 'KeyW', 'KeyA', 'KeyS'];
+      let result = null;
+      for (let frame = 0; frame < 520 && g.battle.phase === 'enemy' && !result; frame++) {
+        for (const key of directions) g.battle.keys[key] = false;
+        g.battle.keys[directions[Math.floor(frame / 35) % directions.length]] = true;
+        // Short prayer pulses keep the shield sustainable while still requiring
+        // the deliberate hold gesture long enough to receive one prayer moment.
+        g.battle.keys.Space = pray && frame % 50 < 18;
+        result = g.battle.update(0.016, frame * 0.016);
+      }
+      for (const key of [...directions, 'Space']) g.battle.keys[key] = false;
+      return result;
+    };
+    for (let i = 0; i < prays + waits; i++) {
+      g.key('KeyD'); g.key('KeyD'); g.key('Enter');
+      dodgeTurn(i < prays);
     }
-    g.key('ArrowRight'); g.key('ArrowRight'); g.key('ArrowRight'); g.key('KeyZ');
-    g.key('KeyZ');
+    g.key('KeyD'); g.key('KeyD'); g.key('Enter');
     const r = g.tickBattle(400);
     await sleep(1800); // let the main loop apply the outcome
     return r;
@@ -140,7 +152,7 @@ async function runJourney(browser, mode) {
       await page.evaluate((id) => { const g = window.__game; g.startEncounter(id); }, id);
       await page.waitForFunction((id) => window.__game.battle.def?.id === id, id);
       await doIntro(page);
-      const r = await spareBattle(page, id === 'pride' ? 2 : 1, 1);
+      const r = await spareBattle(page, id === 'pride' ? 2 : 1, id === 'pride' ? 0 : 1);
       log[id] = r?.outcome;
     }
     await page.evaluate(() => window.__game.teleport(91.5, 55.5));
@@ -195,6 +207,19 @@ async function runInteractionRegressions(browser) {
     'input: combined mouse look keeps the horizon level',
     lookAxes.order === 'YXZ' && Math.abs(lookAxes.roll) < 1e-9,
     JSON.stringify(lookAxes),
+  );
+
+  const quietUi = await page.evaluate(() => ({
+    crosshair: !!document.getElementById('crosshair'),
+    tutorial: !!document.getElementById('battle-help'),
+    fpsDisplay: getComputedStyle(document.getElementById('top-right')).display,
+    titleMentionsBattle: document.getElementById('title-screen').textContent.includes('In battle'),
+  }));
+  check(
+    'ui: removes permanent crosshair/tutorial while preserving debug telemetry',
+    !quietUi.crosshair && !quietUi.tutorial && quietUi.fpsDisplay !== 'none'
+      && !quietUi.titleMentionsBattle,
+    JSON.stringify(quietUi),
   );
 
   const story = await page.evaluate(() => {
@@ -262,8 +287,24 @@ async function runInteractionRegressions(browser) {
   );
 
   await resetState(page);
-
-  await page.evaluate(() => window.__game.startEncounter('tempter'));
+  const intentionalEnemy = await page.evaluate(async () => {
+    const g = window.__game;
+    const p = g.triggers().K;
+    g.teleport(p.x + 2.1, p.z);
+    await new Promise((r) => setTimeout(r, 220));
+    const before = g.state();
+    g.key('Space');
+    const explorationUsesSpace = !!g.player.keys.Space;
+    g.key('KeyE');
+    return { before, after: g.state(), explorationUsesSpace };
+  });
+  check(
+    'world: enemy encounters require E and exploration has no jump key',
+    intentionalEnemy.before === 'explore'
+      && intentionalEnemy.after === 'battle'
+      && !intentionalEnemy.explorationUsesSpace,
+    JSON.stringify(intentionalEnemy),
+  );
   await doIntro(page);
   const choice = await page.evaluate(() => {
     const g = window.__game;
@@ -273,15 +314,15 @@ async function runInteractionRegressions(browser) {
     g.battle._openMenu();
     const lockedText = document.getElementById('battle-condition').textContent;
     const menuHint = document.getElementById('battle-hints').textContent;
+    const simpleMenu = [...document.querySelectorAll('#battle-main .menu-item')].map((e) => e.textContent);
+    const metersInitiallyHidden = !document.getElementById('meters').classList.contains('revealed');
     g.battle.prayActions = 1;
     g.battle.round = 2;
     g.battle._openMenu();
     const readyText = document.getElementById('battle-condition').textContent;
-    g.key('KeyD'); g.key('KeyD'); g.key('KeyD');
-    g.key('Enter');
-    const submenuHint = document.getElementById('battle-hints').textContent;
-    g.key('Escape');
-    const returnedHint = document.getElementById('battle-hints').textContent;
+    const readyMenu = [...document.querySelectorAll('#battle-main .menu-item')].map((e) => e.textContent);
+    g.battle.prayActions = 0;
+    g.battle.round = 0;
     g.battle._openMenu();
     g.key('Enter');
     const phase = g.battle.phase;
@@ -294,6 +335,14 @@ async function runInteractionRegressions(browser) {
     g.battle._updateEnemyTurn(0.25);
     g.battle.keys.KeyD = false;
     const movedX = g.battle.heartPos.x;
+    g.battle.keys.Space = true;
+    g.battle._updateEnemyTurn(1.3);
+    g.battle.keys.Space = false;
+    const sustainedPrayer = {
+      actions: g.battle.prayActions,
+      grace: g.branch.grace,
+      condition: document.getElementById('battle-condition').textContent,
+    };
     const dialogBefore = document.getElementById('battle-dialog').innerHTML;
     g.key('Enter');
     const dialogAfter = document.getElementById('battle-dialog').innerHTML;
@@ -302,12 +351,15 @@ async function runInteractionRegressions(browser) {
       lockedText,
       readyText,
       menuHint,
-      submenuHint,
-      returnedHint,
+      simpleMenu,
+      readyMenu,
+      metersInitiallyHidden,
+      metersRevealed: document.getElementById('meters').classList.contains('revealed'),
       dodgeHint,
       startX,
       movedX,
       enemyEnterDidNothing: dialogBefore === dialogAfter,
+      sustainedPrayer,
       hp: g.branch.hp,
       pride: g.branch.pride,
       forceMomentum: g.battle.forceMomentum,
@@ -319,19 +371,29 @@ async function runInteractionRegressions(browser) {
     `phase ${choice.phase}`,
   );
   check(
-    'choice: MERCY requirements become explicit and announce readiness',
-    choice.lockedText.includes('MERCY CLOSED') && choice.readyText.includes('MERCY READY'),
+    'choice: WAIT becomes direct MERCY when the heart is ready',
+    choice.lockedText.includes('MERCY CLOSED') && choice.readyText === 'MERCY READY'
+      && choice.simpleMenu.length === 3 && choice.simpleMenu[2] === 'WAIT'
+      && choice.readyMenu[2].includes('MERCY') && !choice.simpleMenu.some((x) => x.includes('PRAY')),
     JSON.stringify({ locked: choice.lockedText, ready: choice.readyText }),
   );
   check(
     'input: battle hints show only controls that work in the current phase',
     choice.menuHint.includes('ENTER') && !choice.menuHint.includes('back')
-      && choice.submenuHint.includes('ESC') && choice.submenuHint.includes('back')
-      && !choice.returnedHint.includes('back')
       && choice.dodgeHint.includes('WASD') && choice.dodgeHint.includes('SPACE')
       && !choice.dodgeHint.includes('ENTER') && !choice.dodgeHint.includes('back')
       && choice.enemyEnterDidNothing,
     JSON.stringify(choice),
+  );
+  check(
+    'prayer: sustained SPACE during dodging advances mercy',
+    choice.sustainedPrayer.actions === 1 && choice.sustainedPrayer.grace === 3,
+    JSON.stringify(choice.sustainedPrayer),
+  );
+  check(
+    'hud: heart meters stay hidden until the first consequential choice',
+    choice.metersInitiallyHidden && choice.metersRevealed,
+    JSON.stringify({ before: choice.metersInitiallyHidden, after: choice.metersRevealed }),
   );
   check(
     'input: WASD moves the heart during 2D dodging',

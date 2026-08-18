@@ -10,7 +10,7 @@ export class Branch {
     this.grace = 0;
     this.hp = PLAYER_HP_MAX;
     this.flags = {};          // 'tookGold', 'forgave', 'struck', 'prayed3x'...
-    this.items = { bread: 2, water: 3 };
+    this.provisions = 3;
     this.defeats = 0;         // times the pilgrim fell
     this.confessions = 0;
     this.confessionGraceReceived = false;
@@ -24,7 +24,11 @@ export class Branch {
       const raw = localStorage.getItem(SAVE_KEY);
       if (raw) Object.assign(b, JSON.parse(raw));
     } catch { /* fresh start */ }
-    if (!b.items) b.items = { bread: 2, water: 3 };
+    // Migrate v1 saves that stored separate bread and water inventories.
+    if (!Number.isFinite(b.provisions)) {
+      b.provisions = Math.min(3, (b.items?.bread ?? 0) + (b.items?.water ?? 0));
+    }
+    delete b.items;
     return b;
   }
 
@@ -32,7 +36,7 @@ export class Branch {
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         pride: this.pride, grace: this.grace, hp: this.hp, flags: this.flags,
-        items: this.items, defeats: this.defeats, confessions: this.confessions,
+        provisions: this.provisions, defeats: this.defeats, confessions: this.confessions,
         confessionGraceReceived: this.confessionGraceReceived,
         encountersDone: this.encountersDone, prayerUses: this.prayerUses,
       }));

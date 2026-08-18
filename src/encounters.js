@@ -3,7 +3,7 @@
 //   intro        : string[] | (branch) => string[]
 //   hp           : enemy "walls" (how much FIGHT damage it absorbs)
 //   patterns     : bullet pattern names (see src/battle/patterns.js)
-//   prayerNeeded : PRAY actions required before mercy can work
+//   prayerNeeded : sustained prayer moments required before mercy can work
 //   mercy        : (branch, battle) => bool — is sparing possible right now
 //   lines        : round/pray/fight/mercyReady/spared/defeated/wait
 //   outcomes     : spared|defeated -> { grace, pride, flags }

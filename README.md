@@ -3,7 +3,7 @@
 An Undertale-style **pride vs. humility** prototype rooted in Eastern Orthodox
 teaching, built as a **hybrid**: 3D first-person pilgrimage exploration
 (three.js) with turn-based **2D battle screens** (heart-in-the-box dodging,
-FIGHT / PRAY / ALMS / MERCY).
+FIGHT / ALMS / WAIT→MERCY).
 
 Built on the wizard-castle pipeline: retro 640×360 pixelated renderer,
 pink-chroma-keyed spritesheets, procedural PBR textures, WebAudio synthesis —
@@ -40,8 +40,9 @@ the Ladder — **the Tempter** (greed), **the Wounded Brother** (anger), and
 | Action | Effect | Theology |
 |---|---|---|
 | **FIGHT** | a clean strike restores 1 HP and shortens the next assault, but raises **PRIDE** and strengthens the final adversary | violence offers immediate relief while feeding the passion (Climacus, Ladder 23) |
-| **PRAY** | Jesus-Prayer action (+GRACE) that spends some shield stamina; hold `Space` in dodging to raise the shield | the prayer of the heart as defense and costly stillness |
-| **ALMS** | share bread & water (heal) | almsgiving loosens possessions (Ladder 17) |
+| **PRAY** | hold `Space` while dodging to sustain prayer, raise the shield, and open the heart to mercy | the prayer of the heart as defense and costly stillness |
+| **ALMS** | share one provision (heal) | almsgiving loosens possessions (Ladder 17) |
+| **WAIT** | endure another assault without striking | patience creates room for mercy |
 | **MERCY** | Spare once conditions are met — the enemy is released, GRACE rises | forbearance; the Publican & the Pharisee |
 
 Your **pride** makes the world colder and redder — and makes the final boss
@@ -57,9 +58,9 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 
 | Context | Input |
 |---|---|
-| Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Space` jump · `Shift` run |
+| Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact |
 | Battle dodge | `WASD` move the heart · hold `Space` to pray |
-| Battle choices | `WASD` choose · `Enter` act · `Esc` returns from a submenu |
+| Battle choices | `WASD` choose · `Enter` act |
 | Global | `Esc` pause · `♪ sound` mute (top right) |
 
 ## Asset pipeline

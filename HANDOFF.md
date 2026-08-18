@@ -9,8 +9,8 @@
 
 An Undertale-style Orthodox teaching game: explore a dark monastery in 3D
 (first person), then fight **Pride, Greed, and Anger** as turn-based
-encounters — your choices (FIGHT vs. PRAY / ALMS / MERCY) move a **pride /
-grace** meter that literally changes the world's lighting and decides the
+encounters — your choices (FIGHT / ALMS / WAIT→MERCY), plus sustained prayer
+while dodging, move a **pride / grace** meter that literally changes the world's lighting and decides the
 ending. Read `THEOLOGY.md` for what every mechanic means — the art should
 serve that, not fight it.
 

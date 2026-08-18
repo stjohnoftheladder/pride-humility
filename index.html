@@ -27,7 +27,7 @@
     #game {
       position: absolute; inset: 0; width: 100%; height: 100%;
       image-rendering: pixelated; image-rendering: crisp-edges;
-      cursor: crosshair; background: #000;
+      cursor: default; background: #000;
     }
 
     /* The stage is a fixed 16:9 box that letterboxes to match the canvas,
@@ -41,16 +41,6 @@
     #stage > #hud { position: absolute; inset: 0; pointer-events: none; }
 
     /* ---------------- explore HUD ---------------- */
-    #crosshair {
-      position: absolute; left: 50%; top: 50%; width: 12px; height: 12px;
-      transform: translate(-50%, -50%); display: none;
-    }
-    #crosshair::before, #crosshair::after {
-      content: ''; position: absolute; background: rgba(243, 210, 118, 0.9);
-    }
-    #crosshair::before { left: 5px; top: 0; width: 2px; height: 12px; }
-    #crosshair::after  { left: 0; top: 5px; width: 12px; height: 2px; }
-
     .panel {
       position: absolute; background: rgba(18, 13, 7, 0.78);
       border: 2px solid var(--gold-dim); border-radius: 3px;
@@ -61,7 +51,11 @@
     #top-left { top: 10px; left: 10px; }
     #room-label { color: var(--gold); letter-spacing: 1px; font-size: 12px; }
 
-    #meters { top: 10px; left: 10px; margin-top: 34px; width: 200px; }
+    #meters {
+      top: 10px; left: 10px; margin-top: 34px; width: 200px;
+      opacity: 0; transform: translateY(-5px); transition: opacity 0.5s, transform 0.5s;
+    }
+    #meters.revealed { opacity: 1; transform: translateY(0); }
     .meter { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
     .meter .label { width: 52px; font-size: 11px; color: var(--gold-dim); }
     .meter .track { flex: 1; height: 9px; background: #0d0a05; border: 1px solid var(--accent); overflow: hidden; }
@@ -69,7 +63,7 @@
     #pride-fill  { background: linear-gradient(#e06a5a, var(--red-dim)); box-shadow: 0 0 6px #c0392b88; }
     #grace-fill  { background: linear-gradient(#ffd98a, #c9a227); box-shadow: 0 0 6px #f3d27688; }
 
-    #top-right { top: 10px; right: 10px; display: flex; gap: 8px; align-items: center; }
+    #top-right { top: 10px; right: 10px; display: none; gap: 8px; align-items: center; }
     #fps { color: var(--gold-dim); font-size: 11px; }
     #mute-btn {
       position: absolute; top: 14px; right: 14px;
@@ -146,22 +140,6 @@
       font-size: 11px; color: var(--gold-dim); letter-spacing: 0.5px;
       text-shadow: 0 1px 0 #000;
     }
-    #battle-help {
-      position: absolute; left: 50%; top: 13%; transform: translateX(-50%);
-      width: min(520px, 90%); z-index: 6;
-      background: var(--surface); border: 3px solid var(--gold);
-      border-radius: 4px; padding: 12px 20px; text-align: center;
-      box-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 18px #f3d27644;
-      display: none;
-    }
-    #battle-help.show { display: block; }
-    #battle-help h3 { color: var(--gold); font-size: 17px; letter-spacing: 2px; margin-bottom: 10px; }
-    #battle-help p { font-size: 13px; line-height: 1.9; margin: 6px 0; }
-    #battle-help .key {
-      display: inline-block; min-width: 22px; padding: 1px 7px; margin: 0 2px;
-      border: 2px solid var(--gold-dim); border-radius: 3px; background: #0d0a05;
-      font-size: 11px; color: var(--gold);
-    }
     .menu-col { display: flex; flex-direction: column; gap: 4px; min-width: 74px; }
     .menu-item {
       padding: 2px 8px; color: var(--gold-dim); cursor: pointer; letter-spacing: 1px;
@@ -169,9 +147,6 @@
     }
     .menu-item.selected { color: var(--gold); border-left-color: var(--gold); text-shadow: 0 0 8px #f3d27688; }
     .menu-item.dim { opacity: 0.45; }
-
-    #battle-submenu { display: none; }
-    #battle-submenu .menu-item { font-size: 13px; }
 
     #battle-enemy {
       position: absolute; left: 6%; bottom: 42%; font-size: 13px; color: var(--gold);
@@ -219,8 +194,6 @@
   <div id="stage">
     <canvas id="game"></canvas>
     <div id="hud">
-      <div id="crosshair"></div>
-
     <div class="panel" id="top-left">
       <div id="room-label">The Pilgrimage</div>
     </div>
@@ -246,7 +219,6 @@
       <div id="fight-bar"><div id="fight-zone"></div><div id="fight-marker"></div></div>
       <div id="battle-menu">
         <div class="menu-col" id="battle-main"></div>
-        <div class="menu-col" id="battle-submenu"></div>
       </div>
       <div id="battle-hints"></div>
     </div>
@@ -254,34 +226,15 @@
     <!-- interactive overlays live OUTSIDE #hud (which is pointer-events:none) so
          they are clickable in every browser -->
     <button id="mute-btn">♪ sound</button>
-    <div id="battle-help">
-      <h3>THE WAY OF BATTLE</h3>
-      <p><span class="key">WASD</span> moves the heart · hold <span class="key">SPACE</span> to pray</p>
-      <p>When choices appear: <span class="key">WASD</span> choose · <span class="key">ENTER</span> act</p>
-      <p><b>FIGHT</b> is fast but feeds pride · <b>PRAY</b> opens mercy but costs prayer-strength · <b>ALMS</b> shares bread · <b>MERCY</b> spares</p>
-      <p class="hint">Press <span class="key">any key</span> or click to continue</p>
-    </div>
   </div>
 
   <div class="screen" id="title-screen">
     <h1>PRIDE &amp; HUMILITY</h1>
     <p class="verse">"Lord Jesus Christ, Son of God, have mercy on me, a sinner."</p>
-    <p>
-      A pilgrim enters the monastery gate. Three thresholds stand between him and
-      the Ladder — and each one will ask him the same question:
-      <em>by whose strength do you climb?</em>
-    </p>
-    <p>
-      <span class="hint" style="display:inline">Move&nbsp;</span><span class="hint" style="display:inline">WASD</span> ·
-      <span class="hint" style="display:inline">Look&nbsp;</span><span class="hint" style="display:inline">Mouse</span> ·
-      <span class="hint" style="display:inline">E&nbsp;engage a figure</span> ·
-      <span class="hint" style="display:inline">In battle:&nbsp;</span><span class="hint" style="display:inline">WASD&nbsp;moves the heart</span> ·
-      <span class="hint" style="display:inline">Enter&nbsp;acts</span> ·
-      <span class="hint" style="display:inline">Space&nbsp;hold to pray</span>
-    </p>
-    <p class="verse" style="font-size:12px">Three thresholds stand between you and the Ladder — walk into them, or press <b>E</b> when you are close, to face who waits there.</p>
+    <p>Three thresholds stand between you and the Ladder.<br><em>By whose strength do you climb?</em></p>
+    <p class="hint">WASD · move &nbsp;·&nbsp; MOUSE · look &nbsp;·&nbsp; E · interact &nbsp;·&nbsp; SHIFT · run</p>
     <button class="btn" id="start-btn">BEGIN THE PILGRIMAGE</button>
-    <div class="hint">Clicking locks your mouse (Esc releases). If pointer lock fails, hold the mouse button and drag to look.</div>
+    <div class="hint">Esc releases the mouse.</div>
   </div>
 
   <div class="screen" id="pause-screen" style="display:none">

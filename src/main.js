@@ -83,6 +83,8 @@ async function boot() {
 
   const audio = new AudioFX();
   const hud = new Hud();
+  const debugMode = new URLSearchParams(location.search).has('debug');
+  if (debugMode) document.getElementById('top-right').style.display = 'flex';
   const materials = new Materials();
   materials.load();
 
@@ -111,6 +113,7 @@ async function boot() {
   // should invite movement into the pilgrimage.
   camera.rotation.y = -Math.PI / 2;
   hud.setMeters(branch.pride, branch.grace);
+  if (branch.pride > 0 || branch.grace > 0) hud.revealMeters();
   hud.setRoom('The Gate Court');
 
   // ----- trigger positions ----------------------------------------------------------
@@ -125,7 +128,10 @@ async function boot() {
     if (armed.pride && near('P', 2.4)) { startEncounter('pride'); return; }
     if (near('E', 2.4) && elderCooldown <= 0) {
       hud.message(ELDER_LINES[elderIdx % ELDER_LINES.length], 3200);
-      if (elderIdx < ELDER_LINES.length) branch.addGrace(2);
+      if (elderIdx < ELDER_LINES.length) {
+        branch.addGrace(2);
+        hud.revealMeters();
+      }
       elderIdx++;
       elderCooldown = 6;
       return;
@@ -200,6 +206,7 @@ async function boot() {
       player.vel.set(0, 0, 0);
     }
     hud.setMeters(branch.pride, branch.grace);
+    hud.revealMeters();
   }
 
   function confess() {
@@ -210,11 +217,12 @@ async function boot() {
       branch.confessionGraceReceived = true;
     }
     branch.confessions += 1;
-    branch.items = { bread: 2, water: 3 }; // the elder shares bread & water again
+    branch.provisions = 3;
     branch.save();
     state = 'explore';
     hud.showExplore();
     hud.setMeters(branch.pride, branch.grace);
+    if (receivesGrace) hud.revealMeters();
     hud.message(
       receivesGrace
         ? '\u201CGo in peace, child. Rise, and sin no more.\u201D (+6 grace)'
@@ -339,20 +347,16 @@ async function boot() {
     }
 
     if (state === 'explore') {
-      // engagement hint before the walk-on triggers fire
+      // Figures wait for a deliberate interaction; proximity only teaches E.
       let promptText = null;
-      if (armed.tempter && near('K', 2.6)) promptText = 'The Tempter waits ahead — press E or step forward';
-      else if (armed.brother && near('B', 2.6)) promptText = 'The Wounded Brother waits — press E or step forward';
-      else if (armed.pride && near('P', 2.6)) promptText = 'The Demon of Pride waits — press E or step forward';
+      if (armed.tempter && near('K', 2.6)) promptText = 'Face the Tempter — press E';
+      else if (armed.brother && near('B', 2.6)) promptText = 'Face the Wounded Brother — press E';
+      else if (armed.pride && near('P', 2.6)) promptText = 'Face the Demon of Pride — press E';
       else if (near('E', 2.6)) promptText = 'Speak with the Elder — press E';
       else if (near('A', 2.6)) promptText = 'Confess at the altar — press E';
       if (promptText) hud.showPrompt(promptText); else hud.hidePrompt();
 
-      // triggers
-      if (armed.tempter && near('K')) startEncounter('tempter');
-      else if (armed.brother && near('B')) startEncounter('brother');
-      else if (armed.pride && near('P')) startEncounter('pride');
-      else if (near('L', 1.6) && branch.encountersDone.pride) {
+      if (near('L', 1.6) && branch.encountersDone.pride) {
         finishEnding();
       }
       elderCooldown = Math.max(0, elderCooldown - dt);
@@ -390,7 +394,7 @@ async function boot() {
   frame();
 
   // ----- debug / test hook --------------------------------------------------------------
-  if (new URLSearchParams(location.search).has('debug')) {
+  if (debugMode) {
     window.__game = {
       state: () => state,
       setState: (s) => { state = s; },

@@ -1,5 +1,5 @@
 // Undertale-style battle screen: orthographic 3D scene with a battle box, the
-// heart (soul) the player dodges with, bullet patterns, a FIGHT/PRAY/ALMS/MERCY
+// heart (soul) the player dodges with, bullet patterns, a FIGHT/ALMS/WAIT/MERCY
 // menu, and the hold-Space Jesus-Prayer shield.
 import * as THREE from 'three';
 import { AnimatedSprite } from '../SpriteSystem.js';
@@ -95,7 +95,6 @@ export class BattleSystem {
     this.phaseT = 0;
     this.introIdx = 0;
     this.menuIdx = 0;
-    this.subIdx = 0;
     this.patternT = 0;
     this.patternIdx = 0;
     this.barT = 0;
@@ -103,8 +102,9 @@ export class BattleSystem {
     this.barMarker = 0;
     this.enemyTalk = false;
     this.dialogDone = false;
-    this.helpTimer = 0;
     this.forceMomentum = 0;
+    this.prayerHoldT = 0;
+    this.prayerCreditedThisTurn = false;
   }
 
   // ------------------------------------------------------------------ setup
@@ -127,6 +127,8 @@ export class BattleSystem {
     this.introIdx = 0;
     this.patternIdx = 0;
     this.forceMomentum = 0;
+    this.prayerHoldT = 0;
+    this.prayerCreditedThisTurn = false;
 
     // orthographic camera
     this.camera = new THREE.OrthographicCamera(-16, 16, 9, -9, 0.1, 100);
@@ -193,21 +195,8 @@ export class BattleSystem {
     this.hud.battleSetHp(branch.hp, PLAYER_HP_MAX);
     this.hud.setPrayer(100);
     this.hud.setBattleHints('ENTER · continue');
-    // first battle: show "The Way of Battle" instructions (dismissable, non-blocking)
-    if (localStorage.getItem('ph-battle-help') !== '1') {
-      this.helpTimer = 8;
-      this.hud.showBattleHelp();
-    }
-    this.hud.onHelpDismiss = () => this._dismissHelp();
     this._say(esc(this._introLines()[0] ?? ''));
     this.dialogDone = false;
-  }
-
-  _dismissHelp() {
-    if (this.helpTimer <= 0) return;
-    this.helpTimer = 0;
-    try { localStorage.setItem('ph-battle-help', '1'); } catch { /* private mode */ }
-    this.hud.hideBattleHelp();
   }
 
   // ---------------------------------------------------------------- helpers
@@ -252,9 +241,6 @@ export class BattleSystem {
   onKey(e, down) {
     this.keys[e.code] = down;
     if (!down) return;
-    if (this.helpTimer > 0) {
-      this._dismissHelp(); // any key dismisses; the key still processes below
-    }
     if (this.phase === 'intro') {
       if (e.code === 'KeyZ' || e.code === 'Enter') this._advanceDialog();
       return;
@@ -272,11 +258,6 @@ export class BattleSystem {
     if (!this.active) return null;
     this.phaseT += dt;
     const t = this.phaseT;
-
-    if (this.helpTimer > 0) {
-      this.helpTimer -= dt;
-      if (this.helpTimer <= 0) this._dismissHelp();
-    }
 
     switch (this.phase) {
       case 'intro': {
@@ -350,7 +331,6 @@ export class BattleSystem {
   // ---------------------------------------------------------------- menu
   _openMenu() {
     this.menuIdx = 0;
-    this.subIdx = 0;
     this.heart.mesh.visible = false;
     this.hud.setBattleHints('WASD · choose     ENTER · act');
     this._renderMenu();
@@ -360,9 +340,8 @@ export class BattleSystem {
     const mercyReady = this._mercyReady();
     return [
       { id: 'fight', label: 'FIGHT!' },
-      { id: 'pray', label: 'PRAY' },
-      { id: 'alms', label: 'ALMS' },
-      { id: 'mercy', label: mercyReady ? 'MERCY ✦' : 'MERCY' },
+      { id: 'alms', label: `ALMS ×${this.ctx.branch.provisions}` },
+      { id: mercyReady ? 'mercy' : 'wait', label: mercyReady ? 'MERCY ✦' : 'WAIT' },
     ];
   }
 
@@ -373,34 +352,11 @@ export class BattleSystem {
 
   _menuKey(code) {
     const items = this._menuItems();
-    if (this._submode) {
-      const sub = this._subItems();
-      if (code === 'ArrowUp' || code === 'KeyW') { this.subIdx = (this.subIdx + sub.length - 1) % sub.length; this._renderSub(); }
-      else if (code === 'ArrowDown' || code === 'KeyS') { this.subIdx = (this.subIdx + 1) % sub.length; this._renderSub(); }
-      else if (code === 'KeyZ' || code === 'Enter') { this._chooseSub(sub[this.subIdx]?.id); }
-      else if (code === 'Escape') { this._submode = null; this.hud.setBattleHints('WASD · choose     ENTER · act'); this._renderMenu(); }
-      return;
-    }
     if (code === 'ArrowLeft' || code === 'KeyA') { this.menuIdx = (this.menuIdx + items.length - 1) % items.length; this._renderMenu(); }
     else if (code === 'ArrowRight' || code === 'KeyD') { this.menuIdx = (this.menuIdx + 1) % items.length; this._renderMenu(); }
     else if (code === 'ArrowUp' || code === 'KeyW') { this.menuIdx = (this.menuIdx + items.length - 1) % items.length; this._renderMenu(); }
     else if (code === 'ArrowDown' || code === 'KeyS') { this.menuIdx = (this.menuIdx + 1) % items.length; this._renderMenu(); }
     else if (code === 'KeyZ' || code === 'Enter') this._choose(this._menuItems()[this.menuIdx].id);
-  }
-
-  _subItems() {
-    if (this._submode === 'alms') return this._almsItems();
-    return [
-      { id: 'spare', label: 'Spare', enabled: this._mercyReady() },
-      { id: 'wait', label: 'Wait', enabled: true },
-    ];
-  }
-
-  _renderSub() {
-    const sub = this._subItems();
-    this.hud.renderMenu(this._menuItems(), this._submode === 'alms' ? 'alms' : 'mercy', sub, this.subIdx);
-    this.hud.setBattleHints('W / S · choose     ENTER · act     ESC · back');
-    this._renderMercyCondition();
   }
 
   _choose(id) {
@@ -414,34 +370,27 @@ export class BattleSystem {
       this.hud.showFightBar(true);
       this.hud.setBattleHints('ENTER · strike');
       this._say('Choose your moment.');
-    } else if (id === 'pray') {
-      branch.addGrace(3);
-      branch.prayerUses += 1;
-      this.prayActions += 1;
-      // Deliberate prayer advances mercy, but stillness costs breath. The
-      // next assault begins with less shield stamina than a forceful turn.
-      this.prayerStamina = Math.max(35, this.prayerStamina - 22);
-      this.hud.setPrayer(this.prayerStamina);
-      this.ctx.audio.pray();
-      this._say(this._who(this.def.lines?.pray?.[this.prayActions - 1] ?? '\u201CLord Jesus Christ, have mercy on me, a sinner.\u201D'));
-      this._endPlayerTurn();
     } else if (id === 'alms') {
-      this.subIdx = 0;
-      this._submode = 'alms';
-      this._renderSub();
+      if (branch.provisions > 0) {
+        branch.provisions -= 1;
+        branch.hp = Math.min(PLAYER_HP_MAX, branch.hp + 4);
+        branch.addGrace(1);
+        this.hud.revealMeters();
+        this.ctx.audio.pickup();
+        this._say(this._who('You share a provision. Strength returns. (+4 HP)'));
+      } else {
+        this._say(this._who('Your hands are empty. You remain with them anyway.'));
+      }
+      this.hud.battleSetHp(branch.hp, PLAYER_HP_MAX);
+      this._endPlayerTurn();
     } else if (id === 'mercy') {
-      this.subIdx = 0;
-      this._submode = 'mercy';
-      this._renderSub();
+      this._resolveSpared();
+    } else if (id === 'wait') {
+      branch.addGrace(1);
+      this.hud.revealMeters();
+      this._say(this._who(this.def.lines?.wait ?? 'You wait, and watch. (+1 grace)'));
+      this._endPlayerTurn();
     }
-  }
-
-  _almsItems() {
-    const b = this.ctx.branch;
-    return [
-      { id: 'bread', label: `Bread \u00D7${b.items?.bread ?? 0}`, enabled: (b.items?.bread ?? 0) > 0 },
-      { id: 'water', label: `Water \u00D7${b.items?.water ?? 0}`, enabled: (b.items?.water ?? 0) > 0 },
-    ];
   }
 
   _mercyReady() {
@@ -451,7 +400,7 @@ export class BattleSystem {
   _renderMercyCondition() {
     const ready = this._mercyReady();
     if (ready) {
-      this.hud.setBattleCondition('MERCY READY · choose MERCY → Spare', true);
+      this.hud.setBattleCondition('MERCY READY', true);
       return;
     }
     const prayerNeed = this.def.prayerNeeded ?? 1;
@@ -488,6 +437,7 @@ export class BattleSystem {
     this.enemyHp -= dmg;
     const { branch } = this.ctx;
     branch.addPride(6);
+    this.hud.revealMeters();
     this.enemy.setTint(3.2, 1.0, 1.0);
     this.ctx.audio.hit();
     this._spawnExplosion(this.enemyX, this.enemyY);
@@ -522,12 +472,15 @@ export class BattleSystem {
   // ------------------------------------------------------------ enemy turn
   _startEnemyTurn() {
     this.patternT = 0;
+    this.prayerHoldT = 0;
+    this.prayerCreditedThisTurn = false;
     this._lastTick = -1;
     this.patternIdx = 0;
     this.enemyTalk = true;
     this.heart.mesh.visible = true;
     this.enemy.setAnimation('attack', { fps: 8 });
     this.hud.setBattleHints('WASD · move     hold SPACE · pray');
+    this._renderMercyCondition();
     this._say(`<span class="who">${this.def.name}</span><br>${this.def.lines?.round?.(this.round, this.ctx.branch) ?? '\u2026'}`);
   }
 
@@ -547,6 +500,19 @@ export class BattleSystem {
     this.hud.setPrayer(this.prayerStamina);
     this.shield.mesh.visible = shieldOn;
     if (shieldOn) this.shield.mesh.position.set(this.heartPos.x, this.heartPos.y, 1.4);
+    if (shieldOn && !this.prayerCreditedThisTurn) {
+      this.prayerHoldT += dt;
+      if (this.prayerHoldT >= 1.25) {
+        const { branch } = this.ctx;
+        this.prayerCreditedThisTurn = true;
+        this.prayActions += 1;
+        branch.prayerUses += 1;
+        branch.addGrace(3);
+        this.hud.revealMeters();
+        this.ctx.audio.pray();
+        this._renderMercyCondition();
+      }
+    }
     if (this.heart.mesh.visible === false && this.phase === 'enemy') this.heart.mesh.visible = true;
 
     // run pattern
@@ -645,40 +611,6 @@ export class BattleSystem {
   }
 
   // ------------------------------------------------------------- mercy
-  _chooseSub(id) {
-    const { branch } = this.ctx;
-    if (this._submode === 'alms') {
-      if (id === 'bread' && branch.items.bread > 0) {
-        branch.items.bread -= 1;
-        branch.hp = Math.min(PLAYER_HP_MAX, branch.hp + 4);
-        branch.addGrace(1);
-        this.ctx.audio.pickup();
-        this._say(this._who('You share the bread. Strength returns. (+4 HP)'));
-      } else if (id === 'water' && branch.items.water > 0) {
-        branch.items.water -= 1;
-        branch.hp = Math.min(PLAYER_HP_MAX, branch.hp + 2);
-        this.ctx.audio.pickup();
-        this._say(this._who('Cold water. The soul drinks too. (+2 HP)'));
-      } else {
-        this._say(this._who('Nothing left but the words of the prayer.'));
-      }
-      this.hud.battleSetHp(branch.hp, PLAYER_HP_MAX);
-      this._endPlayerTurn();
-    } else if (this._submode === 'mercy') {
-      if (id === 'spare' && this._mercyReady()) {
-        this._resolveSpared();
-      } else if (id === 'wait') {
-        branch.addGrace(1);
-        this._say(this._who(this.def.lines?.wait ?? 'You wait, and watch. (+1 grace)'));
-        this._endPlayerTurn();
-      } else {
-        this._say(this._who(this.def.lines?.mercyReady ?? 'Not yet. The heart is not ready to spare.'));
-        this._endPlayerTurn();
-      }
-    }
-    this._submode = null;
-  }
-
   _resolveSpared() {
     this.phase = 'resolving';
     this.phaseT = 0;
@@ -724,8 +656,6 @@ export class BattleSystem {
   // -------------------------------------------------------------- cleanup
   dispose() {
     this.active = false;
-    this.hud.onHelpDismiss = null;
-    this.hud.hideBattleHelp();
     for (const s of this.sprites) {
       this.ctx.scene.remove(s.mesh ?? s);
       if (s.dispose && typeof s.dispose === 'function') s.dispose();

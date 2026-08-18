@@ -15,9 +15,9 @@ export class Hud {
     this.el = {
       prideFill: $('pride-fill'),
       graceFill: $('grace-fill'),
+      meters: $('meters'),
       room: $('room-label'),
       msg: $('msg'),
-      crosshair: $('crosshair'),
       title: $('title-screen'),
       pause: $('pause-screen'),
       fall: $('fall-screen'),
@@ -38,9 +38,6 @@ export class Hud {
       fightZone: $('fight-zone'),
       fightMarker: $('fight-marker'),
       battleMenu: $('battle-main'),
-      battleSub: $('battle-submenu'),
-      battleHelp: $('battle-help'),
-      battleHelpBtn: $('battle-help-btn'),
       battleCondition: $('battle-condition'),
       battleHints: $('battle-hints'),
       prompt: $('engage-prompt'),
@@ -54,14 +51,12 @@ export class Hud {
     this.onMute = null;
     this.onFallContinue = null;
     this.onConfess = null;
-    this.onHelpDismiss = null;
 
     $('start-btn')?.addEventListener('click', () => this.onStart?.());
     $('resume-btn')?.addEventListener('click', () => this.onResume?.());
     $('restart-btn')?.addEventListener('click', () => this.onRestart?.());
     $('fall-btn')?.addEventListener('click', () => this.onFallContinue?.());
     $('confess-btn')?.addEventListener('click', () => this.onConfess?.());
-    this.el.battleHelp?.addEventListener('click', () => this.onHelpDismiss?.());
     this.el.mute?.addEventListener('click', () => this.onMute?.());
   }
 
@@ -69,6 +64,7 @@ export class Hud {
     this.el.prideFill.style.width = `${Math.max(0, Math.min(100, (pride / PRIDE_MAX) * 100))}%`;
     this.el.graceFill.style.width = `${Math.max(0, Math.min(100, (grace / GRACE_MAX) * 100))}%`;
   }
+  revealMeters() { this.el.meters?.classList.add('revealed'); }
 
   setRoom(text) { this.el.room.textContent = text; }
 
@@ -95,20 +91,17 @@ export class Hud {
   showTitle() {
     this._hideScreens();
     this.el.title.style.display = 'flex';
-    this.el.crosshair.style.display = 'none';
     this.battleOff();
   }
 
   showPause() {
     this.el.pause.style.display = 'flex';
-    this.el.crosshair.style.display = 'none';
   }
 
   hidePause() { this.el.pause.style.display = 'none'; }
 
   showExplore() {
     this._hideScreens();
-    this.el.crosshair.style.display = 'block';
     this.battleOff();
   }
 
@@ -141,7 +134,6 @@ export class Hud {
   // ---------------- battle ----------------
   battleOn() {
     this.el.battle.classList.add('show');
-    this.el.crosshair.style.display = 'none';
   }
 
   battleOff() {
@@ -153,29 +145,6 @@ export class Hud {
 
   battleDialog(html) { this.el.battleDialog.innerHTML = html; }
   battleEnemy(name) { this.el.battleEnemy.textContent = name; }
-  showBattleHelp() {
-    this.el.battleHelp?.classList.add('show');
-    // safety net: any key or any click dismisses it, plus a 5s auto-hide —
-    // the panel must never be able to block the battle
-    clearTimeout(this._helpAuto);
-    this._helpAuto = setTimeout(() => this.hideBattleHelp(), 5000);
-    if (!this._helpBound) {
-      this._helpBound = true;
-      const ev = () => {
-        if (this.el.battleHelp?.classList.contains('show')) {
-          this.hideBattleHelp();
-          this.onHelpDismiss?.();
-        }
-      };
-      document.addEventListener('keydown', ev);
-      document.addEventListener('pointerdown', ev);
-    }
-  }
-
-  hideBattleHelp() {
-    this.el.battleHelp?.classList.remove('show');
-    clearTimeout(this._helpAuto);
-  }
   battleSetHp(v, max) { this.el.battleHp.textContent = `${Math.max(0, v)} / ${max}`; }
   battleHpFlash() {
     this.el.battleHpBox.classList.remove('flash');
@@ -206,8 +175,8 @@ export class Hud {
     this.el.fightMarker.style.left = `${p * 100}%`;
   }
 
-  /** Render the FIGHT/PRAY/ALMS/MERCY menu. items: [{id,label,enabled}] */
-  renderMenu(items, selected, subItems = null, subSelected = 0) {
+  /** Render the direct FIGHT / ALMS / WAIT-or-MERCY menu. */
+  renderMenu(items, selected) {
     const cols = [];
     for (const it of items) {
       const cls = ['menu-item'];
@@ -216,15 +185,5 @@ export class Hud {
       cols.push(`<div class="${cls.join(' ')}" data-id="${it.id}">${it.label}</div>`);
     }
     this.el.battleMenu.innerHTML = cols.join('');
-    const sub = this.el.battleSub;
-    if (subItems) {
-      sub.style.display = 'flex';
-      sub.innerHTML = subItems.map((s, i) =>
-        `<div class="menu-item ${i === subSelected ? 'selected' : ''}" data-sid="${s.id}">${s.label}</div>`
-      ).join('');
-    } else {
-      sub.style.display = 'none';
-      sub.innerHTML = '';
-    }
   }
 }

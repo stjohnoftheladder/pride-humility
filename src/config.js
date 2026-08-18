@@ -7,7 +7,6 @@ export const WALL_H = 7;          // wall / ceiling height
 export const VIEW_H = 1.62;       // eye height
 export const PLAYER_R = 0.45;
 export const GRAVITY = 24;
-export const JUMP_V = 7.6;
 export const WALK_SPEED = 5.2;
 export const RUN_SPEED = 8.4;
 export const ACCEL = 60;

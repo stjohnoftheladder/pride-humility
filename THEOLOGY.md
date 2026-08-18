@@ -16,7 +16,7 @@ repentance, restores communion.*
 **The journey:** a pilgrim enters a monastery gate, passes three thresholds
 (greed, anger, pride), and reaches the Ladder gate. Each threshold asks the
 same question: *by whose strength do you climb?* The answer is not spoken —
-it is enacted in FIGHT, PRAY, ALMS, MERCY.
+it is enacted in FIGHT, sustained PRAYER, ALMS, WAIT, and MERCY.
 
 ## 2. The three thresholds
 
@@ -36,9 +36,10 @@ because sparing requires humility.**
 | Mechanic | Teaching | Source |
 |---|---|---|
 | **FIGHT** damages the enemy, briefly restores HP, and shortens the next assault, but raises PRIDE | Violence tempts through immediate felt control; that relief feeds the passion and strengthens the last adversary | Climacus, Ladder 23; Cassian, *Institutes* XII.2 (pride is the root of all evil, the demons' first sin) |
-| **PRAY** action (+grace, with an immediate stamina cost) and hold-`Space` shield | The Jesus Prayer — prayer of the heart as the Christian's true defense; stillness is chosen without becoming an effortless power-up | The Philokalia; the Jesus Prayer: *"Lord Jesus Christ, Son of God, have mercy on me, a sinner"* (the Publican's prayer, Luke 18:13) |
+| Hold `Space` to sustain **PRAYER** while dodging (+grace, with a stamina cost) | The Jesus Prayer — prayer of the heart as the Christian's true defense; stillness is chosen without becoming an effortless power-up | The Philokalia; the Jesus Prayer: *"Lord Jesus Christ, Son of God, have mercy on me, a sinner"* (the Publican's prayer, Luke 18:13) |
 | Shield runs on stamina ("PRAYER" bar) | Prayer is effort, not magic — it must be sustained; grace is a gift, never earned, but effort disposes the heart | Climacus, Ladder 28 (prayer); the teaching on unceasing prayer (1 Thess 5:17) |
-| **ALMS** — share bread & water | Almsgiving loosens the grip of possessions; small, concrete mercy | Ladder 17; Matthew 25:35–40 |
+| **ALMS** — share a provision | Almsgiving loosens the grip of possessions; small, concrete mercy | Ladder 17; Matthew 25:35–40 |
+| **WAIT** — endure without striking | Patience is active restraint: it makes room for mercy instead of forcing an outcome | Ladder 8; James 1:19–20 |
 | **MERCY / Spare** | Forbearance and the sparing of life; "mercy rejoices against judgment" | James 2:13; the Publican & the Pharisee (Luke 18:9–14) |
 | The heart is the soul; HP loss = soul-darkening | Damage is not just pain — it is the soul growing cold; prayer slows the assault | The ascetic teaching that the passions "wound the heart" (cf. Mark 7:21–23) |
 | **Pride reddens and dims the world**; the boss grows with your pride | The proud man's world shrinks to himself; his own progress feeds his adversary | Ladder 23.1–5; Cassian XII.7 |
