@@ -372,7 +372,7 @@ export class Level {
 
   build() {
     const { grid, cells } = LEVEL;
-    const wallGeo = [], plinthGeo = [], colGeo = [], woodGeo = [];
+    const wallGeo = [], colGeo = [], woodGeo = [];
     const corniceGeo = [], roofGeo = [], domeGeo = [], domeCrossGeo = [], towerGeo = [], towerCapGeo = [];
 
     const isHouse = (x, z) => x >= HOUSE.x && x < HOUSE.x + HOUSE.w && z >= HOUSE.y && z < HOUSE.y + HOUSE.h;
@@ -386,15 +386,15 @@ export class Level {
         const cz = (z + 0.5) * CELL;
         switch (t) {
           case '#': {
-            // Building mass: stone plinth + light plaster facade up to the roofline.
+            this.addCollider(cx, cz, CELL, CELL);
+            // The house and Hagia Sophia cover their own cells — no wall mass
+            // underneath them (the house mesh is solid; the dome sits on the
+            // band), which also avoids coplanar faces z-fighting at their bases.
+            if (isHouse(x, z) || inHagia(x, z)) break;
+            // Building mass: light plaster facade up to the roofline.
             const g = new THREE.BoxGeometry(CELL, WALL_H, CELL);
             g.translate(cx, WALL_H / 2, cz);
             wallGeo.push(g);
-            const pl = new THREE.BoxGeometry(CELL, 1.15, CELL);
-            pl.translate(cx, 0.575, cz);
-            plinthGeo.push(pl);
-            this.addCollider(cx, cz, CELL, CELL);
-            if (isHouse(x, z) || inHagia(x, z)) break; // special structures are built below
             const kind = inSet(DOME_CELLS, x, z) ? 'dome' : inSet(TOWER_CELLS, x, z) ? 'tower' : roofKind(x, z);
             if (kind === 'dome') {
               const drum = new THREE.CylinderGeometry(1.0, 1.0, 0.7, 10);
@@ -492,11 +492,6 @@ export class Level {
       const mesh = new THREE.Mesh(mergeGeometries(wallGeo), this.mat.get('plaster'));
       this.group.add(mesh);
       wallGeo.forEach((g) => g.dispose());
-    }
-    if (plinthGeo.length) {
-      const mesh = new THREE.Mesh(mergeGeometries(plinthGeo), this.mat.get('stone_wall'));
-      this.group.add(mesh);
-      plinthGeo.forEach((g) => g.dispose());
     }
     if (colGeo.length) {
       const mesh = new THREE.Mesh(mergeGeometries(colGeo), this.mat.get('stone_wall'));
