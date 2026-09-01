@@ -58,7 +58,7 @@ export class Level {
     this.candleLights = [];
     this.group = new THREE.Group();
     scene.add(this.group);
-    this.spawns = { S: [], E: [], A: [], K: [], B: [], P: [], L: [], T: [], V: [], c: [] };
+    this.spawns = { S: [], E: [], A: [], K: [], B: [], P: [], L: [], V: [], c: [] };
     this.worldEnemies = {};  // id -> { sprite, shadow }
     this.animSprites = [];   // every animated billboard in the world
   }
@@ -544,7 +544,7 @@ export class Level {
     this.group.add(floor);
     this.mat.get('stone_floor').map.repeat.set(MAP_W, MAP_H);
 
-    // --- lights: daylight sun + warm sky, candles kept as street lanterns ----
+    // --- lights: daylight sun + warm sky; no candles — it is broad daylight ----
     const hemi = new THREE.HemisphereLight(0xbfd8ef, 0x8a7a5a, 1.0);
     this.group.add(hemi);
     const sun = new THREE.DirectionalLight(0xfff1d6, 2.6);
@@ -574,19 +574,6 @@ export class Level {
       const [x, z] = key.split(',').map(Number);
       const p = this.centerOf(x, z);
       switch (t) {
-        case 'T': {
-          const candle = new AnimatedSprite('torch', 1.25);
-          candle.mesh.position.set(p.x, 1.25 / 2 + 0.05, p.z);
-          candle.setAnimation('idle', { fps: 9 });
-          this.group.add(candle.mesh);
-          this.spawns.T.push(candle);
-          this.animSprites.push(candle);
-          const light = new THREE.PointLight(0xffb45e, 28, 11, 2);
-          light.position.set(p.x, 2.0, p.z);
-          this.group.add(light);
-          this.trackFlicker(light, 28);
-          break;
-        }
         case 'V': {
           const icon = new AnimatedSprite('banner', 2.6);
           icon.mesh.position.set(p.x, 2.6 / 2 + 0.8 + 0.05, p.z);
@@ -669,14 +656,6 @@ export class Level {
       rug.position.set(p.x - 2.4, 0.045, p.z);
       altar.add(base, top, crossVertical, crossHorizontal, rug);
 
-      for (const dz of [-0.72, 0.72]) {
-        const candle = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.07, 0.08, 0.48, 8),
-          this.mat.get('wax_emissive'),
-        );
-        candle.position.set(p.x - 0.35, 1.13, p.z + dz);
-        altar.add(candle);
-      }
       const altarLight = new THREE.PointLight(PALETTE.gold, 32, 9, 2);
       altarLight.position.set(p.x - 0.45, 2.0, p.z);
       this.group.add(altarLight);

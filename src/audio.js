@@ -92,35 +92,117 @@ export class AudioFX {
     this._noise(1.2, 0.1, 300, 0.1);
   }
 
-  /** Low chapel drone + candle crackle; call once, loops forever. */
-  startAmbient() {
-    if (!this.ctx || this.ambientOn) return;
-    this.ambientOn = true;
+  /** Looped white-noise buffer (for sustained layers). */
+  _noiseBuffer(seconds) {
+    const len = Math.max(1, Math.floor(this.ctx.sampleRate * seconds));
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    return buf;
+  }
+
+  /** A distant voice: a short bandpass noise burst with a pitch swell — reads
+   * as a merchant's call or crowd shout across the market square. */
+  _voice(dur, vol, freq) {
+    if (!this.ctx || this.muted) return;
     const t0 = this.ctx.currentTime;
-    // drone: two detuned sines through a lowpass
-    const lp = this.ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 220;
-    lp.connect(this.master);
-    for (const f of [55, 82.4, 110]) {
+    const len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) {
+      const p = i / len;
+      const env = Math.sin(Math.PI * p) * (0.7 + 0.3 * Math.sin(Math.PI * 3 * p));
+      d[i] = (Math.random() * 2 - 1) * env;
+    }
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(freq * 0.65, t0);
+    bp.frequency.exponentialRampToValueAtTime(freq * 1.4, t0 + dur);
+    bp.Q.value = 1.7;
+    const g = this.ctx.createGain();
+    g.gain.value = vol;
+    src.connect(bp).connect(g).connect(this.master);
+    src.start(t0);
+  }
+
+  /** A soft, distant church bell — the city's heart keeps time. */
+  _bell() {
+    if (!this.ctx || this.muted) return;
+    const t0 = this.ctx.currentTime;
+    for (const [f, v] of [[220, 0.055], [277, 0.03], [330, 0.022], [440, 0.016]]) {
       const o = this.ctx.createOscillator();
       o.type = 'sine';
       o.frequency.value = f;
       const g = this.ctx.createGain();
       g.gain.setValueAtTime(0.0001, t0);
-      g.gain.linearRampToValueAtTime(0.05, t0 + 4);
-      o.connect(g).connect(lp);
+      g.gain.linearRampToValueAtTime(v, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 4.2);
+      o.connect(g).connect(this.master);
       o.start(t0);
-      this._ambientNodes = this._ambientNodes || [];
-      this._ambientNodes.push(o, g);
+      o.stop(t0 + 4.4);
     }
-    // candle crackle: sparse filtered-noise ticks
-    const crackle = () => {
-      if (!this.ambientOn) return;
-      this._noise(0.08, 0.05, 1600 + Math.random() * 1200);
-      setTimeout(crackle, 120 + Math.random() * 500);
+  }
+
+  /** Busy Byzantine street: open-air wash + crowd murmur + distant calls and a
+   * far bell. Call once, loops forever. */
+  startAmbient() {
+    if (!this.ctx || this.ambientOn) return;
+    this.ambientOn = true;
+    this._ambientNodes = [];
+    this._ambientTimers = [];
+    const push = (n) => this._ambientNodes.push(n);
+    const every = (fn, first, min, max) => {
+      const tick = () => {
+        if (!this.ambientOn) return;
+        fn();
+        this._ambientTimers.push(setTimeout(tick, min + Math.random() * (max - min)));
+      };
+      this._ambientTimers.push(setTimeout(tick, first));
     };
-    setTimeout(crackle, 800);
+    const t0 = this.ctx.currentTime;
+
+    // street air: a low filtered wash with a slow breeze
+    const air = this.ctx.createBufferSource();
+    air.buffer = this._noiseBuffer(3);
+    air.loop = true;
+    const airBP = this.ctx.createBiquadFilter();
+    airBP.type = 'bandpass';
+    airBP.frequency.value = 320;
+    airBP.Q.value = 0.35;
+    const airG = this.ctx.createGain();
+    airG.gain.setValueAtTime(0.0001, t0);
+    airG.gain.linearRampToValueAtTime(0.13, t0 + 3);
+    air.connect(airBP).connect(airG).connect(this.master);
+    air.start(t0);
+    push(air, airBP, airG);
+
+    // crowd murmur: bandpass noise breathing like a busy market square
+    const crowd = this.ctx.createBufferSource();
+    crowd.buffer = this._noiseBuffer(4);
+    crowd.loop = true;
+    const crowdBP = this.ctx.createBiquadFilter();
+    crowdBP.type = 'bandpass';
+    crowdBP.frequency.value = 620;
+    crowdBP.Q.value = 0.5;
+    const crowdG = this.ctx.createGain();
+    crowdG.gain.setValueAtTime(0.0001, t0);
+    crowdG.gain.linearRampToValueAtTime(0.05, t0 + 4);
+    crowd.connect(crowdBP).connect(crowdG).connect(this.master);
+    crowd.start(t0);
+    push(crowd, crowdBP, crowdG);
+    every(() => {
+      const now = this.ctx.currentTime;
+      crowdG.gain.cancelScheduledValues(now);
+      crowdG.gain.linearRampToValueAtTime(0.028 + Math.random() * 0.05, now + 2.2 + Math.random() * 2.8);
+    }, 3500, 4000, 8000);
+
+    // distant voices / merchant calls
+    every(() => this._voice(0.45 + Math.random() * 0.65, 0.045 + Math.random() * 0.035, 480 + Math.random() * 680), 1500, 2600, 6400);
+
+    // a far bell marks the hours
+    every(() => this._bell(), 14000, 22000, 34000);
   }
 
   stopAmbient() {
@@ -128,6 +210,10 @@ export class AudioFX {
     if (this._ambientNodes) {
       for (const n of this._ambientNodes) { try { n.stop(); } catch { /* */ } }
       this._ambientNodes = [];
+    }
+    if (this._ambientTimers) {
+      for (const t of this._ambientTimers) clearTimeout(t);
+      this._ambientTimers = [];
     }
   }
 }

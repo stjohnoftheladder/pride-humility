@@ -93,18 +93,8 @@ function buildLevelGrid() {
   add(29, 14, 'P');          // encounter 3 trigger (Demon of Pride)
   add(30, 18, 'L');          // Ladder gate (goal)
 
-  // --- candles / icons / columns ----------------------------------------------
-  const candleSpots = [
-    [3, 3], [10, 3], [16, 3], [24, 3], [30, 3],
-    [4, 6], [17, 6], [24, 6],
-    [3, 16], [10, 16], [17, 16], [22, 16], [28, 16], [30, 16],
-    [6, 9], [20, 9], [29, 13],
-    // more light so the world reads as inhabited
-    [2, 4], [11, 4], [16, 4], [25, 4], [2, 15], [12, 15],
-    [17, 5], [19, 5], [22, 5], [26, 17], [13, 17], [5, 13],
-    [8, 4], [26, 3], [30, 14], [4, 17], [21, 15], [18, 13],
-  ];
-  for (const [x, y] of candleSpots) add(x, y, 'T');
+  // --- icons / columns -----------------------------------------------------------
+  // (no candles — the street is open air in daylight)
 
   // icons (banners) in chapel + court
   add(2, 2, 'V'); add(2, 6, 'V'); add(15, 2, 'V'); add(26, 2, 'V'); add(27, 14, 'V');
