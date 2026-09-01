@@ -2,8 +2,29 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE } from './config.js';
+import { HOUSE, HAGIA, HAGIA_MINARETS, DOME_CELLS, TOWER_CELLS, roofKind } from './city.js';
 import { Materials } from './textures.js';
 import { AnimatedSprite } from './SpriteSystem.js';
+
+// Light-blue daylight gradient sky, drawn once into a canvas texture and
+// stretched over a back-side dome so the whole walk is open air.
+function makeSkyTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  const top = ctx.createLinearGradient(0, 0, 0, 256);
+  top.addColorStop(0.0, '#5d9fd6');   // zenith blue
+  top.addColorStop(0.55, '#9cc9e8');  // mid sky
+  top.addColorStop(0.82, '#cfe4f2');  // high horizon
+  top.addColorStop(1.0, '#e9f3fa');   // pale horizon
+  ctx.fillStyle = top;
+  ctx.fillRect(0, 0, 64, 256);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.magFilter = THREE.NearestFilter;
+  return tex;
+}
 
 function makeWayfindingLabel(text) {
   const canvas = document.createElement('canvas');
@@ -227,13 +248,136 @@ export class Level {
     if (this.ladderGuidance) this.ladderGuidance.visible = !!revealed;
   }
 
+  /** The nobleman's house, sitting on the wall band north of the Gate Court.
+   * Faces south so the pilgrim steps out of his door onto the street. */
+  addHouse() {
+    const g = new THREE.Group();
+    g.name = 'noble-house';
+    const { x, y, w, h } = HOUSE;
+    const cx = (x + w / 2) * CELL;
+    const cz = (y + h / 2) * CELL;
+    const depth = h * CELL;
+
+    const base = new THREE.Mesh(new THREE.BoxGeometry(w * CELL, 2.5, depth), this.mat.get('stone_wall'));
+    base.position.set(cx, 1.25, cz);
+    const upper = new THREE.Mesh(
+      new THREE.BoxGeometry(w * CELL - 0.4, 2.3, depth - 0.4),
+      this.mat.get('plaster'),
+    );
+    upper.position.set(cx, 4.15, cz);
+    const trim = new THREE.Mesh(
+      new THREE.BoxGeometry(w * CELL + 0.3, 0.3, depth + 0.3),
+      this.mat.get('gold'),
+    );
+    trim.position.set(cx, 5.35, cz);
+    const roof = new THREE.Mesh(
+      new THREE.ConeGeometry(Math.max(w, h) * CELL * 0.62, 2.4, 4),
+      this.mat.get('roof'),
+    );
+    roof.position.set(cx, 6.8, cz);
+    roof.rotation.y = Math.PI / 4;
+
+    // door + window on the south facade (toward the court)
+    const door = new THREE.Mesh(
+      new THREE.BoxGeometry(1.1, 2.2, 0.18),
+      new THREE.MeshStandardMaterial({ color: 0x2a1c10, roughness: 1 }),
+    );
+    door.position.set(cx, 1.7, cz + depth / 2 + 0.05);
+    const doorArch = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 0.3, 0.24),
+      this.mat.get('gold'),
+    );
+    doorArch.position.set(cx, 2.95, cz + depth / 2 + 0.06);
+    const winL = new THREE.Mesh(
+      new THREE.BoxGeometry(0.9, 1.1, 0.16),
+      this.mat.get('gold'),
+    );
+    winL.position.set(cx - 1.9, 3.1, cz + depth / 2 + 0.04);
+    const winR = new THREE.Mesh(
+      new THREE.BoxGeometry(0.9, 1.1, 0.16),
+      this.mat.get('gold'),
+    );
+    winR.position.set(cx + 1.9, 3.1, cz + depth / 2 + 0.04);
+
+    g.add(base, upper, trim, roof, door, doorArch, winL, winR);
+    this.group.add(g);
+    this.house = g;
+  }
+
+  /** Hagia Sophia rises on the wall band south of the Ladder chamber — the
+   * destination of the whole walk. The golden Ladder gate stands in front of
+   * it, so the pilgrim climbs with the great dome behind. */
+  addHagiaSophia() {
+    const g = new THREE.Group();
+    g.name = 'hagia-sophia-landmark';
+    const cx = (HAGIA.x + HAGIA.w / 2) * CELL; // dome centre x
+    const cz = (HAGIA.y + 0.5) * CELL;          // dome centre z
+    const plaster = this.mat.get('plaster');
+    const gold = this.mat.get('gold');
+
+    const podium = new THREE.Mesh(new THREE.BoxGeometry(10.2, 1.2, 4.6), this.mat.get('stone_wall'));
+    podium.position.set(cx, 0.6, cz);
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.5, 1.8, 20), plaster);
+    drum.position.set(cx, WALL_H + 0.9, cz);
+    const drumTrim = new THREE.Mesh(new THREE.CylinderGeometry(3.5, 3.5, 0.3, 20), gold);
+    drumTrim.position.set(cx, WALL_H + 1.7, cz);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(3.6, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), plaster);
+    dome.position.set(cx, WALL_H + 1.8, cz);
+    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.5, 0.22), gold);
+    crossV.position.set(cx, WALL_H + 5.3, cz);
+    const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.85), gold);
+    crossH.position.set(cx, WALL_H + 5.5, cz);
+
+    // flanking semi-domes
+    const semiMat = plaster;
+    for (const s of [-1, 1]) {
+      const semi = new THREE.Mesh(new THREE.SphereGeometry(1.7, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), semiMat);
+      semi.position.set(cx + s * 4.1, WALL_H + 1.0, cz);
+      g.add(semi);
+    }
+
+    // minarets at the four corners of the complex
+    for (const m of HAGIA_MINARETS) {
+      const mx = m.x * CELL;
+      const mz = m.z * CELL;
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.52, 14, 10), plaster);
+      shaft.position.set(mx, 7, mz);
+      const balcony = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.75, 0.22, 10), gold);
+      balcony.position.set(mx, 11.6, mz);
+      const cap = new THREE.Mesh(new THREE.ConeGeometry(0.62, 1.3, 10), this.mat.get('roof'));
+      cap.position.set(mx, 14.9, mz);
+      const fin = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.6, 0.1), gold);
+      fin.position.set(mx, 15.85, mz);
+      g.add(shaft, balcony, cap, fin);
+    }
+
+    // grand golden arch doorway on the north face, toward the Ladder gate
+    const archFrame = new THREE.Mesh(new THREE.BoxGeometry(5.4, 4.6, 0.35), gold);
+    archFrame.position.set(cx, 3.4, cz - 2.32);
+    const archDark = new THREE.Mesh(
+      new THREE.BoxGeometry(4.0, 3.4, 0.4),
+      new THREE.MeshStandardMaterial({ color: 0x0d0a08, roughness: 1 }),
+    );
+    archDark.position.set(cx, 3.2, cz - 2.5);
+
+    const glow = new THREE.PointLight(PALETTE.gold, 26, 16, 2);
+    glow.position.set(cx, 8, cz - 2);
+    this.group.add(glow);
+    this.trackFlicker(glow, 26);
+
+    g.add(podium, drum, drumTrim, dome, crossV, crossH, archFrame, archDark);
+    this.group.add(g);
+    this.hagiaSophia = g;
+  }
+
   build() {
     const { grid, cells } = LEVEL;
-    const wallGeo = [], colGeo = [], ceilGeo = [], woodGeo = [];
+    const wallGeo = [], plinthGeo = [], colGeo = [], woodGeo = [];
+    const corniceGeo = [], roofGeo = [], domeGeo = [], domeCrossGeo = [], towerGeo = [], towerCapGeo = [];
 
-    const court = LEVEL.rooms.court;
-    const isOpen = (x, z) =>
-      x >= court.x && x < court.x + court.w && z >= court.y && z < court.y + court.h;
+    const isHouse = (x, z) => x >= HOUSE.x && x < HOUSE.x + HOUSE.w && z >= HOUSE.y && z < HOUSE.y + HOUSE.h;
+    const inHagia = (x, z) => x >= HAGIA.x && x < HAGIA.x + HAGIA.w && z >= HAGIA.y && z < HAGIA.y + HAGIA.h;
+    const inSet = (cells, x, z) => cells.some(([a, b]) => a === x && b === z);
 
     for (let z = 0; z < MAP_H; z++) {
       for (let x = 0; x < MAP_W; x++) {
@@ -242,10 +386,47 @@ export class Level {
         const cz = (z + 0.5) * CELL;
         switch (t) {
           case '#': {
+            // Building mass: stone plinth + light plaster facade up to the roofline.
             const g = new THREE.BoxGeometry(CELL, WALL_H, CELL);
             g.translate(cx, WALL_H / 2, cz);
             wallGeo.push(g);
+            const pl = new THREE.BoxGeometry(CELL, 1.15, CELL);
+            pl.translate(cx, 0.575, cz);
+            plinthGeo.push(pl);
             this.addCollider(cx, cz, CELL, CELL);
+            if (isHouse(x, z) || inHagia(x, z)) break; // special structures are built below
+            const kind = inSet(DOME_CELLS, x, z) ? 'dome' : inSet(TOWER_CELLS, x, z) ? 'tower' : roofKind(x, z);
+            if (kind === 'dome') {
+              const drum = new THREE.CylinderGeometry(1.0, 1.0, 0.7, 10);
+              drum.translate(cx, WALL_H + 0.35, cz);
+              domeGeo.push(drum);
+              const hemis = new THREE.SphereGeometry(1.05, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+              hemis.translate(cx, WALL_H + 0.7, cz);
+              domeGeo.push(hemis);
+              const cv = new THREE.BoxGeometry(0.09, 0.52, 0.09);
+              cv.translate(cx, WALL_H + 1.55, cz);
+              domeCrossGeo.push(cv);
+              const ch = new THREE.BoxGeometry(0.09, 0.09, 0.28);
+              ch.translate(cx, WALL_H + 1.63, cz);
+              domeCrossGeo.push(ch);
+            } else if (kind === 'tower') {
+              const shaft = new THREE.BoxGeometry(CELL * 0.7, 4.2, CELL * 0.7);
+              shaft.translate(cx, WALL_H + 2.1, cz);
+              towerGeo.push(shaft);
+              const cap = new THREE.ConeGeometry(0.95, 1.1, 8);
+              cap.translate(cx, WALL_H + 4.75, cz);
+              towerCapGeo.push(cap);
+              const cv = new THREE.BoxGeometry(0.09, 0.55, 0.09);
+              cv.translate(cx, WALL_H + 5.6, cz);
+              domeCrossGeo.push(cv);
+            } else {
+              const parapet = new THREE.BoxGeometry(CELL, 1.1, CELL);
+              parapet.translate(cx, WALL_H + 0.55, cz);
+              roofGeo.push(parapet);
+              const cornice = new THREE.BoxGeometry(CELL + 0.42, 0.36, CELL + 0.42);
+              cornice.translate(cx, WALL_H + 1.18, cz);
+              corniceGeo.push(cornice);
+            }
             break;
           }
           case 'c': {
@@ -301,21 +482,21 @@ export class Level {
               g.translate(cx, 0.03, cz);
               woodGeo.push(g);
             }
-            if (!isOpen(x, z)) {
-              const g = new THREE.PlaneGeometry(CELL, CELL);
-              g.rotateX(Math.PI / 2);
-              g.translate(cx, WALL_H, cz);
-              ceilGeo.push(g);
-            }
+            // open air — no ceiling tiles anywhere; the sky dome is the roof
           }
         }
       }
     }
 
     if (wallGeo.length) {
-      const mesh = new THREE.Mesh(mergeGeometries(wallGeo), this.mat.get('stone_wall'));
+      const mesh = new THREE.Mesh(mergeGeometries(wallGeo), this.mat.get('plaster'));
       this.group.add(mesh);
       wallGeo.forEach((g) => g.dispose());
+    }
+    if (plinthGeo.length) {
+      const mesh = new THREE.Mesh(mergeGeometries(plinthGeo), this.mat.get('stone_wall'));
+      this.group.add(mesh);
+      plinthGeo.forEach((g) => g.dispose());
     }
     if (colGeo.length) {
       const mesh = new THREE.Mesh(mergeGeometries(colGeo), this.mat.get('stone_wall'));
@@ -327,13 +508,35 @@ export class Level {
       this.group.add(mesh);
       woodGeo.forEach((g) => g.dispose());
     }
-    if (ceilGeo.length) {
-      const mesh = new THREE.Mesh(
-        mergeGeometries(ceilGeo),
-        new THREE.MeshStandardMaterial({ color: 0x171008, roughness: 1 })
-      );
+    if (roofGeo.length) {
+      const mesh = new THREE.Mesh(mergeGeometries(roofGeo), this.mat.get('plaster'));
       this.group.add(mesh);
-      ceilGeo.forEach((g) => g.dispose());
+      roofGeo.forEach((g) => g.dispose());
+    }
+    if (corniceGeo.length) {
+      const mesh = new THREE.Mesh(mergeGeometries(corniceGeo), this.mat.get('gold'));
+      this.group.add(mesh);
+      corniceGeo.forEach((g) => g.dispose());
+    }
+    if (domeGeo.length) {
+      const mesh = new THREE.Mesh(mergeGeometries(domeGeo), this.mat.get('plaster'));
+      this.group.add(mesh);
+      domeGeo.forEach((g) => g.dispose());
+    }
+    if (domeCrossGeo.length) {
+      const mesh = new THREE.Mesh(mergeGeometries(domeCrossGeo), this.mat.get('gold'));
+      this.group.add(mesh);
+      domeCrossGeo.forEach((g) => g.dispose());
+    }
+    if (towerGeo.length) {
+      const mesh = new THREE.Mesh(mergeGeometries(towerGeo), this.mat.get('plaster'));
+      this.group.add(mesh);
+      towerGeo.forEach((g) => g.dispose());
+    }
+    if (towerCapGeo.length) {
+      const mesh = new THREE.Mesh(mergeGeometries(towerCapGeo), this.mat.get('roof'));
+      this.group.add(mesh);
+      towerCapGeo.forEach((g) => g.dispose());
     }
 
     // floor
@@ -346,12 +549,30 @@ export class Level {
     this.group.add(floor);
     this.mat.get('stone_floor').map.repeat.set(MAP_W, MAP_H);
 
-    // --- lights: warm candle pools + dim blue night ambient ---------------------
-    const hemi = new THREE.HemisphereLight(0x3a4a7a, 0x141008, 0.95);
+    // --- lights: daylight sun + warm sky, candles kept as street lanterns ----
+    const hemi = new THREE.HemisphereLight(0xbfd8ef, 0x8a7a5a, 1.0);
     this.group.add(hemi);
-    const moonlight = new THREE.DirectionalLight(0xcbb98a, 2.2);
-    moonlight.position.set(-20, 30, -10);
-    this.group.add(moonlight);
+    const sun = new THREE.DirectionalLight(0xfff1d6, 2.6);
+    sun.position.set(-24, 36, -14);
+    this.group.add(sun);
+
+    // --- sky dome: the open-air roof of the whole walk -----------------------
+    const sky = new THREE.Mesh(
+      new THREE.SphereGeometry(75, 24, 12),
+      new THREE.MeshBasicMaterial({
+        map: makeSkyTexture(),
+        side: THREE.BackSide,
+        fog: false,
+        depthWrite: false,
+      }),
+    );
+    sky.renderOrder = -10;
+    sky.position.set((MAP_W * CELL) / 2, 9, (MAP_H * CELL) / 2);
+    this.group.add(sky);
+    this.skyDome = sky;
+
+    this.addHouse();
+    this.addHagiaSophia();
 
     // --- decor + trigger positions ------------------------------------------------
     for (const [key, t] of cells) {

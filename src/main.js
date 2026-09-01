@@ -1,6 +1,6 @@
 // Bootstraps the pilgrimage: explore state + triggers + battle/ending flow.
 import * as THREE from 'three';
-import { PALETTE, LEVEL as LEVEL_CFG, validateLevel } from './config.js';
+import { LEVEL as LEVEL_CFG, validateLevel } from './config.js';
 import { Materials } from './textures.js';
 import { Level } from './level.js';
 import { Player } from './player.js';
@@ -72,8 +72,8 @@ async function boot() {
   renderer.toneMappingExposure = 1.3;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(PALETTE.nightSky);
-  scene.fog = new THREE.Fog(PALETTE.nightSky, 9, 40);
+  scene.background = new THREE.Color(0x9cc9e8);
+  scene.fog = new THREE.Fog(0xcfe3f2, 18, 62);
 
   const camera = new THREE.PerspectiveCamera(75, 640 / 360, 0.1, 80);
   // First-person look must yaw around the world-up axis before applying local
@@ -340,12 +340,12 @@ async function boot() {
   function update(dt, time) {
     if (state === 'explore' || state === 'paused') {
       if (state === 'explore') player.update(dt);
-      // world mood shifts with the heart
+      // world mood shifts with the heart (daylight base, cooling into dusk-red)
       const hemi = level.group.children.find((c) => c.isHemisphereLight);
       if (hemi) {
         const prideT = branch.pride / 100;
-        hemi.color.setHex(0x2a2a4a).lerp(new THREE.Color(0x451410), prideT * 0.9);
-        hemi.intensity = 0.55 - prideT * 0.16;
+        hemi.color.setHex(0xbfd8ef).lerp(new THREE.Color(0x5c2a1e), prideT * 0.55);
+        hemi.intensity = 1.0 - prideT * 0.28;
       }
       level.gateLight.intensity = 18 + (branch.grace / 100) * 20;
     }

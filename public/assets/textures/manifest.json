@@ -7,6 +7,8 @@
     "gold",
     "icon",
     "brick",
-    "wax_emissive"
+    "wax_emissive",
+    "plaster",
+    "roof"
   ]
 }

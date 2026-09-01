@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 
 const loader = new THREE.TextureLoader();
-const SETS = ['stone_wall', 'stone_floor', 'wood_floor', 'gold', 'icon', 'brick', 'wax_emissive'];
+const SETS = ['stone_wall', 'stone_floor', 'wood_floor', 'gold', 'icon', 'brick', 'wax_emissive', 'plaster', 'roof'];
 
 function loadMap(name, kind, opts = {}) {
   const tex = loader.load(`assets/textures/${name}_${kind}.png`);

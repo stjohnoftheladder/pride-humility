@@ -200,6 +200,54 @@ function waxEmissive(seed) {
   return writeSet('wax_emissive', heightFn, albedoFn, () => 0.7, () => 0);
 }
 
+function plaster(seed) {
+  // Warm Byzantine plaster facade: pale sand courses with thin brick bands
+  // (the brick-and-plaster construction of the imperial city).
+  const n = makeNoise(seed);
+  const courseH = 26;
+  const heightFn = (x, y) => {
+    const row = Math.floor(y / courseH);
+    const gy = (y - row * courseH + 1000) % courseH;
+    const brickBand = row % 4 === 2;
+    const groove = gy < 2 || gy > courseH - 2;
+    if (brickBand) return 0.5 + fbm(n, x * 0.08, y * 0.08, 3) * 0.3;
+    return groove ? 0.1 : 0.32 + fbm(n, x * 0.035, y * 0.035, 3) * 0.4;
+  };
+  const albedoFn = (x, y, h) => {
+    const row = Math.floor(y / courseH);
+    const brickBand = row % 4 === 2;
+    const v = 196 + (h - 0.4) * 44 + (fbm(n, x * 0.05, y * 0.05, 2) - 0.5) * 22;
+    if (brickBand) {
+      // thin Byzantine brick course peeking through the plaster
+      const r = 150 + h * 40, g = 96 + h * 26, b = 74 + h * 18;
+      return [clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)];
+    }
+    return [clamp(v * 1.04, 0, 255), clamp(v * 0.99, 0, 255), clamp(v * 0.88, 0, 255)];
+  };
+  return writeSet('plaster', heightFn, albedoFn, () => 0.88, () => 0);
+}
+
+function roof(seed) {
+  // Terracotta roof tiles — rounded tile rows with a warm sun-bleached edge.
+  const n = makeNoise(seed);
+  const tileW = 34;
+  const heightFn = (x, y) => {
+    const col = Math.floor(x / tileW);
+    const lx = (x - col * tileW + 1000) % tileW;
+    const hump = Math.sin((lx / tileW) * Math.PI);
+    const seam = lx < 1.5 || lx > tileW - 1.5;
+    return seam ? 0.05 : 0.35 + hump * 0.3 + fbm(n, x * 0.09, y * 0.09, 3) * 0.2;
+  };
+  const albedoFn = (x, y, h) => {
+    const v = fbm(n, x * 0.07 + 7, y * 0.07 + 7, 2);
+    const r = 176 + h * 34 + (v - 0.5) * 26;
+    const g = 108 + h * 22 + (v - 0.5) * 18;
+    const b = 74 + h * 12 + (v - 0.5) * 12;
+    return [clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)];
+  };
+  return writeSet('roof', heightFn, albedoFn, () => 0.72, () => 0);
+}
+
 const materials = [
   stoneWall(501),
   stoneFloor(502),
@@ -208,6 +256,8 @@ const materials = [
   icon(505),
   brick(506),
   waxEmissive(507),
+  plaster(508),
+  roof(509),
 ];
 fs.writeFileSync(path.join(OUT, 'manifest.json'), JSON.stringify({ size: S, materials }, null, 2));
 console.log(`Generated ${materials.length} PBR material sets -> ${path.relative(process.cwd(), OUT)}`);
