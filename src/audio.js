@@ -145,8 +145,8 @@ export class AudioFX {
     }
   }
 
-  /** Busy Byzantine street: open-air wash + crowd murmur + distant calls and a
-   * far bell. Call once, loops forever. */
+  /** Busy Byzantine street: crowd murmur + distant calls and a far bell.
+   * Call once, loops forever. */
   startAmbient() {
     if (!this.ctx || this.ambientOn) return;
     this.ambientOn = true;
@@ -162,21 +162,6 @@ export class AudioFX {
       this._ambientTimers.push(setTimeout(tick, first));
     };
     const t0 = this.ctx.currentTime;
-
-    // street air: a low filtered wash with a slow breeze
-    const air = this.ctx.createBufferSource();
-    air.buffer = this._noiseBuffer(3);
-    air.loop = true;
-    const airBP = this.ctx.createBiquadFilter();
-    airBP.type = 'bandpass';
-    airBP.frequency.value = 320;
-    airBP.Q.value = 0.35;
-    const airG = this.ctx.createGain();
-    airG.gain.setValueAtTime(0.0001, t0);
-    airG.gain.linearRampToValueAtTime(0.13, t0 + 3);
-    air.connect(airBP).connect(airG).connect(this.master);
-    air.start(t0);
-    push(air, airBP, airG);
 
     // crowd murmur: bandpass noise breathing like a busy market square
     const crowd = this.ctx.createBufferSource();
