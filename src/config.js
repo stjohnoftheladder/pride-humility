@@ -13,7 +13,9 @@ export const ACCEL = 60;
 export const FRICTION = 12;
 
 export const MAP_W = 34;
-export const MAP_H = 22;
+// The map grew south when the Port of Theodosius was added: rows 0-19 are the
+// city, row 20 is the sea wall, rows 21-25 the quay, rows 26-30 the open sea.
+export const MAP_H = 31;
 
 // Byzantine Parchment Pixel palette (from byzantine/DESIGN-HANDOFF.md)
 export const PALETTE = {
@@ -32,9 +34,31 @@ export const GRACE_MAX = 100;
 export const PLAYER_HP_MAX = 20;
 
 // ---------------------------------------------------------------------------
+// The Port of Theodosius — the harbour wing, off the bottom spine.
+//
+// Blueprint: `public/assets/design/port-theodosius-sketch.svg`, the sketch of the
+// walled harbour — the seaward wall with its crenellated towers, a quay with
+// bollards and grain cargo, lateen-rigged ships moored at the mole, and the
+// great dome rising behind the wall. The sketch is an elevation, so it is read
+// here as a plan: wall to the north, quay in front of it, sea to the south.
+//
+// The city's grain came ashore at this kind of quay (the Horrea Theodosiana
+// stood by the harbour), which is why the walk is dressed with cargo rather
+// than with an encounter — the wing carries atmosphere, not a threshold.
+export const HARBOUR = {
+  quay: { x: 2, y: 21, w: 30, h: 5 },   // walkable waterfront (grid cells)
+  wallY: 20,                            // the crenellated sea wall band
+  gateX: 14,                            // the sea gate through the wall
+  stairY0: 14,                          // the stair down from the bottom spine
+  sea: { y0: 26, y1: 30 },              // open water south of the quay
+  wrapX: 2,                             // water wraps this many cells at each end
+};
+
+// ---------------------------------------------------------------------------
 // Level builder
 const F = '.';   // stone floor
 const W = '#';   // wall
+const SEA = 'W'; // open water (not walkable, rendered as sea)
 
 function makeGrid(w, h, fill) {
   return Array.from({ length: h }, () => Array(w).fill(fill));
@@ -69,6 +93,19 @@ function buildLevelGrid() {
   carveCol(g, 20, 8, 13);          // chapel -> bottom spine
   carveRow(g, 13, 2, 31);          // bottom spine (tempter -> brother -> ladder)
   carveCol(g, 7, 7, 12);           // court -> bottom spine (left leg)
+
+  // --- the Port of Theodosius (harbour wing, south of the spine) ------------
+  // The stair drops from the bottom spine at the gap between the Tempter's
+  // chamber and the Brother's cell, pierces the sea wall at the gate, and
+  // opens onto the quay. Water fills the band beyond it and wraps both ends,
+  // so the quay reads as a mole standing out into the Marmara.
+  const { quay, wallY, gateX, stairY0, sea, wrapX } = HARBOUR;
+  carveRoom(g, quay.x, quay.y, quay.w, quay.h);
+  carveCol(g, gateX, stairY0, wallY);   // the stair + the sea gate
+  for (let j = sea.y0; j <= sea.y1; j++) for (let i = 0; i < MAP_W; i++) g[j][i] = SEA;
+  for (let j = quay.y; j < quay.y + quay.h; j++) {
+    for (let i = 0; i < wrapX; i++) { g[j][i] = SEA; g[j][MAP_W - 1 - i] = SEA; }
+  }
 
   // --- wood floors in chapel, brother's cell --------------------------------
   for (const [rx, ry, rw, rh] of [[chapel.x, chapel.y, chapel.w, chapel.h], [brother.x, brother.y, brother.w, brother.h]]) {
@@ -108,7 +145,7 @@ function buildLevelGrid() {
   add(16, 3, 'w'); add(17, 3, 'w'); add(21, 3, 'w'); add(22, 3, 'w');
   add(16, 6, 'w'); add(17, 6, 'w');
 
-  return { grid: g, cells, rooms: { court, chapel, tempter, brother, ladder } };
+  return { grid: g, cells, rooms: { court, chapel, tempter, brother, ladder, harbour: quay, seagate: { x: gateX, y: stairY0, w: 1, h: wallY - stairY0 + 1 } } };
 }
 
 export const LEVEL = buildLevelGrid();

@@ -4,6 +4,15 @@ export class AudioFX {
     this.ctx = null;
     this.master = null;
     this.muted = false;
+    this.ambientOn = false;
+    this._ambientNodes = [];
+    this._ambientTimers = [];
+    this._harbourOn = false;
+    this._harbourWant = false;
+    this._harbourGain = null;
+    this._harbourNodes = [];
+    this._harbourTimers = [];
+    this._gullsScheduled = false;
   }
 
   ensure() {
@@ -145,6 +154,87 @@ export class AudioFX {
     }
   }
 
+  // ---- harbour layer (the Port of Theodosius) ------------------------------
+  /** Lazy-built surf bed + occasional gull, gated by one harbour gain so the
+   * sea fades in over the street ambience without touching the other nodes. */
+  _ensureHarbour() {
+    if (this._harbourGain || !this.ctx) return;
+    const t0 = this.ctx.currentTime;
+    const g = this.ctx.createGain();
+    g.gain.value = 0.0001;
+    g.connect(this.master);
+    this._harbourGain = g;
+
+    const surf = this.ctx.createBufferSource();
+    surf.buffer = this._noiseBuffer(4);
+    surf.loop = true;
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 430;
+    lp.Q.value = 0.7;
+    surf.connect(lp).connect(g);
+    surf.start(t0);
+
+    // slow swell: the surf breathes instead of hissing steadily
+    const lfo = this.ctx.createOscillator();
+    lfo.frequency.value = 0.07;
+    const lfoGain = this.ctx.createGain();
+    lfoGain.gain.value = 210;
+    lfo.connect(lfoGain).connect(lp.frequency);
+    lfo.start(t0);
+
+    this._harbourNodes.push(surf, lp, g, lfo, lfoGain);
+  }
+
+  /** A gull's two-note mew, falling twice. Routed through the harbour gain. */
+  _gull() {
+    if (!this.ctx || this.muted || !this._harbourGain) return;
+    const t0 = this.ctx.currentTime;
+    const mew = (f0, f1, dur, vol, when) => {
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f0, t0 + when);
+      o.frequency.exponentialRampToValueAtTime(f1, t0 + when + dur);
+      g.gain.setValueAtTime(0.0001, t0 + when);
+      g.gain.exponentialRampToValueAtTime(vol, t0 + when + dur * 0.3);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + when + dur);
+      o.connect(g).connect(this._harbourGain);
+      o.start(t0 + when);
+      o.stop(t0 + when + dur + 0.02);
+    };
+    mew(1500, 950, 0.22, 0.5, 0);
+    mew(1250, 800, 0.26, 0.4, 0.22);
+  }
+
+  _scheduleGulls() {
+    if (this._gullsScheduled) return;   // one live chain per visit
+    this._gullsScheduled = true;
+    const tick = () => {
+      if (!this._harbourOn || !this.ambientOn) { this._gullsScheduled = false; return; }
+      this._gull();
+      this._harbourTimers.push(setTimeout(tick, 9000 + Math.random() * 16000));
+    };
+    this._harbourTimers.push(setTimeout(tick, 3000 + Math.random() * 6000));
+  }
+
+  /** Crossfade the sea over the street as the pilgrim enters/leaves the port.
+   * Safe to call every frame: it remembers the wanted state and applies it as
+   * soon as the ambient bed exists. */
+  setHarbour(on) {
+    this._harbourWant = !!on;
+    if (!this.ctx || !this.ambientOn) return;
+    this._ensureHarbour();
+    if (this._harbourWant === this._harbourOn) return;
+    this._harbourOn = this._harbourWant;
+    const t = this.ctx.currentTime;
+    const gain = this._harbourGain.gain;
+    gain.cancelScheduledValues(t);
+    gain.setValueAtTime(gain.value, t);
+    gain.linearRampToValueAtTime(this._harbourOn ? 0.13 : 0.0001, t + 2.2);
+    if (this._harbourOn) this._scheduleGulls();
+  }
+
   /** Busy Byzantine street: crowd murmur + distant calls and a far bell.
    * Call once, loops forever. */
   startAmbient() {
@@ -200,5 +290,17 @@ export class AudioFX {
       for (const t of this._ambientTimers) clearTimeout(t);
       this._ambientTimers = [];
     }
+    this._harbourOn = false;
+    this._harbourWant = false;
+    this._gullsScheduled = false;
+    if (this._harbourTimers) {
+      for (const t of this._harbourTimers) clearTimeout(t);
+      this._harbourTimers = [];
+    }
+    if (this._harbourNodes) {
+      for (const n of this._harbourNodes) { try { n.stop(); } catch { /* */ } }
+      this._harbourNodes = [];
+    }
+    this._harbourGain = null;
   }
 }

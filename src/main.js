@@ -328,12 +328,14 @@ async function boot() {
   }
 
   function roomLabel() {
-    const { court, chapel, tempter, brother, ladder } = LEVEL_CFG.rooms;
+    const { court, chapel, tempter, brother, ladder, harbour, seagate } = LEVEL_CFG.rooms;
     if (isInRoom(court)) return 'The Gate Court';
     if (isInRoom(chapel)) return 'The Chapel';
     if (isInRoom(tempter)) return 'The Tempter\u2019s Chamber';
     if (isInRoom(brother)) return 'The Brother\u2019s Cell';
     if (isInRoom(ladder)) return 'The Ladder Chamber';
+    if (isInRoom(harbour)) return 'The Port of Theodosius';
+    if (isInRoom(seagate)) return 'The Sea Gate';
     return 'The Pilgrim Way';
   }
 
@@ -366,6 +368,9 @@ async function boot() {
       }
       elderCooldown = Math.max(0, elderCooldown - dt);
       confessCooldown = Math.max(0, confessCooldown - dt);
+
+      // the harbour fades its surf over the street ambience
+      audio.setHarbour(isInRoom(LEVEL_CFG.rooms.harbour));
 
       const label = roomLabel();
       if (label !== hud.el.room.textContent) hud.setRoom(label);

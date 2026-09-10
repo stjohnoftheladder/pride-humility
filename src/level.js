@@ -1,7 +1,7 @@
 // Pilgrimage level construction: geometry, collision, candle lights, triggers.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE } from './config.js';
+import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOUR } from './config.js';
 import { HOUSE, HAGIA, HAGIA_MINARETS, DOME_CELLS, TOWER_CELLS, roofKind } from './city.js';
 import { Materials } from './textures.js';
 import { AnimatedSprite } from './SpriteSystem.js';
@@ -328,11 +328,11 @@ export class Level {
     const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 0.85), gold);
     crossH.position.set(cx, WALL_H + 5.5, cz);
 
-    // flanking semi-domes
+    // flanking semi-domes, resting on the band the drum stands on
     const semiMat = plaster;
     for (const s of [-1, 1]) {
       const semi = new THREE.Mesh(new THREE.SphereGeometry(1.7, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), semiMat);
-      semi.position.set(cx + s * 4.1, WALL_H + 1.0, cz);
+      semi.position.set(cx + s * 4.1, WALL_H, cz);
       g.add(semi);
     }
 
@@ -370,6 +370,285 @@ export class Level {
     this.hagiaSophia = g;
   }
 
+  // -------------------------------------------------------------------------
+  // The Port of Theodosius — built from the friend's sketch
+  // (`public/assets/design/port-theodosius-sketch.svg`), which is an elevation of the walled
+  // harbour read here as a plan: sea wall + towers to the north, a quay in
+  // front of it, lateen-rigged ships at the mole, and open sea to the south.
+
+  /** Daylight Marmara water, drawn as the sketch draws its sea: dark blue
+   * with rows of thin horizontal streak lines. */
+  makeSeaTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#22445a';
+    ctx.fillRect(0, 0, 128, 128);
+    for (let y = 6; y < 128; y += 9) {
+      const a = 0.05 + ((y % 27) / 27) * 0.12;
+      ctx.strokeStyle = `rgba(206, 226, 238, ${a.toFixed(3)})`;
+      ctx.lineWidth = 1 + (y % 3);
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(128, y + ((y / 7) % 3) - 1);
+      ctx.stroke();
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    return tex;
+  }
+
+  /** Open water south of the quay, wrapping both of its ends. */
+  addSea() {
+    const { quay, sea, wrapX } = HARBOUR;
+    this.seaTextures = [];
+    const plane = (x0, y0, x1, y1, repeatX, repeatY) => {
+      const g = new THREE.PlaneGeometry((x1 - x0) * CELL, (y1 - y0) * CELL);
+      g.rotateX(-Math.PI / 2);
+      g.translate(((x0 + x1) / 2) * CELL, 0.05, ((y0 + y1) / 2) * CELL);
+      const tex = this.makeSeaTexture();
+      tex.repeat.set(repeatX, repeatY);
+      const m = new THREE.Mesh(
+        g,
+        new THREE.MeshStandardMaterial({ map: tex, roughness: 0.34, metalness: 0.12, color: 0xffffff }),
+      );
+      m.name = 'port-sea';
+      this.group.add(m);
+      this.seaTextures.push(tex);
+    };
+    plane(0, sea.y0, MAP_W, sea.y1 + 1, MAP_W * 0.75, 5);          // the open sea
+    plane(0, quay.y, wrapX, quay.y + quay.h, 1.5, 2);              // west wrap
+    plane(MAP_W - wrapX, quay.y, MAP_W, quay.y + quay.h, 1.5, 2);  // east wrap
+
+    // The water blocks the pilgrim like a low wall (three boxes, one per plane).
+    this.addCollider((MAP_W / 2) * CELL, ((sea.y0 + sea.y1 + 1) / 2) * CELL, MAP_W * CELL, (sea.y1 - sea.y0 + 1) * CELL, 1.2);
+    this.addCollider((wrapX / 2) * CELL, ((quay.y + quay.y + quay.h) / 2) * CELL, wrapX * CELL, quay.h * CELL, 1.2);
+    this.addCollider((MAP_W - wrapX / 2) * CELL, ((quay.y + quay.y + quay.h) / 2) * CELL, wrapX * CELL, quay.h * CELL, 1.2);
+  }
+
+  /** The seaward wall of the city: a crenellated parapet with square towers,
+   * pierced by the sea gate. Mirrors the sketch's wall band and its gold rule. */
+  addSeaWall() {
+    const z = (HARBOUR.wallY + 0.5) * CELL;
+    const wallGeo = [], trimGeo = [], merlonGeo = [];
+    for (let x = 0; x < MAP_W; x++) {
+      if (x === HARBOUR.gateX) continue;   // the sea gate
+      const cx = (x + 0.5) * CELL;
+      const wall = new THREE.BoxGeometry(CELL, 5.2, CELL);
+      wall.translate(cx, 2.6, z);
+      wallGeo.push(wall);
+      const trim = new THREE.BoxGeometry(CELL + 0.12, 0.28, CELL + 0.12);
+      trim.translate(cx, 5.08, z);
+      trimGeo.push(trim);
+      for (let m = -1; m <= 1; m++) {
+        const merlon = new THREE.BoxGeometry(0.62, 0.8, 0.62);
+        merlon.translate(cx + m * 0.95, 5.66, z - CELL * 0.22);
+        merlonGeo.push(merlon);
+      }
+    }
+    const wall = new THREE.Mesh(mergeGeometries(wallGeo), this.mat.get('plaster'));
+    const trim = new THREE.Mesh(mergeGeometries(trimGeo), this.mat.get('gold'));
+    const merlons = new THREE.Mesh(mergeGeometries(merlonGeo), this.mat.get('plaster'));
+    wall.name = 'sea-wall'; trim.name = 'sea-wall-trim'; merlons.name = 'sea-wall-merlons';
+    this.group.add(wall, trim, merlons);
+    wallGeo.forEach((g) => g.dispose());
+    trimGeo.forEach((g) => g.dispose());
+    merlonGeo.forEach((g) => g.dispose());
+
+    // Square crenellated towers: at the wall ends, at intervals, and flanking
+    // the sea gate (the sketch's tower pairs around its wall openings).
+    const gateX = (HARBOUR.gateX + 0.5) * CELL;
+    const towers = [1.5, 10.5, 31.5, 55.5, 76.5, 100.5, gateX - 4.0, gateX + 4.0];
+    const towerGeo = [], towerTrimGeo = [], towerMerlonGeo = [];
+    for (const tx of towers) {
+      const b = new THREE.BoxGeometry(2.7, 9.4, 2.7);
+      b.translate(tx, 4.7, z);
+      towerGeo.push(b);
+      const t = new THREE.BoxGeometry(3.0, 0.32, 3.0);
+      t.translate(tx, 9.52, z);
+      towerTrimGeo.push(t);
+      for (const [mx, mz] of [[-0.92, -0.92], [0.92, -0.92], [-0.92, 0.92], [0.92, 0.92]]) {
+        const m = new THREE.BoxGeometry(0.6, 0.75, 0.6);
+        m.translate(tx + mx, 10.05, z + mz);
+        towerMerlonGeo.push(m);
+      }
+    }
+    const towersMesh = new THREE.Mesh(mergeGeometries(towerGeo), this.mat.get('plaster'));
+    const towersTrim = new THREE.Mesh(mergeGeometries(towerTrimGeo), this.mat.get('gold'));
+    const towersMerlons = new THREE.Mesh(mergeGeometries(towerMerlonGeo), this.mat.get('plaster'));
+    towersMesh.name = 'sea-wall-towers';
+    this.group.add(towersMesh, towersTrim, towersMerlons);
+    towerGeo.forEach((g) => g.dispose());
+    towerTrimGeo.forEach((g) => g.dispose());
+    towerMerlonGeo.forEach((g) => g.dispose());
+  }
+
+  /** A moored lateen-rigged ship from the sketch: hull, prow, mast, yard and a
+   * single triangular sail, tied to the quay. */
+  addShip(parent, x, z) {
+    const ship = new THREE.Group();
+    ship.name = 'harbour-ship';
+    const wood = this.mat.get('wood_floor');
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.95, 1.5), wood);
+    hull.position.set(x, 0.5, z);
+    const prow = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.05, 1.35), wood);
+    prow.position.set(x - 2.15, 0.55, z);
+    prow.rotation.z = 0.35;
+    const stern = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.05, 1.35), wood);
+    stern.position.set(x + 2.15, 0.55, z);
+    stern.rotation.z = -0.35;
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 3.4, 6), wood);
+    mast.position.set(x, 2.5, z);
+    const yard = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.07, 0.07), wood);
+    yard.position.set(x, 4.1, z);
+    const sailShape = new THREE.Shape();
+    sailShape.moveTo(0, 0);
+    sailShape.lineTo(2.7, 0);
+    sailShape.lineTo(1.0, 2.1);
+    sailShape.closePath();
+    const sail = new THREE.Mesh(
+      new THREE.ShapeGeometry(sailShape),
+      new THREE.MeshStandardMaterial({ color: 0xd9cba4, roughness: 1, side: THREE.DoubleSide }),
+    );
+    sail.position.set(x - 0.5, 1.9, z + 0.06);
+    sail.rotation.y = -0.12;
+    const rope = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 0.05, 0.05),
+      new THREE.MeshBasicMaterial({ color: 0x3a2c1c }),
+    );
+    rope.position.set(x - 0.6, 1.0, z - 1.0);
+    rope.rotation.x = 0.5;
+    ship.add(hull, prow, stern, mast, yard, sail, rope);
+    parent.add(ship);
+  }
+
+  /** Quay props: curb, bollards, the two ornamented columns, grain cargo, the
+   * Horrea storehouses against the wall, moored ships, and a wayfinding label
+   * at the sea gate. Atmosphere only — no threshold lives here. */
+  addHarbourProps() {
+    const { quay, gateX } = HARBOUR;
+    const qx0 = quay.x * CELL, qx1 = (quay.x + quay.w) * CELL;   // 6 .. 96
+    const qz0 = quay.y * CELL, qz1 = (quay.y + quay.h) * CELL;   // 63 .. 78
+    const g = new THREE.Group();
+    g.name = 'port-of-theodosius';
+    const stone = this.mat.get('stone_wall');
+    const wood = this.mat.get('wood_floor');
+    const gold = this.mat.get('gold');
+
+    // --- quay curb: a low stone rim where the quay meets the water ------------
+    const curbGeo = [];
+    const curb = (cx, cz, w, d) => {
+      const b = new THREE.BoxGeometry(w, 0.55, d);
+      b.translate(cx, 0.27, cz);
+      curbGeo.push(b);
+    };
+    curb((qx0 + qx1) / 2, qz1 - 0.3, qx1 - qx0, 0.7);
+    curb(qx0 + 0.3, (qz0 + qz1) / 2, 0.7, qz1 - qz0);
+    curb(qx1 - 0.3, (qz0 + qz1) / 2, 0.7, qz1 - qz0);
+    g.add(new THREE.Mesh(mergeGeometries(curbGeo), stone));
+    curbGeo.forEach((b) => b.dispose());
+
+    // --- mooring bollards along the south edge --------------------------------
+    const bollardGeo = [];
+    for (let bx = 12; bx <= 90; bx += 6) {
+      const b = new THREE.CylinderGeometry(0.14, 0.2, 0.85, 8);
+      b.translate(bx, 0.42, qz1 - 1.15);
+      bollardGeo.push(b);
+      const c = new THREE.SphereGeometry(0.2, 8, 6);
+      c.translate(bx, 0.92, qz1 - 1.15);
+      bollardGeo.push(c);
+    }
+    g.add(new THREE.Mesh(mergeGeometries(bollardGeo), stone));
+    bollardGeo.forEach((b) => b.dispose());
+
+    // --- the two ornamented columns from the sketch's twin pilasters ----------
+    for (const colX of [qx0 + 21, qx1 - 21]) {
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.62, 0.5, 10), stone);
+      base.position.set(colX, 0.25, (qz0 + qz1) / 2);
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.34, 5.6, 10), stone);
+      shaft.position.set(colX, 3.05, (qz0 + qz1) / 2);
+      const capital = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.34, 0.42, 10), gold);
+      capital.position.set(colX, 6.0, (qz0 + qz1) / 2);
+      g.add(base, shaft, capital);
+      this.addCollider(colX, (qz0 + qz1) / 2, 0.9, 0.9, 6.2);
+    }
+
+    // --- grain storehouses (the Horrea Theodosiana) against the sea wall -------
+    const gateXw = (gateX + 0.5) * CELL;
+    for (const [cx, len] of [[21, 20], [69, 20]]) {
+      const store = new THREE.Mesh(new THREE.BoxGeometry(len, 3.4, 2.6), this.mat.get('plaster'));
+      store.position.set(cx, 1.7, qz0 + 1.35);
+      const roofTrim = new THREE.Mesh(new THREE.BoxGeometry(len + 0.5, 0.3, 3.0), gold);
+      roofTrim.position.set(cx, 3.5, qz0 + 1.35);
+      g.add(store, roofTrim);
+      for (let dx = -len / 2 + 2.5; dx <= len / 2 - 2.5; dx += 4) {
+        const arch = new THREE.Mesh(
+          new THREE.BoxGeometry(1.5, 2.1, 0.2),
+          new THREE.MeshStandardMaterial({ color: 0x0d0a08, roughness: 1 }),
+        );
+        arch.position.set(cx + dx, 1.2, qz0 + 1.35 + 1.31);
+        g.add(arch);
+      }
+      this.addCollider(cx, qz0 + 1.35, len, 2.6, 3.6);
+    }
+
+    // --- grain cargo: crates and amphorae on the quay --------------------------
+    const cargoSpots = [
+      [18, qz0 + 4.6, 0], [26, qz0 + 3.6, 1], [52, qz0 + 4.8, 2], [64, qz0 + 3.8, 0], [84, qz0 + 4.6, 1],
+    ];
+    for (const [cx, cz, n] of cargoSpots) {
+      const cluster = new THREE.Group();
+      const crate = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.05, 1.05), wood);
+      crate.position.set(cx, 0.55, cz);
+      cluster.add(crate);
+      if (n >= 1) {
+        const crate2 = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.7, 0.8), wood);
+        crate2.position.set(cx + 1.15, 0.35, cz + 0.1);
+        cluster.add(crate2);
+      }
+      for (let i = 0; i < 3; i++) {
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.28, 0.72, 8), stone);
+        body.position.set(cx - 1.0 + i * 0.5, 0.38, cz + 1.3);
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 0.3, 8), stone);
+        neck.position.set(cx - 1.0 + i * 0.5, 0.88, cz + 1.3);
+        cluster.add(body, neck);
+      }
+      g.add(cluster);
+      this.addCollider(cx, cz, 3.0, 2.2, 1.4);
+    }
+
+    // --- the two moored ships (the sketch's lateen-rigged pair) ---------------
+    for (const sx of [qx0 + 28, qx1 - 28]) this.addShip(g, sx, qz1 + 2.2);
+
+    // --- the port announces itself from the spine stair ------------------------
+    const label = makeWayfindingLabel('THE PORT ↓');
+    label.name = 'port-label';
+    label.material.depthTest = true;
+    label.position.set(gateXw, 4.4, (HARBOUR.stairY0 + 0.5) * CELL);
+    this.group.add(label);
+
+    this.group.add(g);
+    this.harbour = g;
+  }
+
+  /** Assemble the whole wing: sea, sea wall, and quay. */
+  addHarbour() {
+    this.addSea();
+    this.addSeaWall();
+    this.addHarbourProps();
+    // The afternoon sun comes from the north, so the sea wall's quay-facing
+    // side would sit in deep shade; a warm fill hanging over the quay lifts it
+    // without re-lighting the rest of the street (point light, short reach).
+    const fill = new THREE.PointLight(0xffe3bd, 55, 26, 2);
+    fill.name = 'harbour-fill';
+    fill.position.set((MAP_W / 2) * CELL, 8, (HARBOUR.quay.y + HARBOUR.quay.h / 2) * CELL);
+    this.group.add(fill);
+  }
+
   build() {
     const { grid, cells } = LEVEL;
     const wallGeo = [], colGeo = [], woodGeo = [];
@@ -387,14 +666,21 @@ export class Level {
         switch (t) {
           case '#': {
             this.addCollider(cx, cz, CELL, CELL);
-            // The house and Hagia Sophia cover their own cells — no wall mass
-            // underneath them (the house mesh is solid; the dome sits on the
-            // band), which also avoids coplanar faces z-fighting at their bases.
-            if (isHouse(x, z) || inHagia(x, z)) break;
+            // The nobleman's house covers its own cells — its mesh is solid to
+            // the ground, so it needs no wall mass underneath.
+            if (isHouse(x, z)) break;
+            // The sea wall band is built by addHarbour() as a crenellated
+            // parapet (not a roofed building), but it still collides like any
+            // wall cell — the collider above stays.
+            if (z === HARBOUR.wallY) break;
             // Building mass: light plaster facade up to the roofline.
             const g = new THREE.BoxGeometry(CELL, WALL_H, CELL);
             g.translate(cx, WALL_H / 2, cz);
             wallGeo.push(g);
+            // The band the dome stands on is solid but unroofed: skipping this
+            // mass left the drum floating over a see-through void, which the
+            // lowered sea wall then exposed from the harbour.
+            if (inHagia(x, z)) break;
             const kind = inSet(DOME_CELLS, x, z) ? 'dome' : inSet(TOWER_CELLS, x, z) ? 'tower' : roofKind(x, z);
             if (kind === 'dome') {
               const drum = new THREE.CylinderGeometry(1.0, 1.0, 0.7, 10);
@@ -568,6 +854,7 @@ export class Level {
 
     this.addHouse();
     this.addHagiaSophia();
+    this.addHarbour();
 
     // --- decor + trigger positions ------------------------------------------------
     for (const [key, t] of cells) {
@@ -694,6 +981,13 @@ export class Level {
 
   /** Flicker candle lights + face world billboards toward the camera every frame. */
   update(dt, time, camera) {
+    // the harbour sea drifts slowly, like the sketch's ruled water breathing
+    if (this.seaTextures) {
+      for (const tex of this.seaTextures) {
+        tex.offset.x = (tex.offset.x + dt * 0.006) % 1;
+        tex.offset.y = (tex.offset.y + dt * 0.003) % 1;
+      }
+    }
     for (let i = 0; i < this.candleLights.length; i++) {
       const l = this.candleLights[i];
       const base = l.userData.flickerBase ?? 20;
