@@ -1,12 +1,20 @@
-name: CI — tests
+name: CI
 
+# One pipeline, two jobs: the suite runs first, and the deploy cannot start
+# until it passes (`needs: test`). This is deliberate — a red suite must not be
+# able to reach production, which the previous split (ci.yml + deploy.yml, both
+# firing independently on a push to main) allowed.
 on:
   push:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,3 +27,27 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run the Playwright suite (both journeys, endings, input, bullets)
         run: npm test
+
+  deploy:
+    name: Deploy to Cloudflare Pages
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Serialise production deploys; queue rather than cancel so an older commit
+    # can never land on top of a newer one.
+    concurrency:
+      group: deploy-main
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler pages deploy dist --project-name pride-humility --branch main

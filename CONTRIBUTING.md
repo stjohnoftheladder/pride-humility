@@ -2,7 +2,9 @@
 
 Thanks for helping! This is a small two-person project (design + development).
 The whole loop is: **clone → change → push**, and CI tests every push; a push
-to `main` also auto-deploys the game to https://pride-humility.pages.dev.
+to `main` also auto-deploys the game to https://pride-humility.pages.dev — but
+only if the test suite passes first (the deploy job waits on the tests, so a
+red build can never reach the live site).
 
 ## For Corey (art)
 
