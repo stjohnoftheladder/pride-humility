@@ -597,9 +597,16 @@ export class Level {
     }
 
     // --- grain storehouses (the Horrea Theodosiana) against the sea wall -------
+    // They line the wall frontage in the spans either side of the sea gate, so
+    // no placement can leave one standing across the mouth of the stair (the
+    // player collides with every collider regardless of its height).
     const gateXw = (gateX + 0.5) * CELL;
-    const len = Math.min(20, qw * 0.222);   // shorter storehouses on a narrow quay
-    for (const cx of [fx(0.18), fx(0.71)]) {
+    const gateCell0 = gateX * CELL, gateCell1 = (gateX + 1) * CELL;
+    for (const [frontage0, frontage1] of [[qx0, gateCell0], [gateCell1, qx1]]) {
+      const across = frontage1 - frontage0;
+      if (across < 8) continue;                 // no room for a storehouse on this side
+      const len = Math.min(20, across * 0.72);  // shorter storehouses on a narrow quay
+      const cx = (frontage0 + frontage1) / 2;
       const store = new THREE.Mesh(new THREE.BoxGeometry(len, 3.4, 2.6), this.mat.get('plaster'));
       store.position.set(cx, 1.7, qz0 + 1.35);
       const roofTrim = new THREE.Mesh(new THREE.BoxGeometry(len + 0.5, 0.3, 3.0), gold);
