@@ -139,8 +139,11 @@ async function runJourney(browser, mode) {
     // confession x2: restoration repeats, grace does not become farmable
     await page.evaluate(async () => {
       const g = window.__game;
+      // Read the altar's cell off the level itself: the map can be re-laid out
+      // without the tests pinning the old world coordinates.
+      const altar = g.triggers().A;
       for (let i = 0; i < 2; i++) {
-        g.teleport(76.5, 13.5);
+        g.teleport(altar.x, altar.z);
         await new Promise((r) => setTimeout(r, 350));
         g.key('KeyE');
         document.getElementById('confess-btn').click();
@@ -155,7 +158,10 @@ async function runJourney(browser, mode) {
       const r = await spareBattle(page, id === 'pride' ? 2 : 1, id === 'pride' ? 0 : 1);
       log[id] = r?.outcome;
     }
-    await page.evaluate(() => window.__game.teleport(91.5, 55.5));
+    await page.evaluate(() => {
+      const g = window.__game, gate = g.triggers().L;   // the Ladder gate cell
+      g.teleport(gate.x, gate.z);
+    });
     await sleep(900);
     log.endingTitle = await page.evaluate(() => document.getElementById('ending-title').textContent);
     log.final = await page.evaluate(() => {
@@ -169,7 +175,10 @@ async function runJourney(browser, mode) {
       await doIntro(page);
       log[id] = (await fightToKill(page)).r?.outcome;
     }
-    await page.evaluate(() => window.__game.teleport(91.5, 55.5));
+    await page.evaluate(() => {
+      const g = window.__game, gate = g.triggers().L;   // the Ladder gate cell
+      g.teleport(gate.x, gate.z);
+    });
     await sleep(900);
     log.endingTitle = await page.evaluate(() => document.getElementById('ending-title').textContent);
     log.final = await page.evaluate(() => {
@@ -278,7 +287,8 @@ async function runInteractionRegressions(browser) {
 
   const intentionalConfession = await page.evaluate(async () => {
     const g = window.__game;
-    g.teleport(74.4, 13.5);
+    const altar = g.triggers().A;
+    g.teleport(altar.x - 2.1, altar.z);   // standing beside the altar, not on it
     await new Promise((r) => setTimeout(r, 220));
     const before = g.state();
     g.key('KeyE');
@@ -296,8 +306,9 @@ async function runInteractionRegressions(browser) {
 
   const confession = await page.evaluate(async () => {
     const g = window.__game;
+    const altar = g.triggers().A;
     for (let i = 0; i < 2; i++) {
-      g.teleport(76.5, 13.5);
+      g.teleport(altar.x, altar.z);
       await new Promise((r) => setTimeout(r, 350));
       g.key('KeyE');
       document.getElementById('confess-btn').click();
