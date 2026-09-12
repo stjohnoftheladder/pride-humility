@@ -624,10 +624,15 @@ export class Level {
     }
 
     // --- grain cargo: crates and amphorae on the quay --------------------------
-    const cargoSpots = [
-      [fx(0.13), qz0 + 4.6, 0], [fx(0.30), qz0 + 3.6, 1], [fx(0.50), qz0 + 4.8, 2],
-      [fx(0.68), qz0 + 3.8, 0], [fx(0.87), qz0 + 4.6, 1],
-    ];
+    // One cluster per ~18 world units of quay, as the wing was originally
+    // dressed, so a narrow quay is not packed with the same five clusters as a
+    // wide one (that crowding was sealing single cells off between props).
+    const cargoCount = Math.max(2, Math.min(5, Math.round(qw / 18)));
+    const cargoSpots = Array.from({ length: cargoCount }, (_, i) => [
+      fx((i + 1) / (cargoCount + 1)),
+      qz0 + (i % 2 ? 3.6 : 4.7),
+      i % 3,
+    ]);
     for (const [cx, cz, n] of cargoSpots) {
       const cluster = new THREE.Group();
       const crate = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.05, 1.05), wood);
