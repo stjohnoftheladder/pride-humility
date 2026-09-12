@@ -402,9 +402,9 @@ export class Level {
     return tex;
   }
 
-  /** Open water south of the quay, wrapping both of its ends. */
+  /** Open water beyond the quay, wrapping whichever of its ends are open. */
   addSea() {
-    const { quay, sea, wrapX } = HARBOUR;
+    const { quay, sea, wrap } = HARBOUR;
     this.seaTextures = [];
     const plane = (x0, y0, x1, y1, repeatX, repeatY) => {
       const g = new THREE.PlaneGeometry((x1 - x0) * CELL, (y1 - y0) * CELL);
@@ -420,22 +420,24 @@ export class Level {
       this.group.add(m);
       this.seaTextures.push(tex);
     };
-    plane(0, sea.y0, MAP_W, sea.y1 + 1, MAP_W * 0.75, 5);          // the open sea
-    plane(0, quay.y, wrapX, quay.y + quay.h, 1.5, 2);              // west wrap
-    plane(MAP_W - wrapX, quay.y, MAP_W, quay.y + quay.h, 1.5, 2);  // east wrap
+    const width = sea.x1 - sea.x0 + 1;
+    plane(sea.x0, sea.y0, sea.x1 + 1, sea.y1 + 1, width * 0.75, 5);   // the open sea
+    if (wrap.west > 0) plane(0, quay.y, wrap.west, quay.y + quay.h, 1.5, 2);
+    if (wrap.east > 0) plane(MAP_W - wrap.east, quay.y, MAP_W, quay.y + quay.h, 1.5, 2);
 
-    // The water blocks the pilgrim like a low wall (three boxes, one per plane).
-    this.addCollider((MAP_W / 2) * CELL, ((sea.y0 + sea.y1 + 1) / 2) * CELL, MAP_W * CELL, (sea.y1 - sea.y0 + 1) * CELL, 1.2);
-    this.addCollider((wrapX / 2) * CELL, ((quay.y + quay.y + quay.h) / 2) * CELL, wrapX * CELL, quay.h * CELL, 1.2);
-    this.addCollider((MAP_W - wrapX / 2) * CELL, ((quay.y + quay.y + quay.h) / 2) * CELL, wrapX * CELL, quay.h * CELL, 1.2);
+    // The water blocks the pilgrim like a low wall (one box per plane).
+    this.addCollider(((sea.x0 + sea.x1 + 1) / 2) * CELL, ((sea.y0 + sea.y1 + 1) / 2) * CELL, width * CELL, (sea.y1 - sea.y0 + 1) * CELL, 1.2);
+    const wrapBox = (cells, cx) => this.addCollider(cx * CELL, ((quay.y + quay.y + quay.h) / 2) * CELL, cells * CELL, quay.h * CELL, 1.2);
+    if (wrap.west > 0) wrapBox(wrap.west, wrap.west / 2);
+    if (wrap.east > 0) wrapBox(wrap.east, MAP_W - wrap.east / 2);
   }
 
   /** The seaward wall of the city: a crenellated parapet with square towers,
    * pierced by the sea gate. Mirrors the sketch's wall band and its gold rule. */
   addSeaWall() {
-    const z = (HARBOUR.wallY + 0.5) * CELL;
+    const z = (HARBOUR.wall.y + 0.5) * CELL;
     const wallGeo = [], trimGeo = [], merlonGeo = [];
-    for (let x = 0; x < MAP_W; x++) {
+    for (let x = HARBOUR.wall.x0; x <= HARBOUR.wall.x1; x++) {
       if (x === HARBOUR.gateX) continue;   // the sea gate
       const cx = (x + 0.5) * CELL;
       const wall = new THREE.BoxGeometry(CELL, 5.2, CELL);
@@ -459,12 +461,23 @@ export class Level {
     trimGeo.forEach((g) => g.dispose());
     merlonGeo.forEach((g) => g.dispose());
 
-    // Square crenellated towers: at the wall ends, at intervals, and flanking
-    // the sea gate (the sketch's tower pairs around its wall openings).
+    // Square crenellated towers: at the wall ends, at intervals along it, and
+    // flanking the sea gate (the sketch's tower pairs around its wall openings).
+    // Derived from the wall band rather than listed, so a narrower harbour gets
+    // its own spacing instead of towers left standing out in the city.
     const gateX = (HARBOUR.gateX + 0.5) * CELL;
-    const towers = [1.5, 10.5, 31.5, 55.5, 76.5, 100.5, gateX - 4.0, gateX + 4.0];
+    const x0 = HARBOUR.wall.x0 * CELL, x1 = (HARBOUR.wall.x1 + 1) * CELL, span = x1 - x0;
+    const towers = [x0 + 1.5, x1 - 1.5, gateX - 4.0, gateX + 4.0];
+    const steps = Math.max(0, Math.round(span / 24) - 1);
+    for (let i = 1; i <= steps; i++) towers.push(x0 + (span * i) / (steps + 1));
+    const placed = [];
+    for (const tx of towers.sort((a, b) => a - b)) {
+      if (tx < x0 || tx > x1) continue;                          // off the wall band
+      if (placed.length && tx - placed[placed.length - 1] < 3) continue;  // too close to the last
+      placed.push(tx);
+    }
     const towerGeo = [], towerTrimGeo = [], towerMerlonGeo = [];
-    for (const tx of towers) {
+    for (const tx of placed) {
       const b = new THREE.BoxGeometry(2.7, 9.4, 2.7);
       b.translate(tx, 4.7, z);
       towerGeo.push(b);
@@ -531,8 +544,13 @@ export class Level {
    * at the sea gate. Atmosphere only — no threshold lives here. */
   addHarbourProps() {
     const { quay, gateX } = HARBOUR;
-    const qx0 = quay.x * CELL, qx1 = (quay.x + quay.w) * CELL;   // 6 .. 96
-    const qz0 = quay.y * CELL, qz1 = (quay.y + quay.h) * CELL;   // 63 .. 78
+    const qx0 = quay.x * CELL, qx1 = (quay.x + quay.w) * CELL;
+    const qz0 = quay.y * CELL, qz1 = (quay.y + quay.h) * CELL;
+    const qw = qx1 - qx0;
+    // The wing is dressed by fraction of the quay's width, so it fills a wide
+    // mole and a narrow one without props drifting out over the water or the
+    // street. fx(0) is the quay's west edge, fx(1) its east edge.
+    const fx = (f) => qx0 + f * qw;
     const g = new THREE.Group();
     g.name = 'port-of-theodosius';
     const stone = this.mat.get('stone_wall');
@@ -554,7 +572,7 @@ export class Level {
 
     // --- mooring bollards along the south edge --------------------------------
     const bollardGeo = [];
-    for (let bx = 12; bx <= 90; bx += 6) {
+    for (let bx = qx0 + 6; bx <= qx1 - 6; bx += 6) {
       const b = new THREE.CylinderGeometry(0.14, 0.2, 0.85, 8);
       b.translate(bx, 0.42, qz1 - 1.15);
       bollardGeo.push(b);
@@ -566,7 +584,7 @@ export class Level {
     bollardGeo.forEach((b) => b.dispose());
 
     // --- the two ornamented columns from the sketch's twin pilasters ----------
-    for (const colX of [qx0 + 21, qx1 - 21]) {
+    for (const colX of [fx(0.233), fx(0.767)]) {
       const base = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.62, 0.5, 10), stone);
       base.position.set(colX, 0.25, (qz0 + qz1) / 2);
       const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.34, 5.6, 10), stone);
@@ -579,7 +597,8 @@ export class Level {
 
     // --- grain storehouses (the Horrea Theodosiana) against the sea wall -------
     const gateXw = (gateX + 0.5) * CELL;
-    for (const [cx, len] of [[21, 20], [69, 20]]) {
+    const len = Math.min(20, qw * 0.222);   // shorter storehouses on a narrow quay
+    for (const cx of [fx(0.18), fx(0.71)]) {
       const store = new THREE.Mesh(new THREE.BoxGeometry(len, 3.4, 2.6), this.mat.get('plaster'));
       store.position.set(cx, 1.7, qz0 + 1.35);
       const roofTrim = new THREE.Mesh(new THREE.BoxGeometry(len + 0.5, 0.3, 3.0), gold);
@@ -598,7 +617,8 @@ export class Level {
 
     // --- grain cargo: crates and amphorae on the quay --------------------------
     const cargoSpots = [
-      [18, qz0 + 4.6, 0], [26, qz0 + 3.6, 1], [52, qz0 + 4.8, 2], [64, qz0 + 3.8, 0], [84, qz0 + 4.6, 1],
+      [fx(0.13), qz0 + 4.6, 0], [fx(0.30), qz0 + 3.6, 1], [fx(0.50), qz0 + 4.8, 2],
+      [fx(0.68), qz0 + 3.8, 0], [fx(0.87), qz0 + 4.6, 1],
     ];
     for (const [cx, cz, n] of cargoSpots) {
       const cluster = new THREE.Group();
@@ -622,7 +642,7 @@ export class Level {
     }
 
     // --- the two moored ships (the sketch's lateen-rigged pair) ---------------
-    for (const sx of [qx0 + 28, qx1 - 28]) this.addShip(g, sx, qz1 + 2.2);
+    for (const sx of [fx(0.311), fx(0.689)]) this.addShip(g, sx, qz1 + 2.2);
 
     // --- the port announces itself from the spine stair ------------------------
     const label = makeWayfindingLabel('THE PORT ↓');
@@ -645,7 +665,7 @@ export class Level {
     // without re-lighting the rest of the street (point light, short reach).
     const fill = new THREE.PointLight(0xffe3bd, 55, 26, 2);
     fill.name = 'harbour-fill';
-    fill.position.set((MAP_W / 2) * CELL, 8, (HARBOUR.quay.y + HARBOUR.quay.h / 2) * CELL);
+    fill.position.set((HARBOUR.quay.x + HARBOUR.quay.w / 2) * CELL, 8, (HARBOUR.quay.y + HARBOUR.quay.h / 2) * CELL);
     this.group.add(fill);
   }
 
@@ -672,7 +692,7 @@ export class Level {
             // The sea wall band is built by addHarbour() as a crenellated
             // parapet (not a roofed building), but it still collides like any
             // wall cell — the collider above stays.
-            if (z === HARBOUR.wallY) break;
+            if (z === HARBOUR.wall.y && x >= HARBOUR.wall.x0 && x <= HARBOUR.wall.x1) break;
             // Building mass: light plaster facade up to the roofline.
             const g = new THREE.BoxGeometry(CELL, WALL_H, CELL);
             g.translate(cx, WALL_H / 2, cz);

@@ -63,7 +63,7 @@ const ENDINGS = {
 async function boot() {
   const canvas = document.getElementById('game');
   const renderer = new THREE.WebGLRenderer({
-    canvas, antialias: false, powerPreference: 'high-performance',
+    canvas, antialias: true, powerPreference: 'high-performance',
     preserveDrawingBuffer: true,
   });
   renderer.setSize(640, 360, false);

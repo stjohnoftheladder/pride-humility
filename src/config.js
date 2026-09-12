@@ -1,6 +1,14 @@
 // Game-wide constants, the pilgrimage map, and the byzantine palette.
-// Layout: gate court -> chapel (confession/elder) -> U-turn along the bottom
-// spine -> Tempter chamber -> Brother's cell -> Ladder chamber (Pride boss).
+// Layout, north to south: the gate court -> the main road running south -> the
+// bottom spine, which opens west onto the Tempter's chamber and east onto the
+// Brother's cell -> the Ladder chamber (Pride boss + Ladder gate) -> the chapel
+// (confession + elder) at the foot of the road.
+//
+// REVIEW NOTE (map restructure): walking the road south from the court, the
+// Ladder chamber turns off at y98 and the chapel is not reached until y108, so
+// the Ladder gate can fire before the elder and the confession. In the older
+// U-shaped map the chapel came first. Left as laid out here; swapping the two
+// chambers is a separate call.
 
 export const CELL = 3;            // world units per grid cell
 export const WALL_H = 7;          // wall / ceiling height
@@ -13,9 +21,9 @@ export const ACCEL = 60;
 export const FRICTION = 12;
 
 export const MAP_W = 34;
-// The map grew south when the Port of Theodosius was added: rows 0-19 are the
-// city, row 20 is the sea wall, rows 21-25 the quay, rows 26-30 the open sea.
-export const MAP_H = 31;
+// The road runs the length of the city: the gate court sits at rows 2-6 and
+// the chapel at the far south of the map.
+export const MAP_H = 128;
 
 // Byzantine Parchment Pixel palette (from byzantine/DESIGN-HANDOFF.md)
 export const PALETTE = {
@@ -34,7 +42,7 @@ export const GRACE_MAX = 100;
 export const PLAYER_HP_MAX = 20;
 
 // ---------------------------------------------------------------------------
-// The Port of Theodosius — the harbour wing, off the bottom spine.
+// The Port of Theodosius — the harbour wing.
 //
 // Blueprint: `public/assets/design/port-theodosius-sketch.svg`, the sketch of the
 // walled harbour — the seaward wall with its crenellated towers, a quay with
@@ -45,13 +53,19 @@ export const PLAYER_HP_MAX = 20;
 // The city's grain came ashore at this kind of quay (the Horrea Theodosiana
 // stood by the harbour), which is why the walk is dressed with cargo rather
 // than with an encounter — the wing carries atmosphere, not a threshold.
+//
+// Where the wing sits is entirely this block: the sea wall band it claims, the
+// quay, the sea, and which of the quay's ends the water wraps. level.js derives
+// every mesh, collider and prop position from it (props as fractions of the
+// quay's width), so the harbour can be sited anywhere along the road without
+// touching the geometry code — see the harbour-placement bakeoff.
 export const HARBOUR = {
-  quay: { x: 2, y: 21, w: 30, h: 5 },   // walkable waterfront (grid cells)
-  wallY: 20,                            // the crenellated sea wall band
-  gateX: 14,                            // the sea gate through the wall
-  stairY0: 14,                          // the stair down from the bottom spine
-  sea: { y0: 26, y1: 30 },              // open water south of the quay
-  wrapX: 2,                             // water wraps this many cells at each end
+  quay: { x: 2, y: 21, w: 13, h: 5 },     // walkable waterfront -> cells x2..14
+  wall: { x0: 0, x1: 14, y: 20 },         // the crenellated sea wall band
+  gateX: 14,                              // the sea gate through the wall
+  stairY0: 14,                            // the stair down from the bottom spine
+  sea: { x0: 0, x1: 14, y0: 26, y1: 30 }, // open water beyond the quay
+  wrap: { west: 2, east: 0 },             // cells of water wrapping each quay end
 };
 
 // ---------------------------------------------------------------------------
@@ -80,31 +94,33 @@ function buildLevelGrid() {
   const g = makeGrid(MAP_W, MAP_H, W);
 
   // --- rooms ---------------------------------------------------------------
-  const court   = { x: 2, y: 2, w: 10, h: 5 };   // gate court (open sky)
-  const chapel  = { x: 15, y: 2, w: 12, h: 6 };  // confession + elder
-  const tempter = { x: 2, y: 14, w: 11, h: 5 };  // encounter 1
-  const brother = { x: 15, y: 14, w: 10, h: 5 }; // encounter 2
-  const ladder  = { x: 27, y: 14, w: 5, h: 5 };  // encounter 3 + Ladder gate
+  const court    = { x: 2, y: 2, w: 10, h: 5 };            // gate court (open sky)
+  const chapel   = { x: 12, y: MAP_H - 20, w: 11, h: 6 };  // confession + elder, at the road's foot
+  const mainroad = { x: 15, y: 2, w: 5, h: chapel.y - 2 }; // the road from the court south to the chapel
+  const tempter  = { x: 2, y: 14, w: 11, h: 5 };           // encounter 1
+  const brother  = { x: mainroad.x + mainroad.w + 1, y: 14, w: 10, h: 5 }; // encounter 2
+  const ladder   = { x: 27, y: chapel.y - 10, w: 5, h: 5 }; // encounter 3 + Ladder gate
 
-  for (const r of [court, chapel, tempter, brother, ladder]) carveRoom(g, r.x, r.y, r.w, r.h);
+  for (const r of [court, chapel, tempter, brother, ladder, mainroad]) carveRoom(g, r.x, r.y, r.w, r.h);
 
-  // --- corridors (a gentle U) ----------------------------------------------
-  carveRow(g, 4, 12, 14);          // court -> chapel
-  carveCol(g, 20, 8, 13);          // chapel -> bottom spine
-  carveRow(g, 13, 2, 31);          // bottom spine (tempter -> brother -> ladder)
-  carveCol(g, 7, 7, 12);           // court -> bottom spine (left leg)
+  // --- corridors ------------------------------------------------------------
+  carveRow(g, 4, 12, 14);                                     // court -> the road
+  carveRow(g, 13, 2, 31);                                     // bottom spine (tempter -> brother -> ladder)
+  carveRow(g, ladder.y, mainroad.x + mainroad.w, ladder.x);   // the road -> Ladder chamber
 
-  // --- the Port of Theodosius (harbour wing, south of the spine) ------------
-  // The stair drops from the bottom spine at the gap between the Tempter's
-  // chamber and the Brother's cell, pierces the sea wall at the gate, and
-  // opens onto the quay. Water fills the band beyond it and wraps both ends,
-  // so the quay reads as a mole standing out into the Marmara.
-  const { quay, wallY, gateX, stairY0, sea, wrapX } = HARBOUR;
+  // --- the Port of Theodosius (harbour wing) --------------------------------
+  // Placed straight from HARBOUR so the wing can be sited anywhere: the quay is
+  // carved walkable, the stair drops from the spine through the sea gate to the
+  // quay, water fills the band beyond it, and any quay end flagged in `wrap`
+  // becomes water too — so the quay can read as a mole standing out into the
+  // Marmara rather than as a walled pond.
+  const { quay, wall, gateX, stairY0, sea, wrap } = HARBOUR;
   carveRoom(g, quay.x, quay.y, quay.w, quay.h);
-  carveCol(g, gateX, stairY0, wallY);   // the stair + the sea gate
-  for (let j = sea.y0; j <= sea.y1; j++) for (let i = 0; i < MAP_W; i++) g[j][i] = SEA;
+  carveCol(g, gateX, stairY0, wall.y);   // the stair + the sea gate
+  for (let j = sea.y0; j <= sea.y1; j++) for (let i = sea.x0; i <= sea.x1; i++) g[j][i] = SEA;
   for (let j = quay.y; j < quay.y + quay.h; j++) {
-    for (let i = 0; i < wrapX; i++) { g[j][i] = SEA; g[j][MAP_W - 1 - i] = SEA; }
+    for (let i = 0; i < wrap.west; i++) g[j][i] = SEA;
+    for (let i = 0; i < wrap.east; i++) g[j][MAP_W - 1 - i] = SEA;
   }
 
   // --- wood floors in chapel, brother's cell --------------------------------
@@ -122,30 +138,51 @@ function buildLevelGrid() {
   };
 
   // --- key spots (placed first so decor can't claim their cells) ------------------
-  add(6, 4, 'S');            // pilgrim start
-  add(18, 5, 'E');           // elder (NPC)
-  add(25, 4, 'A');           // confession altar
-  add(7, 14, 'K');           // encounter 1 trigger (Tempter)
-  add(20, 14, 'B');          // encounter 2 trigger (Brother)
-  add(29, 14, 'P');          // encounter 3 trigger (Demon of Pride)
-  add(30, 18, 'L');          // Ladder gate (goal)
+  add(court.x + 2, court.y + 3, 'S');                          // pilgrim start
+  add(chapel.x + 2, chapel.y + chapel.h / 2 - 1, 'E');         // elder (NPC)
+  add(chapel.x + 5, chapel.y + 5, 'A');                        // confession altar
+  add(tempter.x + 5, tempter.y + 1, 'K');                      // encounter 1 trigger (Tempter)
+  add(brother.x + 4, brother.y + 1, 'B');                      // encounter 2 trigger (Brother)
+  add(ladder.x + 2, ladder.y + 2, 'P');                        // encounter 3 trigger (Demon of Pride)
+  add(ladder.x + 2, ladder.y + 4, 'L');                        // Ladder gate (goal)
 
   // --- icons / columns -----------------------------------------------------------
+  // decor codes
+  const icon     = 'V';
+  const pew      = 'w';
+  const column   = 'c';
+  const fountain = 'F';
   // (no candles — the street is open air in daylight)
 
-  // icons (banners) in chapel + court
-  add(2, 2, 'V'); add(2, 6, 'V'); add(15, 2, 'V'); add(26, 2, 'V'); add(27, 14, 'V');
-  add(15, 6, 'V'); add(26, 6, 'V'); add(30, 18, 'V');
-
   // columns
-  add(5, 4, 'c'); add(18, 4, 'c'); add(28, 16, 'c'); add(31, 16, 'c');
+  add(18, 4, column);
+  add(28, 16, column);
 
-  // fountain in the gate court + pews in the chapel
-  add(9, 4, 'F');
-  add(16, 3, 'w'); add(17, 3, 'w'); add(21, 3, 'w'); add(22, 3, 'w');
-  add(16, 6, 'w'); add(17, 6, 'w');
+  // court decor
+  add(court.x + 0, court.y + 0, icon);
+  add(court.x + 0, court.y + 4, icon);
+  add(court.x + 3, court.y + 2, column);
+  add(court.x + 7, court.y + 2, fountain);
 
-  return { grid: g, cells, rooms: { court, chapel, tempter, brother, ladder, harbour: quay, seagate: { x: gateX, y: stairY0, w: 1, h: wallY - stairY0 + 1 } } };
+  // chapel decor
+  add(chapel.x + 2, chapel.y + 1, pew);
+  add(chapel.x + 3, chapel.y + 1, pew);
+  add(chapel.x + 7, chapel.y + 1, pew);
+  add(chapel.x + 8, chapel.y + 1, pew);
+  add(chapel.x + 2, chapel.y + 3, pew);
+  add(chapel.x + 3, chapel.y + 3, pew);
+  add(chapel.x + 7, chapel.y + 3, pew);
+  add(chapel.x + 8, chapel.y + 3, pew);
+
+  return {
+    grid: g,
+    cells,
+    rooms: {
+      court, chapel, tempter, brother, ladder, mainroad,
+      harbour: quay,
+      seagate: { x: gateX, y: stairY0, w: 1, h: wall.y - stairY0 + 1 },
+    },
+  };
 }
 
 export const LEVEL = buildLevelGrid();
@@ -157,5 +194,30 @@ export function validateLevel() {
   const counts = {};
   for (const row of grid) for (const t of row) counts[t] = (counts[t] || 0) + 1;
   for (const t of ['S', 'E', 'A', 'K', 'B', 'P', 'L']) if (!counts[t]) problems.push(`missing ${t}`);
+
+  // Every key spot must be walkable from the pilgrim's start. The map is long
+  // and its links are single cells, so a room moved along the road can strand a
+  // threshold (or the Ladder chamber) without any other symptom.
+  const passable = (x, y) => x >= 0 && y >= 0 && x < MAP_W && y < MAP_H
+    && grid[y][x] !== W && grid[y][x] !== SEA;
+  let start = null;
+  for (let y = 0; y < MAP_H && !start; y++) {
+    for (let x = 0; x < MAP_W; x++) if (grid[y][x] === 'S') { start = { x, y }; break; }
+  }
+  if (start) {
+    const seen = new Set([`${start.x},${start.y}`]);
+    const queue = [start];
+    while (queue.length) {
+      const { x, y } = queue.pop();
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx, ny = y + dy, key = `${nx},${ny}`;
+        if (!seen.has(key) && passable(nx, ny)) { seen.add(key); queue.push({ x: nx, y: ny }); }
+      }
+    }
+    for (const [key, tile] of LEVEL.cells) {
+      if (!seen.has(key)) problems.push(`${tile} at ${key} is walled off from the start`);
+    }
+  }
+
   return { ok: problems.length === 0, problems, counts };
 }
