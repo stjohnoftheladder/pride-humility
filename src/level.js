@@ -473,6 +473,7 @@ export class Level {
     const placed = [];
     for (const tx of towers.sort((a, b) => a - b)) {
       if (tx < x0 || tx > x1) continue;                          // off the wall band
+      if (Math.abs(tx - gateX) < 3) continue;                    // never in the gate's own opening
       if (placed.length && tx - placed[placed.length - 1] < 3) continue;  // too close to the last
       placed.push(tx);
     }
