@@ -33,7 +33,9 @@ Test suite (builds, serves, plays both journeys with keyboard-only input):
 npm test
 ```
 
-Deploy to the live site (Cloudflare Pages):
+Deploy (Cloudflare Pages). Two branches publish, both gated on the suite:
+pushing `main` deploys the live site, pushing `dev` deploys a preview of its own
+at **dev.pride-humility.pages.dev** — work that is not ready for players yet.
 
 ```bash
 npm run build && npx wrangler pages deploy dist --project-name pride-humility --branch main
