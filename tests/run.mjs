@@ -441,6 +441,111 @@ async function runInteractionRegressions(browser) {
     choice.hp === 11 && choice.pride === 6 && choice.forceMomentum === 1,
     JSON.stringify(choice),
   );
+  // ---- the HUD mini-map and the dev feature toggles -------------------------
+  // Back to explore: the map only lives there, and the checks below walk around.
+  await resetState(page);
+  await sleep(200);
+  const map = await page.evaluate(() => {
+    const el = document.getElementById('minimap');
+    const c = document.getElementById('minimap-canvas');
+    const px = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+    let painted = 0;
+    for (let i = 3; i < px.length; i += 4) if (px[i] > 0) painted++;
+    const rect = el.getBoundingClientRect();
+    const stage = document.getElementById('stage').getBoundingClientRect();
+    return {
+      display: getComputedStyle(el).display, on: window.__game.minimapOn(),
+      w: c.width, h: c.height, painted,
+      inside: rect.width > 0 && rect.height > 0 && rect.left >= stage.left && rect.right <= stage.right,
+    };
+  });
+  check(
+    'minimap: the whole-city strip is drawn on the HUD while exploring',
+    map.display !== 'none' && map.on && map.painted > 2000 && map.inside
+      && map.w / map.h > 0.2 && map.w / map.h < 0.4,   // the strip's 34:128 shape
+    JSON.stringify(map),
+  );
+
+  const mapToggle = await page.evaluate(async () => {
+    const el = document.getElementById('minimap');
+    const g = window.__game;
+    const shown = getComputedStyle(el).display;
+    g.key('KeyM');
+    await new Promise((r) => setTimeout(r, 250));
+    const hidden = { display: getComputedStyle(el).display, on: g.minimapOn() };
+    g.key('KeyM');
+    await new Promise((r) => setTimeout(r, 250));
+    return { shown, hidden, back: { display: getComputedStyle(el).display, on: g.minimapOn() } };
+  });
+  check(
+    'minimap: M hides it and shows it again',
+    mapToggle.shown !== 'none' && mapToggle.hidden.display === 'none' && !mapToggle.hidden.on
+      && mapToggle.back.display !== 'none' && mapToggle.back.on,
+    JSON.stringify(mapToggle),
+  );
+
+  const wings = await page.evaluate(() => ({
+    groups: Object.keys(window.__game.level.featureGroups),
+    harbours: window.__game.harbours().map((w) => w.id),
+    features: window.__game.features(),
+  }));
+  check(
+    'features: every harbour site ships built and flagged on',
+    wings.groups.length === 3 && wings.harbours.length === 3
+      && wings.harbours.every((id) => wings.groups.includes(id) && wings.features[id] !== false),
+    JSON.stringify(wings),
+  );
+
+  // Toggling an addition off must take its blocking with it: drop the pilgrim
+  // into that wing's open water and see whether the world still pushes him out.
+  const toggled = await page.evaluate(async () => {
+    const g = window.__game;
+    const wing = g.harbours().find((w) => w.id === 'harbourSouth');
+    const tx = ((wing.sea.x0 + wing.sea.x1 + 1) / 2) * 3;
+    const tz = ((wing.sea.y0 + wing.sea.y1 + 1) / 2) * 3;
+    const drift = async () => {
+      g.teleport(tx, tz);
+      await new Promise((r) => setTimeout(r, 320));
+      return Math.hypot(g.player.pos.x - tx, g.player.pos.z - tz);
+    };
+    const on = await drift();
+    const offFlag = g.setFeature('harbourSouth', false);
+    const invisible = g.level.featureGroups.harbourSouth.visible;
+    const off = await drift();
+    g.setFeature('harbourSouth', true);
+    return { on, off, offFlag, invisible, restored: g.features().harbourSouth };
+  });
+  check(
+    'features: a toggled-off harbour hides and stops blocking (dev switch)',
+    toggled.on > 0.3 && toggled.off < 0.05 && toggled.offFlag === false
+      && toggled.invisible === false && toggled.restored === true,
+    JSON.stringify(toggled),
+  );
+
+  // The map is drawn from the same flags, so a hidden wing empties out of it.
+  const mapFollows = await page.evaluate(async () => {
+    const sea = () => {
+      const c = document.getElementById('minimap-canvas');
+      const px = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 0; i < px.length; i += 4) if (px[i] === 34 && px[i + 1] === 68 && px[i + 2] === 90) n++;
+      return n;
+    };
+    const settle = () => new Promise((r) => setTimeout(r, 320));
+    await settle();                 // let the map catch up with the toggle above
+    const before = sea();
+    window.__game.setFeature('harbourSouth', false);
+    await new Promise((r) => setTimeout(r, 300));
+    const off = sea();
+    window.__game.setFeature('harbourSouth', true);
+    await new Promise((r) => setTimeout(r, 300));
+    return { before, off, back: sea() };
+  });
+  check(
+    'minimap: the plan follows a toggled-off harbour',
+    mapFollows.off < mapFollows.before * 0.7 && mapFollows.back >= mapFollows.before * 0.95,
+    JSON.stringify(mapFollows),
+  );
   check('interactions: no console errors', errors.length === 0, JSON.stringify(errors));
   await page.close();
 }

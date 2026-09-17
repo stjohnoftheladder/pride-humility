@@ -1,7 +1,7 @@
 // Pilgrimage level construction: geometry, collision, candle lights, triggers.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOUR } from './config.js';
+import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOURS, FEATURES } from './config.js';
 import { HOUSE, HAGIA, HAGIA_MINARETS, DOME_CELLS, TOWER_CELLS, roofKind } from './city.js';
 import { Materials } from './textures.js';
 import { AnimatedSprite } from './SpriteSystem.js';
@@ -58,6 +58,8 @@ export class Level {
     this.candleLights = [];
     this.group = new THREE.Group();
     scene.add(this.group);
+    this.featureGroups = {}; // feature id -> the group holding that addition
+    this.seaTextures = [];   // one per water plane, across every wing
     this.spawns = { S: [], E: [], A: [], K: [], B: [], P: [], L: [], V: [], c: [] };
     this.worldEnemies = {};  // id -> { sprite, shadow }
     this.animSprites = [];   // every animated billboard in the world
@@ -67,8 +69,16 @@ export class Level {
     return new THREE.Vector3((x + 0.5) * CELL, 0, (z + 0.5) * CELL);
   }
 
-  addCollider(cx, cz, w, h, top = WALL_H) {
-    this.colliders.push({ minX: cx - w / 2, maxX: cx + w / 2, minZ: cz - h / 2, maxZ: cz + h / 2, top });
+  /** Register a blocking box. `feature` ties it to an entry in FEATURES, so
+   *  turning that addition off also takes its blocks out of the way. */
+  addCollider(cx, cz, w, h, top = WALL_H, feature = null) {
+    this.colliders.push({ minX: cx - w / 2, maxX: cx + w / 2, minZ: cz - h / 2, maxZ: cz + h / 2, top, feature });
+  }
+
+  /** Is this collider live right now? A disabled addition neither blocks the
+   *  pilgrim nor shadows a light. */
+  colliderLive(c) {
+    return !c.feature || FEATURES[c.feature] !== false;
   }
 
   trackFlicker(light, baseIntensity) {
@@ -403,9 +413,8 @@ export class Level {
   }
 
   /** Open water beyond the quay, wrapping whichever of its ends are open. */
-  addSea() {
-    const { quay, sea, wrap } = HARBOUR;
-    this.seaTextures = [];
+  addSea(wing, group) {
+    const { id, quay, sea, wrap } = wing;
     const plane = (x0, y0, x1, y1, repeatX, repeatY) => {
       const g = new THREE.PlaneGeometry((x1 - x0) * CELL, (y1 - y0) * CELL);
       g.rotateX(-Math.PI / 2);
@@ -417,7 +426,7 @@ export class Level {
         new THREE.MeshStandardMaterial({ map: tex, roughness: 0.34, metalness: 0.12, color: 0xffffff }),
       );
       m.name = 'port-sea';
-      this.group.add(m);
+      group.add(m);
       this.seaTextures.push(tex);
     };
     const width = sea.x1 - sea.x0 + 1;
@@ -426,19 +435,20 @@ export class Level {
     if (wrap.east > 0) plane(MAP_W - wrap.east, quay.y, MAP_W, quay.y + quay.h, 1.5, 2);
 
     // The water blocks the pilgrim like a low wall (one box per plane).
-    this.addCollider(((sea.x0 + sea.x1 + 1) / 2) * CELL, ((sea.y0 + sea.y1 + 1) / 2) * CELL, width * CELL, (sea.y1 - sea.y0 + 1) * CELL, 1.2);
-    const wrapBox = (cells, cx) => this.addCollider(cx * CELL, ((quay.y + quay.y + quay.h) / 2) * CELL, cells * CELL, quay.h * CELL, 1.2);
+    this.addCollider(((sea.x0 + sea.x1 + 1) / 2) * CELL, ((sea.y0 + sea.y1 + 1) / 2) * CELL, width * CELL, (sea.y1 - sea.y0 + 1) * CELL, 1.2, id);
+    const wrapBox = (cells, cx) => this.addCollider(cx * CELL, ((quay.y + quay.y + quay.h) / 2) * CELL, cells * CELL, quay.h * CELL, 1.2, id);
     if (wrap.west > 0) wrapBox(wrap.west, wrap.west / 2);
     if (wrap.east > 0) wrapBox(wrap.east, MAP_W - wrap.east / 2);
   }
 
   /** The seaward wall of the city: a crenellated parapet with square towers,
    * pierced by the sea gate. Mirrors the sketch's wall band and its gold rule. */
-  addSeaWall() {
-    const z = (HARBOUR.wall.y + 0.5) * CELL;
+  addSeaWall(wing, group) {
+    const { id, wall: band, gateX: gateCell } = wing;
+    const z = (band.y + 0.5) * CELL;
     const wallGeo = [], trimGeo = [], merlonGeo = [];
-    for (let x = HARBOUR.wall.x0; x <= HARBOUR.wall.x1; x++) {
-      if (x === HARBOUR.gateX) continue;   // the sea gate
+    for (let x = band.x0; x <= band.x1; x++) {
+      if (x === gateCell) continue;   // the sea gate
       const cx = (x + 0.5) * CELL;
       const wall = new THREE.BoxGeometry(CELL, 5.2, CELL);
       wall.translate(cx, 2.6, z);
@@ -456,7 +466,7 @@ export class Level {
     const trim = new THREE.Mesh(mergeGeometries(trimGeo), this.mat.get('gold'));
     const merlons = new THREE.Mesh(mergeGeometries(merlonGeo), this.mat.get('plaster'));
     wall.name = 'sea-wall'; trim.name = 'sea-wall-trim'; merlons.name = 'sea-wall-merlons';
-    this.group.add(wall, trim, merlons);
+    group.add(wall, trim, merlons);
     wallGeo.forEach((g) => g.dispose());
     trimGeo.forEach((g) => g.dispose());
     merlonGeo.forEach((g) => g.dispose());
@@ -465,8 +475,8 @@ export class Level {
     // flanking the sea gate (the sketch's tower pairs around its wall openings).
     // Derived from the wall band rather than listed, so a narrower harbour gets
     // its own spacing instead of towers left standing out in the city.
-    const gateX = (HARBOUR.gateX + 0.5) * CELL;
-    const x0 = HARBOUR.wall.x0 * CELL, x1 = (HARBOUR.wall.x1 + 1) * CELL, span = x1 - x0;
+    const gateX = (gateCell + 0.5) * CELL;
+    const x0 = band.x0 * CELL, x1 = (band.x1 + 1) * CELL, span = x1 - x0;
     const towers = [x0 + 1.5, x1 - 1.5, gateX - 4.0, gateX + 4.0];
     const steps = Math.max(0, Math.round(span / 24) - 1);
     for (let i = 1; i <= steps; i++) towers.push(x0 + (span * i) / (steps + 1));
@@ -495,7 +505,7 @@ export class Level {
     const towersTrim = new THREE.Mesh(mergeGeometries(towerTrimGeo), this.mat.get('gold'));
     const towersMerlons = new THREE.Mesh(mergeGeometries(towerMerlonGeo), this.mat.get('plaster'));
     towersMesh.name = 'sea-wall-towers';
-    this.group.add(towersMesh, towersTrim, towersMerlons);
+    group.add(towersMesh, towersTrim, towersMerlons);
     towerGeo.forEach((g) => g.dispose());
     towerTrimGeo.forEach((g) => g.dispose());
     towerMerlonGeo.forEach((g) => g.dispose());
@@ -543,8 +553,8 @@ export class Level {
   /** Quay props: curb, bollards, the two ornamented columns, grain cargo, the
    * Horrea storehouses against the wall, moored ships, and a wayfinding label
    * at the sea gate. Atmosphere only — no threshold lives here. */
-  addHarbourProps() {
-    const { quay, gateX } = HARBOUR;
+  addHarbourProps(wing, group) {
+    const { id, quay, gateX } = wing;
     const qx0 = quay.x * CELL, qx1 = (quay.x + quay.w) * CELL;
     const qz0 = quay.y * CELL, qz1 = (quay.y + quay.h) * CELL;
     const qw = qx1 - qx0;
@@ -553,7 +563,7 @@ export class Level {
     // street. fx(0) is the quay's west edge, fx(1) its east edge.
     const fx = (f) => qx0 + f * qw;
     const g = new THREE.Group();
-    g.name = 'port-of-theodosius';
+    g.name = 'port-props';
     const stone = this.mat.get('stone_wall');
     const wood = this.mat.get('wood_floor');
     const gold = this.mat.get('gold');
@@ -593,7 +603,7 @@ export class Level {
       const capital = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.34, 0.42, 10), gold);
       capital.position.set(colX, 6.0, (qz0 + qz1) / 2);
       g.add(base, shaft, capital);
-      this.addCollider(colX, (qz0 + qz1) / 2, 0.9, 0.9, 6.2);
+      this.addCollider(colX, (qz0 + qz1) / 2, 0.9, 0.9, 6.2, id);
     }
 
     // --- grain storehouses (the Horrea Theodosiana) against the sea wall -------
@@ -620,7 +630,7 @@ export class Level {
         arch.position.set(cx + dx, 1.2, qz0 + 1.35 + 1.31);
         g.add(arch);
       }
-      this.addCollider(cx, qz0 + 1.35, len, 2.6, 3.6);
+      this.addCollider(cx, qz0 + 1.35, len, 2.6, 3.6, id);
     }
 
     // --- grain cargo: crates and amphorae on the quay --------------------------
@@ -651,7 +661,7 @@ export class Level {
         cluster.add(body, neck);
       }
       g.add(cluster);
-      this.addCollider(cx, cz, 3.0, 2.2, 1.4);
+      this.addCollider(cx, cz, 3.0, 2.2, 1.4, id);
     }
 
     // --- the two moored ships (the sketch's lateen-rigged pair) ---------------
@@ -661,25 +671,43 @@ export class Level {
     const label = makeWayfindingLabel('THE PORT ↓');
     label.name = 'port-label';
     label.material.depthTest = true;
-    label.position.set(gateXw, 4.4, (HARBOUR.stairY0 + 0.5) * CELL);
-    this.group.add(label);
+    label.position.set(gateXw, 4.4, (wing.stairY0 + 0.5) * CELL);
+    group.add(label);
 
-    this.group.add(g);
-    this.harbour = g;
+    group.add(g);
   }
 
-  /** Assemble the whole wing: sea, sea wall, and quay. */
-  addHarbour() {
-    this.addSea();
-    this.addSeaWall();
-    this.addHarbourProps();
+  /** Assemble one wing: sea, sea wall, and quay, all into a group of their own
+   *  so the whole addition can be shown or hidden as one thing. */
+  addHarbour(wing) {
+    const group = new THREE.Group();
+    group.name = `port-of-theodosius-${wing.id}`;
+    group.userData.feature = wing.id;
+    this.addSea(wing, group);
+    this.addSeaWall(wing, group);
+    this.addHarbourProps(wing, group);
     // The afternoon sun comes from the north, so the sea wall's quay-facing
     // side would sit in deep shade; a warm fill hanging over the quay lifts it
     // without re-lighting the rest of the street (point light, short reach).
     const fill = new THREE.PointLight(0xffe3bd, 55, 26, 2);
     fill.name = 'harbour-fill';
-    fill.position.set((HARBOUR.quay.x + HARBOUR.quay.w / 2) * CELL, 8, (HARBOUR.quay.y + HARBOUR.quay.h / 2) * CELL);
-    this.group.add(fill);
+    fill.position.set((wing.quay.x + wing.quay.w / 2) * CELL, 8, (wing.quay.y + wing.quay.h / 2) * CELL);
+    group.add(fill);
+    this.group.add(group);
+    this.featureGroups[wing.id] = group;
+    if (FEATURES[wing.id] === false) group.visible = false;
+  }
+
+  /** Turn an addition on or off while the game is running: its geometry shows
+   *  or hides, and its colliders stop or resume blocking (they consult FEATURES
+   *  at collision time, so nothing has to be rebuilt). The ground plan stays
+   *  carved until the next reload — flip the flag in config.js for that. */
+  setFeature(id, on) {
+    FEATURES[id] = !!on;
+    for (const group of Object.values(this.featureGroups)) {
+      if (group.userData.feature === id) group.visible = !!on;
+    }
+    return FEATURES[id];
   }
 
   build() {
@@ -698,14 +726,17 @@ export class Level {
         const cz = (z + 0.5) * CELL;
         switch (t) {
           case '#': {
-            this.addCollider(cx, cz, CELL, CELL);
+            // A wing's sea wall band is built by addHarbour() as a crenellated
+            // parapet rather than a roofed building, but its cells still collide
+            // like any wall cell — tagged with the wing, so hiding the wing lifts
+            // the block as well as the parapet.
+            const band = HARBOURS.find((w) => w.wall.y === z && x >= w.wall.x0 && x <= w.wall.x1);
+            this.addCollider(cx, cz, CELL, CELL, WALL_H, band ? band.id : null);
             // The nobleman's house covers its own cells — its mesh is solid to
             // the ground, so it needs no wall mass underneath.
             if (isHouse(x, z)) break;
-            // The sea wall band is built by addHarbour() as a crenellated
-            // parapet (not a roofed building), but it still collides like any
-            // wall cell — the collider above stays.
-            if (z === HARBOUR.wall.y && x >= HARBOUR.wall.x0 && x <= HARBOUR.wall.x1) break;
+            // The parapet stands in for the mass, so no mass here.
+            if (band) break;
             // Building mass: light plaster facade up to the roofline.
             const g = new THREE.BoxGeometry(CELL, WALL_H, CELL);
             g.translate(cx, WALL_H / 2, cz);
@@ -887,7 +918,7 @@ export class Level {
 
     this.addHouse();
     this.addHagiaSophia();
-    this.addHarbour();
+    for (const wing of HARBOURS) this.addHarbour(wing);
 
     // --- decor + trigger positions ------------------------------------------------
     for (const [key, t] of cells) {
@@ -1038,6 +1069,7 @@ export class Level {
   raycast(ox, oy, oz, dx, dy, dz, maxT) {
     let best = maxT;
     for (const c of this.colliders) {
+      if (!this.colliderLive(c)) continue;
       let tmin = 0, tmax = maxT;
       if (Math.abs(dx) < 1e-9) { if (ox < c.minX || ox > c.maxX) continue; }
       else {
@@ -1067,6 +1099,7 @@ export class Level {
 
   collideCircle(px, pz, radius, out) {
     for (const c of this.colliders) {
+      if (!this.colliderLive(c)) continue;
       const nx = Math.max(c.minX, Math.min(px, c.maxX));
       const nz = Math.max(c.minZ, Math.min(pz, c.maxZ));
       const ddx = px - nx, ddz = pz - nz;

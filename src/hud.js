@@ -42,6 +42,7 @@ export class Hud {
       battleHints: $('battle-hints'),
       prompt: $('engage-prompt'),
       mute: $('mute-btn'),
+      minimap: $('minimap'),
       fps: $('fps'),
     };
     this.msgTimer = null;
@@ -87,6 +88,13 @@ export class Hud {
   }
 
   setFps(v) { this.el.fps.textContent = v.toFixed(0); }
+
+  /** The mini-map is a panel like any other: shown only while exploring. */
+  setMinimap(on) {
+    if (!this.el.minimap || this._minimapOn === on) return;
+    this._minimapOn = on;
+    this.el.minimap.style.display = on ? 'block' : 'none';
+  }
 
   showTitle() {
     this._hideScreens();

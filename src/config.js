@@ -42,6 +42,22 @@ export const GRACE_MAX = 100;
 export const PLAYER_HP_MAX = 20;
 
 // ---------------------------------------------------------------------------
+// Feature flags — work in progress, shipped ON.
+//
+// A dev takes an addition out of the world by setting its flag to false here
+// and reloading. The flag is read once, at map-build time, so it decides what is
+// carved into the grid, what geometry is built and what blocks the pilgrim, all
+// from this one place. The ?debug build also flips these live (see the feature
+// keys in main.js) for walking the alternatives side by side; a live flip shows
+// and hides the addition and stops it blocking, while the ground plan it
+// claimed stays carved until the next reload.
+export const FEATURES = {
+  harbourWest: true,
+  harbourEast: true,
+  harbourSouth: true,
+};
+
+// ---------------------------------------------------------------------------
 // The Port of Theodosius — the harbour wing.
 //
 // Blueprint: `public/assets/design/port-theodosius-sketch.svg`, the sketch of the
@@ -54,19 +70,46 @@ export const PLAYER_HP_MAX = 20;
 // stood by the harbour), which is why the walk is dressed with cargo rather
 // than with an encounter — the wing carries atmosphere, not a threshold.
 //
-// Where the wing sits is entirely this block: the sea wall band it claims, the
+// Where a wing sits is entirely its own block: the sea wall band it claims, the
 // quay, the sea, and which of the quay's ends the water wraps. level.js derives
-// every mesh, collider and prop position from it (props as fractions of the
-// quay's width), so the harbour can be sited anywhere along the road without
-// touching the geometry code — see the harbour-placement bakeoff.
-export const HARBOUR = {
-  quay: { x: 2, y: 21, w: 13, h: 5 },     // walkable waterfront -> cells x2..14
-  wall: { x0: 0, x1: 14, y: 20 },         // the crenellated sea wall band
-  gateX: 14,                              // the sea gate through the wall
-  stairY0: 14,                            // the stair down from the bottom spine
-  sea: { x0: 0, x1: 14, y0: 26, y1: 30 }, // open water beyond the quay
-  wrap: { west: 2, east: 0 },             // cells of water wrapping each quay end
-};
+// every mesh, collider and prop position from it (props by fraction of the
+// quay's width), so a wing can be sited anywhere without touching the geometry
+// code.
+//
+// Three candidate sites are built at once for now, so they can be walked and
+// compared side by side rather than argued about on paper; each is behind its
+// own flag. West and east hang off the bottom spine on either side of the road
+// (the road becomes a causeway between their two seas); south sits at the foot
+// of the road, in the rows the long map otherwise leaves empty below the chapel.
+export const HARBOURS = [
+  {
+    id: 'harbourWest',
+    quay: { x: 2, y: 21, w: 13, h: 5 },     // walkable waterfront -> cells x2..14
+    wall: { x0: 0, x1: 14, y: 20 },         // the crenellated sea wall band
+    gateX: 14,                              // the sea gate through the wall
+    stairY0: 14,                            // the stair down from the bottom spine
+    sea: { x0: 0, x1: 14, y0: 26, y1: 30 }, // open water beyond the quay
+    wrap: { west: 2, east: 0 },             // cells of water wrapping each quay end
+  },
+  {
+    id: 'harbourEast',
+    quay: { x: 20, y: 21, w: 12, h: 5 },    // -> cells x20..31
+    wall: { x0: 20, x1: 33, y: 20 },
+    gateX: 20,
+    stairY0: 14,
+    sea: { x0: 20, x1: 33, y0: 26, y1: 30 },
+    wrap: { west: 0, east: 2 },
+  },
+  {
+    id: 'harbourSouth',
+    quay: { x: 2, y: 116, w: 30, h: 5 },        // -> cells x2..31, at the road's foot
+    wall: { x0: 0, x1: 33, y: 115 },
+    gateX: 20,                                  // the stair drops from the chapel
+    stairY0: 114,
+    sea: { x0: 0, x1: 33, y0: 121, y1: 127 },   // water to the map's edge
+    wrap: { west: 2, east: 2 },
+  },
+].filter((wing) => FEATURES[wing.id]);
 
 // ---------------------------------------------------------------------------
 // Level builder
@@ -108,19 +151,20 @@ function buildLevelGrid() {
   carveRow(g, 13, 2, 31);                                     // bottom spine (tempter -> brother -> ladder)
   carveRow(g, ladder.y, mainroad.x + mainroad.w, ladder.x);   // the road -> Ladder chamber
 
-  // --- the Port of Theodosius (harbour wing) --------------------------------
-  // Placed straight from HARBOUR so the wing can be sited anywhere: the quay is
-  // carved walkable, the stair drops from the spine through the sea gate to the
-  // quay, water fills the band beyond it, and any quay end flagged in `wrap`
-  // becomes water too — so the quay can read as a mole standing out into the
-  // Marmara rather than as a walled pond.
-  const { quay, wall, gateX, stairY0, sea, wrap } = HARBOUR;
-  carveRoom(g, quay.x, quay.y, quay.w, quay.h);
-  carveCol(g, gateX, stairY0, wall.y);   // the stair + the sea gate
-  for (let j = sea.y0; j <= sea.y1; j++) for (let i = sea.x0; i <= sea.x1; i++) g[j][i] = SEA;
-  for (let j = quay.y; j < quay.y + quay.h; j++) {
-    for (let i = 0; i < wrap.west; i++) g[j][i] = SEA;
-    for (let i = 0; i < wrap.east; i++) g[j][MAP_W - 1 - i] = SEA;
+  // --- the Port of Theodosius (every enabled wing) --------------------------
+  // Each wing is carved from its own block: the quay walkable, the stair down
+  // from the road through the sea gate to it, water filling the band beyond,
+  // and any quay end flagged in `wrap` turned to water too — so a quay can read
+  // as a mole standing out into the Marmara rather than as a walled pond.
+  for (const wing of HARBOURS) {
+    const { quay, wall, gateX, stairY0, sea, wrap } = wing;
+    carveRoom(g, quay.x, quay.y, quay.w, quay.h);
+    carveCol(g, gateX, stairY0, wall.y);   // the stair + the sea gate
+    for (let j = sea.y0; j <= sea.y1; j++) for (let i = sea.x0; i <= sea.x1; i++) g[j][i] = SEA;
+    for (let j = quay.y; j < quay.y + quay.h; j++) {
+      for (let i = 0; i < wrap.west; i++) g[j][i] = SEA;
+      for (let i = 0; i < wrap.east; i++) g[j][MAP_W - 1 - i] = SEA;
+    }
   }
 
   // --- wood floors in chapel, brother's cell --------------------------------
@@ -177,11 +221,9 @@ function buildLevelGrid() {
   return {
     grid: g,
     cells,
-    rooms: {
-      court, chapel, tempter, brother, ladder, mainroad,
-      harbour: quay,
-      seagate: { x: gateX, y: stairY0, w: 1, h: wall.y - stairY0 + 1 },
-    },
+    // The harbour wings are not rooms: read them from HARBOURS, which carries
+    // each wing's quay, band, gate and sea together.
+    rooms: { court, chapel, tempter, brother, ladder, mainroad },
   };
 }
 

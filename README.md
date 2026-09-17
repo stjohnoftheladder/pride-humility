@@ -67,10 +67,37 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 
 | Context | Input |
 |---|---|
-| Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact |
+| Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact · `M` map |
 | Battle dodge | `WASD` move the heart · hold `Space` to pray |
 | Battle choices | `WASD` choose · `Enter`/`Space` act · `X` back |
 | Global | `Esc` pause · `♪ sound` mute (top right) |
+
+## Features a dev can switch off
+
+Work-in-progress additions are listed behind flags in `src/config.js`:
+
+```js
+export const FEATURES = {
+  harbourWest: true,
+  harbourEast: true,
+  harbourSouth: true,
+};
+```
+
+Set one to `false` and reload. The flag is read while the map is built, so it
+decides what is carved into the grid, what geometry is built and what blocks
+the pilgrim. All three harbour sites ship **on** because they are still
+candidates for the one Port of Theodosius — west and east hang off the bottom
+spine either side of the road, south sits at the road's foot below the chapel.
+Walk them from the same world and then delete the losers.
+
+With `?debug` on the URL, `1` / `2` / `3` toggle them live (in `FEATURES`
+order) as you walk. A live toggle shows and hides the addition and lifts
+everything it was blocking, but the ground plan it claimed stays carved until
+the next reload — flip the flag for a plan-level change.
+
+The mini-map (`M`) shows the whole city as a strip and follows those flags:
+a switched-off harbour empties out of it.
 
 ## Asset pipeline
 
@@ -96,8 +123,10 @@ the layout convention (or update `manifest.json`), and it just works — see
 index.html             byzantine-styled HUD + battle UI + screens
 src/
   main.js              boot, states (explore/battle/fall/confess/ending), triggers
-  config.js            pilgrimage map + palette + constants
+  config.js            pilgrimage map + palette + constants + FEATURES flags
+  city.js              wall-band dressing: the nobleman's house, Hagia Sophia, roof cells
   level.js             geometry, physical lights, passion-specific room storytelling
+  minimap.js           whole-city HUD mini-map strip (M)
   textures.js          PBR material loader
   SpriteSystem.js      chroma-key billboard shader + animation (shared)
   player.js            pilgrim exploration controller (no combat)
@@ -108,7 +137,7 @@ src/
   audio.js             WebAudio synth + chapel ambience
   hud.js               DOM HUD
 tools/                 asset generators (shared pipeline)
-tests/run.mjs          Playwright: both full journeys + endings + no console errors
+tests/run.mjs          Playwright: both full journeys + endings + HUD/map + feature flags
 vite.config.js         Vite 8/Rolldown split for the cacheable Three.js chunk
 .github/workflows/     ci.yml: Playwright suite, then Pages deploy (gated on it)
 THEOLOGY.md            mechanic → Orthodox source mapping

@@ -1,6 +1,6 @@
 // Bootstraps the pilgrimage: explore state + triggers + battle/ending flow.
 import * as THREE from 'three';
-import { LEVEL as LEVEL_CFG, validateLevel } from './config.js';
+import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, FEATURES } from './config.js';
 import { Materials } from './textures.js';
 import { Level } from './level.js';
 import { Player } from './player.js';
@@ -9,6 +9,7 @@ import { ENCOUNTERS, ENCOUNTER_ORDER } from './encounters.js';
 import { Branch } from './branch.js';
 import { AudioFX } from './audio.js';
 import { Hud } from './hud.js';
+import { Minimap } from './minimap.js';
 
 // ----- content (drafted; refined in the content pass) --------------------------
 const ELDER_LINES = [
@@ -83,6 +84,8 @@ async function boot() {
 
   const audio = new AudioFX();
   const hud = new Hud();
+  const minimap = new Minimap(document.getElementById('minimap-canvas'));
+  let minimapOn = true;            // the city is long; the map is on to start with
   const debugMode = new URLSearchParams(location.search).has('debug');
   if (debugMode) document.getElementById('top-right').style.display = 'flex';
   const materials = new Materials();
@@ -251,6 +254,17 @@ async function boot() {
     if (state === 'battle') { battle.onKey(e, true); return; }
     if (state === 'explore') {
       if (e.code === 'KeyE') { tryEngage(); return; }
+      if (e.code === 'KeyM') { minimapOn = !minimapOn; return; }
+      // ?debug: 1/2/3 toggle the additions in HARBOURS order, so the alternative
+      // harbour sites can be walked one at a time without reloading.
+      if (debugMode && /^Digit[1-9]$/.test(e.code)) {
+        const wing = HARBOURS[Number(e.code.slice(5)) - 1];
+        if (wing) {
+          const now = level.setFeature(wing.id, FEATURES[wing.id] === false);
+          hud.message(`${wing.id} ${now ? 'on' : 'off'}`, 1400);
+        }
+        return;
+      }
       player.onKey(e, true);
     }
   });
@@ -327,15 +341,20 @@ async function boot() {
     return x >= r.x && x < r.x + r.w && z >= r.y && z < r.y + r.h;
   }
 
+  /** A wing counts only while it is live: turning it off empties its quay. */
+  function wingLive(w) { return FEATURES[w.id] !== false; }
+  const wingGate = (w) => ({ x: w.gateX, y: w.stairY0, w: 1, h: w.wall.y - w.stairY0 + 1 });
+
   function roomLabel() {
-    const { court, chapel, tempter, brother, ladder, harbour, seagate } = LEVEL_CFG.rooms;
+    const { court, chapel, tempter, brother, ladder } = LEVEL_CFG.rooms;
     if (isInRoom(court)) return 'The Gate Court';
     if (isInRoom(chapel)) return 'The Chapel';
     if (isInRoom(tempter)) return 'The Tempter\u2019s Chamber';
     if (isInRoom(brother)) return 'The Brother\u2019s Cell';
     if (isInRoom(ladder)) return 'The Ladder Chamber';
-    if (isInRoom(harbour)) return 'The Port of Theodosius';
-    if (isInRoom(seagate)) return 'The Sea Gate';
+    // every live wing answers to the one name for now (they are candidate sites)
+    if (HARBOURS.some((w) => wingLive(w) && isInRoom(w.quay))) return 'The Port of Theodosius';
+    if (HARBOURS.some((w) => wingLive(w) && isInRoom(wingGate(w)))) return 'The Sea Gate';
     return 'The Pilgrim Way';
   }
 
@@ -369,12 +388,16 @@ async function boot() {
       elderCooldown = Math.max(0, elderCooldown - dt);
       confessCooldown = Math.max(0, confessCooldown - dt);
 
-      // the harbour fades its surf over the street ambience
-      audio.setHarbour(isInRoom(LEVEL_CFG.rooms.harbour));
+      // a live harbour wing fades its surf over the street ambience
+      audio.setHarbour(HARBOURS.some((w) => wingLive(w) && isInRoom(w.quay)));
 
       const label = roomLabel();
       if (label !== hud.el.room.textContent) hud.setRoom(label);
     }
+
+    // The map is part of the explore HUD: it goes away for battle and screens.
+    hud.setMinimap(state === 'explore' && minimapOn);
+    if (state === 'explore') minimap.update(player.pos.x, player.pos.z, camera.rotation.y);
 
     if (state === 'battle') {
       const res = battle.update(dt, time);
@@ -434,6 +457,13 @@ async function boot() {
       triggers: () => ({ K: spawns.K[0], B: spawns.B[0], P: spawns.P[0], A: spawns.A[0], E: spawns.E[0], L: spawns.L[0] }),
       finish: (o) => finishEncounter(o),
       roomLabel,
+      // mini-map + the feature registry, so a test can drive both
+      minimap,
+      minimapOn: () => minimapOn,
+      setMinimap: (on) => { minimapOn = !!on; },
+      features: () => ({ ...FEATURES }),
+      setFeature: (id, on) => level.setFeature(id, on),
+      harbours: () => HARBOURS.map((wing) => JSON.parse(JSON.stringify(wing))),
     };
   }
 }
