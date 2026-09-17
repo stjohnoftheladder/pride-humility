@@ -584,6 +584,24 @@ async function runInteractionRegressions(browser) {
     JSON.stringify(standable),
   );
 
+  // The dev keys have to be findable without being told: the HUD lists them,
+  // and the title screen repeats them for a ?debug build.
+  const devHints = await page.evaluate(() => {
+    const el = document.getElementById('dev-hints');
+    const text = el ? el.textContent : '';
+    return {
+      display: el ? getComputedStyle(el).display : 'missing',
+      travel: /PageDown/.test(text) && /PageUp/.test(text),
+      toggle: /1/.test(text) && /7/.test(text),
+      titleDev: getComputedStyle(document.getElementById('title-dev')).display,
+    };
+  });
+  check(
+    'dev: the HUD lists the dev keys, travel included',
+    devHints.display !== 'none' && devHints.travel && devHints.toggle && devHints.titleDev !== 'none',
+    JSON.stringify(devHints),
+  );
+
   // Toggling an addition off must take its blocking with it: drop the pilgrim
   // into that wing's open water and see whether the world still pushes him out.
   const toggled = await page.evaluate(async () => {

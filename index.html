@@ -69,6 +69,13 @@
     #top-right { top: 46px; right: 14px; display: none; gap: 8px; align-items: center; }
     #fps { color: var(--gold-dim); font-size: 11px; }
 
+    /* The dev keys. Bottom-right, below where the map ends, so the two never
+       fight for the corner. */
+    #dev-hints { right: 10px; bottom: 12px; max-width: 286px; font-size: 10px; line-height: 1.6; }
+    #dev-hints-title { color: var(--gold); letter-spacing: 2px; margin-bottom: 3px; }
+    .dev-row { color: var(--gold-dim); }
+    #dev-hints b { color: var(--gold); font-weight: normal; }
+
     /* The site card: what you have walked up to, its explanation, and how a dev
        turns it on and off. Bottom-left, clear of the room label and meters above
        it and of the map and sound button on the right. */
@@ -248,6 +255,15 @@
       <canvas id="minimap-canvas"></canvas>
     </div>
 
+    <!-- The dev keys, for a ?debug build. Bottom right: the map is centred on
+         the right, so the bottom of that column is always clear of it. -->
+    <div class="panel" id="dev-hints" style="display:none">
+      <div id="dev-hints-title">DEV</div>
+      <div class="dev-row"><b>PageDown</b> / <b>PageUp</b> · travel to the next / previous stop</div>
+      <div class="dev-row"><b>1</b>–<b>7</b> · toggle an addition off and on</div>
+      <div class="dev-row"><b>M</b> · map &nbsp;·&nbsp; walk up to a landmark for its card</div>
+    </div>
+
     <!-- Walk up to a site and it names itself here: what it was, and how a dev
          switches it on and off. -->
     <div class="panel" id="site-card" style="display:none">
@@ -285,6 +301,7 @@
     <p class="hint">WASD · move &nbsp;·&nbsp; MOUSE · look &nbsp;·&nbsp; E · interact &nbsp;·&nbsp; SHIFT · run &nbsp;·&nbsp; M · map</p>
     <button class="btn" id="start-btn">BEGIN THE PILGRIMAGE</button>
     <div class="hint">Esc releases the mouse.</div>
+    <p class="hint" id="title-dev" style="display:none">DEV · <b>PageDown</b>/<b>PageUp</b> travel the walk · <b>1</b>–<b>7</b> toggle additions · walk up to a landmark for its card</p>
   </div>
 
   <div class="screen" id="pause-screen" style="display:none">

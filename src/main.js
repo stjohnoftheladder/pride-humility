@@ -87,7 +87,11 @@ async function boot() {
   const minimap = new Minimap(document.getElementById('minimap-canvas'));
   let minimapOn = true;            // the city is long; the map is on to start with
   const debugMode = new URLSearchParams(location.search).has('debug');
-  if (debugMode) document.getElementById('top-right').style.display = 'flex';
+  if (debugMode) {
+    document.getElementById('top-right').style.display = 'flex';
+    document.getElementById('dev-hints').style.display = 'block';
+    document.getElementById('title-dev').style.display = 'block';
+  }
   const materials = new Materials();
   materials.load();
 
