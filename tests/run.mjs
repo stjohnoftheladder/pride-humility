@@ -35,7 +35,9 @@ async function waitForServer(url) {
 }
 
 let failures = 0;
+let checks = 0;
 function check(name, ok, detail) {
+  checks++;
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ' — ' + detail : ''}`);
   if (!ok) failures++;
 }
@@ -546,12 +548,46 @@ async function runInteractionRegressions(browser) {
     mapFollows.off < mapFollows.before * 0.7 && mapFollows.back >= mapFollows.before * 0.95,
     JSON.stringify(mapFollows),
   );
+
+  // The plan is turned half about, so walking the pilgrimage (south) moves the
+  // pilgrim UP the strip: the Gate Court sits low, the port high.
+  const orientation = await page.evaluate(async () => {
+    const g = window.__game;
+    const c = document.getElementById('minimap-canvas');
+    const markerRow = async (x, z) => {
+      g.teleport(x, z);
+      await new Promise((r) => setTimeout(r, 260));
+      const px = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let sum = 0, n = 0;
+      for (let y = 0; y < c.height; y++) {
+        for (let x2 = 0; x2 < c.width; x2++) {
+          const i = (y * c.width + x2) * 4;
+          if (px[i] === 255 && px[i + 1] === 233 && px[i + 2] === 176) { sum += y; n++; }
+        }
+      }
+      return n ? sum / n : null;
+    };
+    // the pilgrimage start is a spawn, not a trigger
+    const start = g.level.spawns.S[0];
+    const court = await markerRow(start.x, start.z);
+    const ladder = await markerRow(g.triggers().L.x, g.triggers().L.z);
+    const port = await markerRow(61.5, 355.5);           // the south quay
+    return { court, ladder, port, height: c.height };
+  });
+  check(
+    'minimap: walking south moves the pilgrim UP the strip (destination at the top)',
+    orientation.court !== null && orientation.court > orientation.ladder
+      && orientation.ladder > orientation.port && orientation.court > orientation.height * 0.75,
+    JSON.stringify(orientation),
+  );
+
   check('interactions: no console errors', errors.length === 0, JSON.stringify(errors));
   await page.close();
 }
 
 const server = startServer();
 let exit = 1;
+let aborted = null;
 try {
   await waitForServer(`http://localhost:${PORT}/`);
   const browser = await chromium.launch();
@@ -598,11 +634,18 @@ try {
   await browser.close();
   exit = failures === 0 ? 0 : 1;
 } catch (err) {
+  // A thrown check aborts the run: say so, and never report the run as passed —
+  // a crash part-way through used to print "ALL TESTS PASSED" over exit code 1.
+  aborted = err;
   console.error('TEST ERROR:', err.message);
   exit = 1;
 } finally {
   server.kill();
 }
 
-console.log(failures === 0 ? '\nALL TESTS PASSED' : `\n${failures} CHECK(S) FAILED`);
+if (aborted) {
+  console.log(`\nRUN ABORTED after ${checks} check(s): ${aborted.message}`);
+  process.exit(1);
+}
+console.log(failures === 0 ? `\nALL TESTS PASSED (${checks} checks)` : `\n${failures} CHECK(S) FAILED`);
 process.exit(exit);

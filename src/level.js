@@ -610,7 +610,6 @@ export class Level {
     // They line the wall frontage in the spans either side of the sea gate, so
     // no placement can leave one standing across the mouth of the stair (the
     // player collides with every collider regardless of its height).
-    const gateXw = (gateX + 0.5) * CELL;
     const gateCell0 = gateX * CELL, gateCell1 = (gateX + 1) * CELL;
     for (const [frontage0, frontage1] of [[qx0, gateCell0], [gateCell1, qx1]]) {
       const across = frontage1 - frontage0;
@@ -667,11 +666,15 @@ export class Level {
     // --- the two moored ships (the sketch's lateen-rigged pair) ---------------
     for (const sx of [fx(0.311), fx(0.689)]) this.addShip(g, sx, qz1 + 2.2);
 
-    // --- the port announces itself from the spine stair ------------------------
-    const label = makeWayfindingLabel('THE PORT ↓');
-    label.name = 'port-label';
+    // --- the port announces itself, standing over its own quay ---------------
+    // Sited over the quay's centre rather than at the stair mouth, so when more
+    // than one site is built each sign visibly belongs to the quay it names.
+    // It hangs above the sea wall's merlons (top 6.06) so it can still be read
+    // from the approach on the other side of the wall.
+    const label = makeWayfindingLabel(`THE PORT · ${wing.label}`);
+    label.name = `port-label-${wing.id}`;
     label.material.depthTest = true;
-    label.position.set(gateXw, 4.4, (wing.stairY0 + 0.5) * CELL);
+    label.position.set((quay.x + quay.w / 2) * CELL, 7.4, (quay.y + quay.h / 2) * CELL);
     group.add(label);
 
     group.add(g);

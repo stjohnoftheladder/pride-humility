@@ -84,6 +84,7 @@ export const FEATURES = {
 export const HARBOURS = [
   {
     id: 'harbourWest',
+    label: 'WEST',                          // wayfinding: "THE PORT · WEST"
     quay: { x: 2, y: 21, w: 13, h: 5 },     // walkable waterfront -> cells x2..14
     wall: { x0: 0, x1: 14, y: 20 },         // the crenellated sea wall band
     gateX: 14,                              // the sea gate through the wall
@@ -93,6 +94,7 @@ export const HARBOURS = [
   },
   {
     id: 'harbourEast',
+    label: 'EAST',
     quay: { x: 20, y: 21, w: 12, h: 5 },    // -> cells x20..31
     wall: { x0: 20, x1: 33, y: 20 },
     gateX: 20,
@@ -102,6 +104,7 @@ export const HARBOURS = [
   },
   {
     id: 'harbourSouth',
+    label: 'SOUTH',
     quay: { x: 2, y: 116, w: 30, h: 5 },        // -> cells x2..31, at the road's foot
     wall: { x0: 0, x1: 33, y: 115 },
     gateX: 20,                                  // the stair drops from the chapel
