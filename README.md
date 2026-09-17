@@ -97,7 +97,12 @@ everything it was blocking, but the ground plan it claimed stays carved until
 the next reload — flip the flag for a plan-level change.
 
 The mini-map (`M`) shows the whole city as a strip and follows those flags:
-a switched-off harbour empties out of it.
+a switched-off harbour empties out of it. The strip is turned half about, so the
+destination is at the top and walking south moves you up it — turning rather
+than mirroring keeps your left hand on the map's left, which is what you need
+when you pick a side at the spine. Each port is named on its own band
+(`WEST` / `EAST` / `SOUTH`), and the same names stand over the quays in the
+world, so a sign and its band always agree.
 
 ## Asset pipeline
 
