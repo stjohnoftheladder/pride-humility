@@ -66,6 +66,29 @@
     #top-right { top: 10px; right: 10px; display: none; gap: 8px; align-items: center; }
     #fps { color: var(--gold-dim); font-size: 11px; }
 
+    /* The index of what the city is made of: every addition, its explanation,
+       and whether it is switched on. Tall and scrollable; the wheel scrolls it
+       even with the pointer captured (see the wheel handler in main.js). */
+    #index-panel {
+      left: 10px; top: 50%; transform: translateY(-50%);
+      width: 350px; max-height: 88%; padding: 8px 10px;
+      display: flex; flex-direction: column;
+    }
+    #index-head {
+      display: flex; justify-content: space-between; gap: 10px;
+      font-size: 10px; letter-spacing: 1px; color: var(--gold);
+      border-bottom: 1px solid var(--accent); padding-bottom: 5px; margin-bottom: 6px;
+    }
+    #index-hint { color: var(--gold-dim); letter-spacing: 0; }
+    #index-list { overflow: hidden; flex: 1 1 auto; min-height: 0; }
+    .idx-entry { margin: 0 0 9px; }
+    .idx-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .idx-name { font-size: 12px; color: var(--gold); letter-spacing: 0.6px; }
+    .idx-state { font-size: 10px; color: var(--gold-dim); }
+    .idx-state.on { color: #9fd18a; }
+    .idx-state.off { color: #d1796a; }
+    .idx-note { margin: 2px 0 0; font-size: 11px; line-height: 1.45; color: var(--text); opacity: 0.85; }
+
     /* Whole-city mini-map: a tall thin strip, drawn from the level grid by
        src/minimap.js. Sized as a fraction of the stage so it keeps its
        proportions when the window changes. */
@@ -226,6 +249,16 @@
          (court, the road, the port) is what carries the information. -->
     <div class="panel" id="minimap" style="display:none">
       <canvas id="minimap-canvas"></canvas>
+    </div>
+
+    <!-- What the city is made of: every addition a dev can switch off, with the
+         explanation of what it was. Opened with I. -->
+    <div class="panel" id="index-panel" style="display:none">
+      <div id="index-head">
+        <span>THE CITY, AND WHAT IT IS MADE OF</span>
+        <span id="index-hint">I · close</span>
+      </div>
+      <div id="index-list"></div>
     </div>
 
     <div id="msg"></div>

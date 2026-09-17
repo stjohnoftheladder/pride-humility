@@ -15,7 +15,7 @@
 //
 // The static plan is painted once into an offscreen canvas and only repainted
 // when the set of live features changes; each frame is a blit plus the arrow.
-import { LEVEL, CELL, MAP_W, MAP_H, HARBOURS, FEATURES } from './config.js';
+import { LEVEL, CELL, MAP_W, MAP_H, HARBOURS, SITES, FEATURES } from './config.js';
 
 const SCALE = 3;                 // canvas px per grid cell -> 102 x 384
 
@@ -30,6 +30,7 @@ const COLOURS = {
   shadow: 'rgba(0, 0, 0, 0.55)',
   label: '#d9b96a',        // site names — dimmer than the pilgrim, so he stays the brightest thing on the strip
   labelShadow: 'rgba(0, 0, 0, 0.85)',
+  monument: '#a8883f',     // the ring marking a monument of the quarter
 };
 
 // Drawn as dots, brightest first: where the pilgrimage starts and ends, the
@@ -76,13 +77,20 @@ export class Minimap {
     return x === gateX && y >= stairY0 && y <= wall.y;
   }
 
+  inSite(site, x, y) {
+    return [site.area, site.water, site.band, site.at].filter(Boolean)
+      .some((b) => x >= b.x && x < b.x + (b.w || 1) && y >= b.y && y < b.y + (b.h || 1));
+  }
+
   inDeadWing(x, y) {
-    return HARBOURS.some((wing) => FEATURES[wing.id] === false && this.inWing(wing, x, y));
+    return HARBOURS.some((wing) => FEATURES[wing.id] === false && this.inWing(wing, x, y))
+      || SITES.some((site) => FEATURES[site.id] === false && this.inSite(site, x, y));
   }
 
   /** What the plan currently reflects — repaint when this changes. */
   liveSignature() {
-    return HARBOURS.map((wing) => `${wing.id}:${FEATURES[wing.id] === false ? 0 : 1}`).join(',');
+    const flag = (id) => (FEATURES[id] === false ? 0 : 1);
+    return [...HARBOURS.map((w) => `${w.id}:${flag(w.id)}`), ...SITES.map((s) => `${s.id}:${flag(s.id)}`)].join(',');
   }
 
   paintPlan() {
@@ -117,6 +125,22 @@ export class Minimap {
       ctx.fillText(wing.label, cx + 1, cy + 1);
       ctx.fillStyle = COLOURS.label;
       ctx.fillText(wing.label, cx, cy);
+    }
+
+    // The monuments of the quarter, as a ring apiece: six of them stand within
+    // twenty rows of each other, and the strip is 34 cells wide, so their names
+    // would collide here — the signs in the world and the index (I) carry the
+    // names, and the map carries where.
+    ctx.strokeStyle = COLOURS.monument;
+    ctx.lineWidth = 1.7;
+    for (const site of SITES) {
+      if (FEATURES[site.id] === false) continue;
+      const box = site.area || site.band
+        || { x: site.at.x, y: site.at.y, w: site.at.w || 1, h: site.at.h || 1 };
+      const cx = this.cellX(box.x + box.w / 2), cy = this.cellY(box.y + box.h / 2);
+      ctx.beginPath();
+      ctx.arc(cx, cy, SCALE * 1.7, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
     // Thresholds and landmarks last, so decor can't cover them.

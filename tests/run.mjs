@@ -488,14 +488,73 @@ async function runInteractionRegressions(browser) {
 
   const wings = await page.evaluate(() => ({
     groups: Object.keys(window.__game.level.featureGroups),
-    harbours: window.__game.harbours().map((w) => w.id),
-    features: window.__game.features(),
+    additions: window.__game.additions(),
   }));
   check(
-    'features: every harbour site ships built and flagged on',
-    wings.groups.length === 3 && wings.harbours.length === 3
-      && wings.harbours.every((id) => wings.groups.includes(id) && wings.features[id] !== false),
-    JSON.stringify(wings),
+    'features: every addition ships built and flagged on',
+    wings.groups.length === 9 && wings.additions.length === 9
+      && wings.additions.every((a) => wings.groups.includes(a.id) && a.on),
+    JSON.stringify({ groups: wings.groups, additions: wings.additions.map((a) => `${a.id}:${a.on}`) }),
+  );
+
+  const sites = await page.evaluate(() => window.__game.sites().map((s) => s.id));
+  check(
+    'sites: the quarter around Hagia Sophia is built',
+    sites.length === 6 && ['augustaion', 'milion', 'chalke', 'zeuxippus', 'cistern', 'hagiaEirene']
+      .every((id) => sites.includes(id)),
+    JSON.stringify(sites),
+  );
+
+  // The index: every addition listed with its explanation, and the wheel
+  // scrolls it (a captured pointer still delivers wheel events).
+  const index = await page.evaluate(async () => {
+    const g = window.__game;
+    g.setIndex(true);
+    await new Promise((r) => setTimeout(r, 250));
+    const panel = document.getElementById('index-panel');
+    const notes = [...document.querySelectorAll('#index-list .idx-note')].map((n) => n.textContent.length);
+    const list = document.getElementById('index-list');
+    const before = list.style.transform;
+    g.key('KeyI');            // closes
+    await new Promise((r) => setTimeout(r, 220));
+    const closed = getComputedStyle(panel).display;
+    g.key('KeyI');            // reopens
+    await new Promise((r) => setTimeout(r, 220));
+    return {
+      display: getComputedStyle(panel).display, closed,
+      entries: notes.length, shortest: Math.min(...notes), longest: Math.max(...notes),
+      scrollable: list.scrollHeight > list.clientHeight, scrolled: before,
+    };
+  });
+  check(
+    'index: lists every addition with its explanation, and I opens and closes it',
+    index.display !== 'none' && index.closed === 'none' && index.entries === 9
+      && index.shortest > 120 && index.longest > 200 && index.scrollable,
+    JSON.stringify(index),
+  );
+
+  const sitesToggle = await page.evaluate(async () => {
+    const g = window.__game;
+    const site = g.sites().find((s) => s.id === 'cistern');
+    const tz = (site.water.y + site.water.h / 2) * 3;
+    const tx = (site.water.x + site.water.w / 2) * 3;
+    const drift = async () => {
+      g.teleport(tx, tz);
+      await new Promise((r) => setTimeout(r, 320));
+      return Math.hypot(g.player.pos.x - tx, g.player.pos.z - tz);
+    };
+    const on = await drift();
+    const offFlag = g.setFeature('cistern', false);
+    const invisible = g.level.featureGroups.cistern.visible;
+    const off = await drift();
+    g.setFeature('cistern', true);
+    return { on, off, offFlag, invisible, restored: g.features().cistern };
+  });
+  check(
+    'sites: a toggled-off monument hides and stops blocking',
+    sitesToggle.on > 0.3 && sitesToggle.off < 0.05 && sitesToggle.offFlag === false
+      && sitesToggle.invisible === false && sitesToggle.restored === true,
+    JSON.stringify(sitesToggle),
   );
 
   // Toggling an addition off must take its blocking with it: drop the pilgrim

@@ -1,7 +1,7 @@
 // Pilgrimage level construction: geometry, collision, candle lights, triggers.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOURS, FEATURES } from './config.js';
+import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOURS, SITES, FEATURES } from './config.js';
 import { HOUSE, HAGIA, HAGIA_MINARETS, DOME_CELLS, TOWER_CELLS, roofKind } from './city.js';
 import { Materials } from './textures.js';
 import { AnimatedSprite } from './SpriteSystem.js';
@@ -713,6 +713,250 @@ export class Level {
     return FEATURES[id];
   }
 
+  // -------------------------------------------------------------------------
+  // The monumental quarter around Hagia Sophia.
+  //
+  // Six sites of the real city, each raised from its own data block in SITES,
+  // into a group of its own (so a feature flag can take it out) and with its own
+  // sign, like the wings. They keep the game's level of abstraction: courts the
+  // pilgrim can cross, and silhouettes read from the road.
+
+  /** A site's centre in world units, whichever shape its data uses. */
+  siteCentre(site) {
+    const box = site.area || site.band
+      || { x: site.at.x, y: site.at.y, w: site.at.w || 1, h: site.at.h || 1 };
+    return { x: (box.x + box.w / 2) * CELL, z: (box.y + (box.h || 1) / 2) * CELL };
+  }
+
+  /** Raise one site and hang its sign over it. */
+  addSite(site) {
+    const group = new THREE.Group();
+    group.name = `site-${site.id}`;
+    group.userData.feature = site.id;
+    const builders = {
+      court: 'addAugustaion',
+      tetrapylon: 'addMilion',
+      gate: 'addChalke',
+      peristyle: 'addZeuxippus',
+      cistern: 'addCistern',
+      domeBand: 'addHagiaEirene',
+    };
+    if (builders[site.kind]) this[builders[site.kind]](site, group);
+
+    const label = makeWayfindingLabel(site.label);
+    label.name = `site-label-${site.id}`;
+    const c = this.siteCentre(site);
+    label.position.set(c.x, 9.4, c.z);
+    group.add(label);
+
+    this.group.add(group);
+    this.featureGroups[site.id] = group;
+    if (FEATURES[site.id] === false) group.visible = false;
+  }
+
+  /** The Augustaion: the marble forecourt, with a peristyle down its long sides
+   *  — the court the pilgrim crosses on the way to the chapel. */
+  addAugustaion(site, g) {
+    const { x, y, w, h } = site.area;
+    const x0 = x * CELL, x1 = (x + w) * CELL, z0 = y * CELL, z1 = (y + h) * CELL;
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    const gold = this.mat.get('gold'), plaster = this.mat.get('plaster');
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0 - 0.9, 0.14, z1 - z0 - 0.9), this.mat.get('stone_floor'));
+    slab.position.set(cx, 0.07, cz);
+    g.add(slab);
+    for (const [kx, kz, kw, kd] of [[cx, z0 + 0.45, x1 - x0 - 0.9, 0.26], [cx, z1 - 0.45, x1 - x0 - 0.9, 0.26]]) {
+      const kerb = new THREE.Mesh(new THREE.BoxGeometry(kw, 0.24, kd), gold);
+      kerb.position.set(kx, 0.12, kz);
+      g.add(kerb);
+    }
+    // A single colonnade down the court's spine: three cells deep is not room
+    // for a peristyle, and columns set on the spine leave the ends open. Spaced
+    // every three cells, starting clear of the Milion's plot, so the pilgrim can
+    // always pass between them.
+    const spine = (y + 1.5) * CELL;
+    for (let i = 2; i < w; i += 3) {
+      const px = (x + i + 0.5) * CELL;
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 5.2, 10), plaster);
+      shaft.position.set(px, 2.6, spine);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.34, 0.42, 10), gold);
+      cap.position.set(px, 5.41, spine);
+      g.add(shaft, cap);
+      this.addCollider(px, spine, 0.9, 0.9, 5.6, site.id);
+    }
+  }
+
+  /** The Milion: mile zero — four piers, four arches, a dome, and a crossing
+   *  the pilgrim can walk through, as a tetrapylon invites. */
+  addMilion(site, g) {
+    const { x, y, w, h } = site.at;
+    const cx = (x + w / 2) * CELL, cz = (y + h / 2) * CELL;
+    const half = 2.5;
+    const plaster = this.mat.get('plaster'), gold = this.mat.get('gold');
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      const pier = new THREE.Mesh(new THREE.BoxGeometry(1.15, 5.4, 1.15), plaster);
+      pier.position.set(cx + sx * half, 2.7, cz + sz * half);
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.3, 1.35), gold);
+      cap.position.set(cx + sx * half, 5.55, cz + sz * half);
+      g.add(pier, cap);
+      this.addCollider(cx + sx * half, cz + sz * half, 1.25, 1.25, 5.7, site.id);
+    }
+    for (const [ax, az, ww, dd] of [[0, -half, 5.2, 0.55], [0, half, 5.2, 0.55], [-half, 0, 0.55, 5.2], [half, 0, 0.55, 5.2]]) {
+      const arch = new THREE.Mesh(new THREE.BoxGeometry(ww, 0.7, dd), plaster);
+      arch.position.set(cx + ax, 5.65, cz + az);
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(ww + 0.18, 0.22, dd + 0.18), gold);
+      trim.position.set(cx + ax, 6.11, cz + az);
+      g.add(arch, trim);
+    }
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.6, 0.45, 14), plaster);
+    drum.position.set(cx, 6.4, cz);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(1.65, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), plaster);
+    dome.position.set(cx, 6.6, cz);
+    const finial = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.0, 0.14), gold);
+    finial.position.set(cx, 8.3, cz);
+    g.add(drum, dome, finial);
+  }
+
+  /** The Chalke: the palace gate, shut, with the icon of Christ above the doors
+   *  — the first act of iconoclasm was the taking down of this image. */
+  addChalke(site, g) {
+    const { x, y } = site.at;
+    const cx = (x + 0.5) * CELL;
+    const face = y * CELL;                     // the wall's north face, toward the square
+    const gold = this.mat.get('gold'), stone = this.mat.get('stone_wall');
+    for (const s of [-1, 1]) {
+      const pier = new THREE.Mesh(new THREE.BoxGeometry(0.95, 5.6, 1.1), stone);
+      pier.position.set(cx + s * 2.5, 2.8, face);
+      g.add(pier);
+      this.addCollider(cx + s * 2.5, face, 1.05, 1.2, 5.8, site.id);
+    }
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.95, 1.25), stone);
+    lintel.position.set(cx, 5.85, face);
+    const lintelTrim = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.24, 1.4), gold);
+    lintelTrim.position.set(cx, 6.42, face);
+    const doors = new THREE.Mesh(new THREE.BoxGeometry(4.1, 4.7, 0.32), gold);   // bronze, and shut
+    doors.position.set(cx, 2.35, face - 0.15);
+    const iconFrame = new THREE.Mesh(new THREE.BoxGeometry(3.1, 2.5, 0.14), gold);
+    iconFrame.position.set(cx, 4.85, face - 0.22);
+    const icon = new THREE.Mesh(new THREE.PlaneGeometry(2.7, 2.1), this.mat.get('icon'));
+    icon.position.set(cx, 4.85, face - 0.31);
+    icon.rotation.y = Math.PI;                 // facing north, out over the square
+    g.add(lintel, lintelTrim, doors, iconFrame, icon);
+    const glow = new THREE.PointLight(PALETTE.gold, 14, 13, 2);
+    glow.position.set(cx, 5.2, face - 1.4);
+    g.add(glow);
+  }
+
+  /** The Baths of Zeuxippus: a peristyle court, and the statues the poets
+   *  catalogued — gods, heroes, poets and statesmen, all of them bronze. */
+  addZeuxippus(site, g) {
+    const { x, y, w, h } = site.area;
+    const x0 = x * CELL, x1 = (x + w) * CELL, z0 = y * CELL, z1 = (y + h) * CELL;
+    const stone = this.mat.get('stone_floor'), plaster = this.mat.get('plaster'), gold = this.mat.get('gold');
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(x1 - x0 - 1.1, 0.1, z1 - z0 - 1.1), stone);
+    slab.position.set((x0 + x1) / 2, 0.05, (z0 + z1) / 2);
+    g.add(slab);
+    // A peristyle one cell in from the edge — in cell units, so the columns
+    // stand in the aisle and the rim cells stay clear to walk.
+    const seen = new Set();
+    const columns = [];
+    const push = (px, pz) => {
+      const k = `${px.toFixed(2)},${pz.toFixed(2)}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      columns.push([px, pz]);
+    };
+    for (let i = 1; i < w - 1; i += 2) {
+      push((x + i + 0.5) * CELL, y * CELL + CELL * 1.5);
+      push((x + i + 0.5) * CELL, (y + h) * CELL - CELL * 1.5);
+    }
+    for (let j = 1; j < h - 1; j += 2) {
+      push(x * CELL + CELL * 1.5, (y + j + 0.5) * CELL);
+      push((x + w) * CELL - CELL * 1.5, (y + j + 0.5) * CELL);
+    }
+    for (const [px, pz] of columns) {
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, 5.4, 10), plaster);
+      shaft.position.set(px, 2.7, pz);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.36, 0.44, 10), gold);
+      cap.position.set(px, 5.62, pz);
+      g.add(shaft, cap);
+      this.addCollider(px, pz, 1.0, 1.0, 5.8, site.id);
+    }
+    // the collection: a plinth and a figure apiece
+    const figures = [
+      [x + 2.5, y + 2.5], [x + w - 3.5, y + 2.5],
+      [x + 2.5, y + h - 3.5], [x + w - 3.5, y + h - 3.5],
+      [x + w / 2, y + h / 2],
+    ];
+    for (const [fx, fz] of figures) {
+      const px = fx * CELL, pz = fz * CELL;
+      const plinth = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.9, 1.05), stone);
+      plinth.position.set(px, 0.45, pz);
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.36, 1.9, 8), plaster);
+      body.position.set(px, 1.85, pz);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 6), plaster);
+      head.position.set(px, 2.95, pz);
+      g.add(plinth, body, head);
+      this.addCollider(px, pz, 1.15, 1.15, 3.2, site.id);
+    }
+  }
+
+  /** The Basilica Cistern: the water it held, with its column forest standing
+   *  in it and a dry rim to walk — the court reads as sunken. */
+  addCistern(site, g) {
+    const { x, y, w, h } = site.water;
+    const cx = (x + w / 2) * CELL, cz = (y + h / 2) * CELL;
+    const stone = this.mat.get('stone_wall'), gold = this.mat.get('gold');
+    const tex = this.makeSeaTexture();
+    tex.repeat.set(w * 0.8, h * 0.8);
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(w * CELL, h * CELL).rotateX(-Math.PI / 2),
+      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.24, metalness: 0.14, color: 0xd8e4ea }),
+    );
+    plane.name = 'cistern-water';
+    plane.position.set(cx, 0.07, cz);
+    g.add(plane);
+    this.seaTextures.push(tex);
+    this.addCollider(cx, cz, w * CELL, h * CELL, 1.1, site.id);
+    for (let j = 0; j < h; j += 2) {
+      for (let i = 0; i < w; i += 2) {
+        const px = (x + i + 0.5) * CELL, pz = (y + j + 0.5) * CELL;
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.3, 2.7, 8), stone);
+        shaft.position.set(px, 1.35, pz);
+        const cap = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.28, 0.95), stone);
+        cap.position.set(px, 2.84, pz);
+        g.add(shaft, cap);
+      }
+    }
+    // the kerb of the dry rim, so the water sits below the paving
+    for (const [kx, kz, kw, kd] of [
+      [cx, (y * CELL) - 0.2, w * CELL + 0.4, 0.4], [cx, ((y + h) * CELL) + 0.2, w * CELL + 0.4, 0.4],
+      [(x * CELL) - 0.2, cz, 0.4, h * CELL], [((x + w) * CELL) + 0.2, cz, 0.4, h * CELL],
+    ]) {
+      const kerb = new THREE.Mesh(new THREE.BoxGeometry(kw, 0.34, kd), gold);
+      kerb.position.set(kx, 0.17, kz);
+      g.add(kerb);
+    }
+  }
+
+  /** Hagia Eirene: the other great church, its dome rising from the band that
+   *  shares a wall with Hagia Sophia's. */
+  addHagiaEirene(site, g) {
+    const { x, y, w } = site.band;
+    const cx = (x + w / 2) * CELL, cz = (y + 0.5) * CELL;
+    const plaster = this.mat.get('plaster'), gold = this.mat.get('gold');
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.2, 1.5, 16), plaster);
+    drum.position.set(cx, WALL_H + 0.75, cz);
+    const trim = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, 0.26, 16), gold);
+    trim.position.set(cx, WALL_H + 1.42, cz);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(2.3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), plaster);
+    dome.position.set(cx, WALL_H + 1.5, cz);
+    const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.16, 1.1, 0.16), gold);
+    crossV.position.set(cx, WALL_H + 4.1, cz);
+    const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.6), gold);
+    crossH.position.set(cx, WALL_H + 4.25, cz);
+    g.add(drum, trim, dome, crossV, crossH);
+  }
+
   build() {
     const { grid, cells } = LEVEL;
     const wallGeo = [], colGeo = [], woodGeo = [];
@@ -720,6 +964,12 @@ export class Level {
 
     const isHouse = (x, z) => x >= HOUSE.x && x < HOUSE.x + HOUSE.w && z >= HOUSE.y && z < HOUSE.y + HOUSE.h;
     const inHagia = (x, z) => x >= HAGIA.x && x < HAGIA.x + HAGIA.w && z >= HAGIA.y && z < HAGIA.y + HAGIA.h;
+    // Any dome band keeps its mass, for the same reason Hagia Sophia's does: the
+    // drum stands on the band the mass raises, and skipping the mass leaves the
+    // dome floating over a see-through void.
+    const domeBands = SITES.filter((s) => s.kind === 'domeBand').map((s) => s.band);
+    const inDomeBand = (x, z) => inHagia(x, z)
+      || domeBands.some((b) => x >= b.x && x < b.x + b.w && z >= b.y && z < b.y + 1);
     const inSet = (cells, x, z) => cells.some(([a, b]) => a === x && b === z);
 
     for (let z = 0; z < MAP_H; z++) {
@@ -747,7 +997,7 @@ export class Level {
             // The band the dome stands on is solid but unroofed: skipping this
             // mass left the drum floating over a see-through void, which the
             // lowered sea wall then exposed from the harbour.
-            if (inHagia(x, z)) break;
+            if (inDomeBand(x, z)) break;
             const kind = inSet(DOME_CELLS, x, z) ? 'dome' : inSet(TOWER_CELLS, x, z) ? 'tower' : roofKind(x, z);
             if (kind === 'dome') {
               const drum = new THREE.CylinderGeometry(1.0, 1.0, 0.7, 10);
@@ -922,6 +1172,7 @@ export class Level {
     this.addHouse();
     this.addHagiaSophia();
     for (const wing of HARBOURS) this.addHarbour(wing);
+    for (const site of SITES) this.addSite(site);
 
     // --- decor + trigger positions ------------------------------------------------
     for (const [key, t] of cells) {

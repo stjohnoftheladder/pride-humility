@@ -1,6 +1,6 @@
 // Bootstraps the pilgrimage: explore state + triggers + battle/ending flow.
 import * as THREE from 'three';
-import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, FEATURES } from './config.js';
+import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, SITES, ADDITIONS, FEATURES } from './config.js';
 import { Materials } from './textures.js';
 import { Level } from './level.js';
 import { Player } from './player.js';
@@ -86,6 +86,8 @@ async function boot() {
   const hud = new Hud();
   const minimap = new Minimap(document.getElementById('minimap-canvas'));
   let minimapOn = true;            // the city is long; the map is on to start with
+  let indexOn = false;             // what the city is made of, on I
+  hud.renderIndex(ADDITIONS, FEATURES);
   const debugMode = new URLSearchParams(location.search).has('debug');
   if (debugMode) document.getElementById('top-right').style.display = 'flex';
   const materials = new Materials();
@@ -255,13 +257,15 @@ async function boot() {
     if (state === 'explore') {
       if (e.code === 'KeyE') { tryEngage(); return; }
       if (e.code === 'KeyM') { minimapOn = !minimapOn; return; }
-      // ?debug: 1/2/3 toggle the additions in HARBOURS order, so the alternative
-      // harbour sites can be walked one at a time without reloading.
+      if (e.code === 'KeyI') { indexOn = !indexOn; return; }
+      // ?debug: 1..9 toggle the additions in ADDITIONS order, so the candidate
+      // sites and the quarter can be walked one at a time without reloading.
       if (debugMode && /^Digit[1-9]$/.test(e.code)) {
-        const wing = HARBOURS[Number(e.code.slice(5)) - 1];
-        if (wing) {
-          const now = level.setFeature(wing.id, FEATURES[wing.id] === false);
-          hud.message(`${wing.id} ${now ? 'on' : 'off'}`, 1400);
+        const addition = ADDITIONS[Number(e.code.slice(5)) - 1];
+        if (addition) {
+          const now = level.setFeature(addition.id, FEATURES[addition.id] === false);
+          hud.renderIndex(ADDITIONS, FEATURES);
+          hud.message(`${addition.label} ${now ? 'on' : 'off'}`, 1400);
         }
         return;
       }
@@ -291,6 +295,12 @@ async function boot() {
     camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x));
   });
   window.addEventListener('mouseup', () => { dragLook = false; });
+
+  // The wheel scrolls the index. A captured pointer still delivers wheel
+  // events, so the list can be read without letting go of the mouse.
+  window.addEventListener('wheel', (e) => {
+    if (state === 'explore' && indexOn) hud.scrollIndex(e.deltaY);
+  }, { passive: true });
 
   document.addEventListener('pointerlockchange', () => {
     if (document.pointerLockElement === canvas) {
@@ -395,8 +405,9 @@ async function boot() {
       if (label !== hud.el.room.textContent) hud.setRoom(label);
     }
 
-    // The map is part of the explore HUD: it goes away for battle and screens.
+    // The map and the index are part of the explore HUD: they go for battle too.
     hud.setMinimap(state === 'explore' && minimapOn);
+    hud.setIndex(state === 'explore' && indexOn);
     if (state === 'explore') minimap.update(player.pos.x, player.pos.z, camera.rotation.y);
 
     if (state === 'battle') {
@@ -464,6 +475,10 @@ async function boot() {
       features: () => ({ ...FEATURES }),
       setFeature: (id, on) => level.setFeature(id, on),
       harbours: () => HARBOURS.map((wing) => JSON.parse(JSON.stringify(wing))),
+      sites: () => SITES.map((site) => JSON.parse(JSON.stringify(site))),
+      additions: () => ADDITIONS.map((a) => ({ ...a, on: FEATURES[a.id] !== false })),
+      indexOn: () => indexOn,
+      setIndex: (on) => { indexOn = !!on; },
     };
   }
 }
