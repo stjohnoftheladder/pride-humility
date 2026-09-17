@@ -16,6 +16,7 @@
 // The static plan is painted once into an offscreen canvas and only repainted
 // when the set of live features changes; each frame is a blit plus the arrow.
 import { LEVEL, CELL, MAP_W, MAP_H, HARBOURS, SITES, FEATURES } from './config.js';
+import { HAGIA } from './city.js';
 
 const SCALE = 3;                 // canvas px per grid cell -> 102 x 384
 
@@ -124,7 +125,7 @@ export class Minimap {
       ctx.fillStyle = COLOURS.labelShadow;
       ctx.fillText(wing.label, cx + 1, cy + 1);
       ctx.fillStyle = COLOURS.label;
-      ctx.fillText(wing.label, cx, cy);
+      ctx.fillText(wing.short || wing.label, cx, cy);
     }
 
     // The monuments of the quarter, as a ring apiece: six of them stand within
@@ -142,6 +143,19 @@ export class Minimap {
       ctx.arc(cx, cy, SCALE * 1.7, 0, Math.PI * 2);
       ctx.stroke();
     }
+
+    // Hagia Sophia is named on the map as well as signed in the world — it is
+    // the landmark the whole road climbs toward, and the one a player asks for.
+    const hx = this.cellX(HAGIA.x + HAGIA.w / 2), hy = this.cellY(HAGIA.y + 0.5);
+    ctx.fillStyle = COLOURS.label;
+    ctx.beginPath();
+    ctx.arc(hx, hy - SCALE * 3.2, SCALE * 2.1, Math.PI, 0);   // a dome above the name
+    ctx.fill();
+    ctx.font = `bold ${SCALE * 3}px ui-monospace, "DejaVu Sans Mono", monospace`;
+    ctx.fillStyle = COLOURS.labelShadow;
+    ctx.fillText('HAGIA SOPHIA', hx + 1, hy + 1);
+    ctx.fillStyle = COLOURS.label;
+    ctx.fillText('HAGIA SOPHIA', hx, hy);
 
     // Thresholds and landmarks last, so decor can't cover them.
     for (const { tile, r } of MARKS) {

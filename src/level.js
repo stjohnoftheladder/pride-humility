@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOURS, SITES, FEATURES } from './config.js';
-import { HOUSE, HAGIA, HAGIA_MINARETS, DOME_CELLS, TOWER_CELLS, roofKind } from './city.js';
+import { HOUSE, HAGIA, HAGIA_MINARETS, HAGIA_NOTE, DOME_CELLS, TOWER_CELLS, roofKind } from './city.js';
 import { Materials } from './textures.js';
 import { AnimatedSprite } from './SpriteSystem.js';
 
@@ -373,6 +373,14 @@ export class Level {
     const glow = new THREE.PointLight(PALETTE.gold, 26, 16, 2);
     glow.position.set(cx, 8, cz - 2);
     this.group.add(glow);
+
+    // As findable as the sites: its own sign, high over the road it faces, and
+    // the centre the approach card and the dev transport read.
+    this.hagiaCentre = { x: cx, z: cz };
+    const sign = makeWayfindingLabel('HAGIA SOPHIA');
+    sign.name = 'hagia-sophia-sign';
+    sign.position.set(cx - 3.4, 13.6, cz);
+    this.group.add(sign);
     this.trackFlicker(glow, 26);
 
     g.add(podium, drum, drumTrim, dome, crossV, crossH, archFrame, archDark);
@@ -671,7 +679,7 @@ export class Level {
     // than one site is built each sign visibly belongs to the quay it names.
     // It hangs above the sea wall's merlons (top 6.06) so it can still be read
     // from the approach on the other side of the wall.
-    const label = makeWayfindingLabel(`THE PORT · ${wing.label}`);
+    const label = makeWayfindingLabel(wing.label);
     label.name = `port-label-${wing.id}`;
     label.material.depthTest = true;
     label.position.set((quay.x + quay.w / 2) * CELL, 7.4, (quay.y + quay.h / 2) * CELL);
@@ -955,6 +963,30 @@ export class Level {
     const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.6), gold);
     crossH.position.set(cx, WALL_H + 4.25, cz);
     g.add(drum, trim, dome, crossV, crossH);
+  }
+
+  /** Everything the approach card knows about: the additions, each with its
+   *  explanation, plus Hagia Sophia, which is fixed scenery but deserves to be
+   *  named as you come up to it. Assembled here because this is where every
+   *  position is known. */
+  landmarks() {
+    const out = [
+      ...HARBOURS.map((w) => ({
+        id: w.id, label: w.label, note: w.note,
+        x: (w.quay.x + w.quay.w / 2) * CELL, z: (w.quay.y + w.quay.h / 2) * CELL,
+      })),
+      ...SITES.map((s) => {
+        const c = this.siteCentre(s);
+        return { id: s.id, label: s.label, note: s.note, x: c.x, z: c.z };
+      }),
+    ];
+    if (this.hagiaCentre) {
+      out.push({
+        id: 'hagiaSophia', label: 'HAGIA SOPHIA', note: HAGIA_NOTE, fixed: true,
+        x: this.hagiaCentre.x, z: this.hagiaCentre.z,
+      });
+    }
+    return out;
   }
 
   build() {

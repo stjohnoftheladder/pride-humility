@@ -492,7 +492,7 @@ async function runInteractionRegressions(browser) {
   }));
   check(
     'features: every addition ships built and flagged on',
-    wings.groups.length === 9 && wings.additions.length === 9
+    wings.groups.length === 7 && wings.additions.length === 7
       && wings.additions.every((a) => wings.groups.includes(a.id) && a.on),
     JSON.stringify({ groups: wings.groups, additions: wings.additions.map((a) => `${a.id}:${a.on}`) }),
   );
@@ -505,63 +505,90 @@ async function runInteractionRegressions(browser) {
     JSON.stringify(sites),
   );
 
-  // The index: every addition listed with its explanation, and the wheel
-  // scrolls it (a captured pointer still delivers wheel events).
-  const index = await page.evaluate(async () => {
+  // The approach card: walk up to a site and it names itself with its
+  // explanation and how to switch it off; walk away and it goes.
+  const card = await page.evaluate(async () => {
     const g = window.__game;
-    g.setIndex(true);
-    await new Promise((r) => setTimeout(r, 250));
-    const panel = document.getElementById('index-panel');
-    const notes = [...document.querySelectorAll('#index-list .idx-note')].map((n) => n.textContent.length);
-    const list = document.getElementById('index-list');
-    const before = list.style.transform;
-    g.key('KeyI');            // closes
-    await new Promise((r) => setTimeout(r, 220));
-    const closed = getComputedStyle(panel).display;
-    g.key('KeyI');            // reopens
-    await new Promise((r) => setTimeout(r, 220));
-    return {
-      display: getComputedStyle(panel).display, closed,
-      entries: notes.length, shortest: Math.min(...notes), longest: Math.max(...notes),
-      scrollable: list.scrollHeight > list.clientHeight, scrolled: before,
+    const at = (l) => { g.teleport(l.x, l.z); };
+    const read = () => {
+      const el = document.getElementById('site-card');
+      return {
+        display: getComputedStyle(el).display,
+        name: document.getElementById('site-card-name').textContent,
+        note: document.getElementById('site-card-note').textContent.length,
+        toggle: document.getElementById('site-card-toggle').textContent,
+      };
     };
+    const mile = g.landmarks().find((l) => l.id === 'milion');
+    at(mile); await new Promise((r) => setTimeout(r, 260));
+    const onSite = read();
+    const hagia = g.landmarks().find((l) => l.id === 'hagiaSophia');
+    at(hagia); await new Promise((r) => setTimeout(r, 260));
+    const atHagia = read();
+    g.teleport(52.5, 166.5);                       // the empty middle of the road
+    await new Promise((r) => setTimeout(r, 260));
+    const away = read();
+    return { onSite, atHagia, away };
   });
   check(
-    'index: lists every addition with its explanation, and I opens and closes it',
-    index.display !== 'none' && index.closed === 'none' && index.entries === 9
-      && index.shortest > 120 && index.longest > 200 && index.scrollable,
-    JSON.stringify(index),
+    'card: walking up to a site names it, explains it, and says how to toggle it',
+    card.onSite.display !== 'none' && card.onSite.name === 'THE MILION'
+      && card.onSite.note > 120 && /milion/.test(card.onSite.toggle)
+      && card.atHagia.name === 'HAGIA SOPHIA' && /fixed landmark/.test(card.atHagia.toggle)
+      && card.away.display === 'none',
+    JSON.stringify(card),
   );
 
-  const sitesToggle = await page.evaluate(async () => {
+  // ?debug: instant transport north and south along the walk, naming each stop.
+  const transport = await page.evaluate(async () => {
     const g = window.__game;
-    const site = g.sites().find((s) => s.id === 'cistern');
-    const tz = (site.water.y + site.water.h / 2) * 3;
-    const tx = (site.water.x + site.water.w / 2) * 3;
-    const drift = async () => {
-      g.teleport(tx, tz);
-      await new Promise((r) => setTimeout(r, 320));
-      return Math.hypot(g.player.pos.x - tx, g.player.pos.z - tz);
-    };
-    const on = await drift();
-    const offFlag = g.setFeature('cistern', false);
-    const invisible = g.level.featureGroups.cistern.visible;
-    const off = await drift();
-    g.setFeature('cistern', true);
-    return { on, off, offFlag, invisible, restored: g.features().cistern };
+    const stops = g.waypoints();
+    const sorted = stops.every((w, i) => i === 0 || w.z > stops[i - 1].z);
+    const visited = [];
+    for (let i = 0; i < stops.length - 1; i++) {          // the last step wraps north
+      g.key('PageDown');
+      await new Promise((r) => setTimeout(r, 90));
+      visited.push({ z: +g.player.pos.z.toFixed(1), label: document.getElementById('msg').textContent });
+    }
+    const southward = visited.every((p, i) => i === 0 || p.z > visited[i - 1].z);
+    const atPort = /Port of Theodosius/.test(visited[visited.length - 1].label);
+    g.key('PageDown');                                    // wraps to the first stop
+    await new Promise((r) => setTimeout(r, 90));
+    const wrapped = document.getElementById('msg').textContent;
+    g.key('PageUp');
+    await new Promise((r) => setTimeout(r, 90));
+    const backNorth = document.getElementById('msg').textContent;
+    return { count: stops.length, sorted, southward, atPort, wrapped, backNorth };
   });
   check(
-    'sites: a toggled-off monument hides and stops blocking',
-    sitesToggle.on > 0.3 && sitesToggle.off < 0.05 && sitesToggle.offFlag === false
-      && sitesToggle.invisible === false && sitesToggle.restored === true,
-    JSON.stringify(sitesToggle),
+    'transport: the stops run north to south, and PageDown/PageUp walk them',
+    transport.count === 7 && transport.sorted && transport.southward && transport.atPort
+      && /Gate Court/.test(transport.wrapped) && /Port of Theodosius/.test(transport.backNorth),
+    JSON.stringify(transport),
+  );
+
+  // Every stop must be somewhere the pilgrim can actually stand.
+  const standable = await page.evaluate(async () => {
+    const g = window.__game;
+    const out = [];
+    for (const w of g.waypoints()) {
+      g.teleport(w.x, w.z);
+      await new Promise((r) => setTimeout(r, 300));
+      out.push({ name: w.name, drift: +Math.hypot(g.player.pos.x - w.x, g.player.pos.z - w.z).toFixed(2) });
+    }
+    return out;
+  });
+  check(
+    'transport: every stop is clear ground, not inside a wall or a prop',
+    standable.every((p) => p.drift < 0.05),
+    JSON.stringify(standable),
   );
 
   // Toggling an addition off must take its blocking with it: drop the pilgrim
   // into that wing's open water and see whether the world still pushes him out.
   const toggled = await page.evaluate(async () => {
     const g = window.__game;
-    const wing = g.harbours().find((w) => w.id === 'harbourSouth');
+    const wing = g.harbours().find((w) => w.id === 'harbour');
     const tx = ((wing.sea.x0 + wing.sea.x1 + 1) / 2) * 3;
     const tz = ((wing.sea.y0 + wing.sea.y1 + 1) / 2) * 3;
     const drift = async () => {
@@ -570,14 +597,14 @@ async function runInteractionRegressions(browser) {
       return Math.hypot(g.player.pos.x - tx, g.player.pos.z - tz);
     };
     const on = await drift();
-    const offFlag = g.setFeature('harbourSouth', false);
-    const invisible = g.level.featureGroups.harbourSouth.visible;
+    const offFlag = g.setFeature('harbour', false);
+    const invisible = g.level.featureGroups.harbour.visible;
     const off = await drift();
-    g.setFeature('harbourSouth', true);
-    return { on, off, offFlag, invisible, restored: g.features().harbourSouth };
+    g.setFeature('harbour', true);
+    return { on, off, offFlag, invisible, restored: g.features().harbour };
   });
   check(
-    'features: a toggled-off harbour hides and stops blocking (dev switch)',
+    'features: a toggled-off port hides and stops blocking (dev switch)',
     toggled.on > 0.3 && toggled.off < 0.05 && toggled.offFlag === false
       && toggled.invisible === false && toggled.restored === true,
     JSON.stringify(toggled),
@@ -595,10 +622,10 @@ async function runInteractionRegressions(browser) {
     const settle = () => new Promise((r) => setTimeout(r, 320));
     await settle();                 // let the map catch up with the toggle above
     const before = sea();
-    window.__game.setFeature('harbourSouth', false);
+    window.__game.setFeature('harbour', false);
     await new Promise((r) => setTimeout(r, 300));
     const off = sea();
-    window.__game.setFeature('harbourSouth', true);
+    window.__game.setFeature('harbour', true);
     await new Promise((r) => setTimeout(r, 300));
     return { before, off, back: sea() };
   });

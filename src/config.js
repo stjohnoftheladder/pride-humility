@@ -52,10 +52,7 @@ export const PLAYER_HP_MAX = 20;
 // and hides the addition and stops it blocking, while the ground plan it
 // claimed stays carved until the next reload.
 export const FEATURES = {
-  // three candidate sites for the one port (see HARBOURS)
-  harbourWest: true,
-  harbourEast: true,
-  harbourSouth: true,
+  harbour: true,                        // the Port of Theodosius (see HARBOURS)
   // the monumental quarter around Hagia Sophia (see SITES)
   augustaion: true,
   milion: true,
@@ -94,37 +91,16 @@ export const FEATURES = {
 // see what is switched off).
 const WING_DATA = [
   {
-    id: 'harbourWest',
-    label: 'WEST',                          // wayfinding: "THE PORT · WEST"
-    quay: { x: 2, y: 21, w: 13, h: 5 },     // walkable waterfront -> cells x2..14
-    wall: { x0: 0, x1: 14, y: 20 },         // the crenellated sea wall band
-    gateX: 14,                              // the sea gate through the wall
-    stairY0: 14,                            // the stair down from the bottom spine
-    sea: { x0: 0, x1: 14, y0: 26, y1: 30 }, // open water beyond the quay
-    wrap: { west: 2, east: 0 },             // cells of water wrapping each quay end
-    note: 'The city’s grain came ashore at a quay like this one, under the sea wall’s towers — the Horrea Theodosiana stood by the harbour, which is why the walk is dressed with cargo rather than with an encounter. Built from the sketch of the walled harbour, read as a plan. This site hangs off the bottom spine west of the road.',
-  },
-  {
-    id: 'harbourEast',
-    label: 'EAST',
-    quay: { x: 20, y: 21, w: 12, h: 5 },    // -> cells x20..31
-    wall: { x0: 20, x1: 33, y: 20 },
-    gateX: 20,
-    stairY0: 14,
-    sea: { x0: 20, x1: 33, y0: 26, y1: 30 },
-    wrap: { west: 0, east: 2 },
-    note: 'The same harbour, sited east of the road: with the west site built too, the road runs out between two seas, a quay and a sea wall on either hand. The grain quays, the Horrea and the moored ships are the city’s, not this corner’s.',
-  },
-  {
-    id: 'harbourSouth',
-    label: 'SOUTH',
-    quay: { x: 2, y: 116, w: 30, h: 5 },        // -> cells x2..31, at the road's foot
-    wall: { x0: 0, x1: 33, y: 115 },
+    id: 'harbour',
+    label: 'THE PORT OF THEODOSIUS',        // wayfinding
+    short: 'PORT',                          // the mini-map's short form
+    quay: { x: 2, y: 116, w: 30, h: 5 },        // walkable waterfront -> cells x2..31
+    wall: { x0: 0, x1: 33, y: 115 },            // the crenellated sea wall band
     gateX: 20,                                  // the stair drops from the chapel
     stairY0: 114,
     sea: { x0: 0, x1: 33, y0: 121, y1: 127 },   // water to the map's edge
-    wrap: { west: 2, east: 2 },
-    note: 'The same harbour at the foot of the road, in the rows the long map otherwise leaves empty below the chapel, with the sea running to the map’s edge — the widest of the three sites, and the one that keeps the wing at the size it was drawn.',
+    wrap: { west: 2, east: 2 },                 // cells of water wrapping each quay end
+    note: 'The city’s grain came ashore at a quay like this one, under the sea wall’s towers — the Horrea Theodosiana stood by the harbour, which is why the walk is dressed with cargo rather than with an encounter. Built from the sketch of the walled harbour, read as a plan: wall to the north, quay in front of it, sea to the south. It stands at the foot of the road, past the chapel, with the water running to the map’s edge.',
   },
 ];
 
@@ -198,7 +174,7 @@ export const SITES = SITE_DATA.filter((site) => FEATURES[site.id]);
  *  candidate sites first, then the monuments of the quarter — each carrying the
  *  explanation the index shows. */
 export const ADDITIONS = [
-  ...WING_DATA.map((w) => ({ id: w.id, label: `THE PORT · ${w.label}`, note: w.note })),
+  ...WING_DATA.map((w) => ({ id: w.id, label: w.label, note: w.note })),
   ...SITE_DATA.map((s) => ({ id: s.id, label: s.label, note: s.note })),
 ];
 

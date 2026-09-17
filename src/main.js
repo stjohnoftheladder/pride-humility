@@ -86,8 +86,6 @@ async function boot() {
   const hud = new Hud();
   const minimap = new Minimap(document.getElementById('minimap-canvas'));
   let minimapOn = true;            // the city is long; the map is on to start with
-  let indexOn = false;             // what the city is made of, on I
-  hud.renderIndex(ADDITIONS, FEATURES);
   const debugMode = new URLSearchParams(location.search).has('debug');
   if (debugMode) document.getElementById('top-right').style.display = 'flex';
   const materials = new Materials();
@@ -95,6 +93,8 @@ async function boot() {
 
   const level = new Level(scene, materials);
   const spawns = level.build();
+  // Every addition and landmark the approach card knows about, with positions.
+  const landmarks = level.landmarks();
   const player = new Player(camera, canvas, level);
   scene.add(camera);
 
@@ -257,14 +257,17 @@ async function boot() {
     if (state === 'explore') {
       if (e.code === 'KeyE') { tryEngage(); return; }
       if (e.code === 'KeyM') { minimapOn = !minimapOn; return; }
-      if (e.code === 'KeyI') { indexOn = !indexOn; return; }
+      // ?debug: instant transport along the road, one stop at a time.
+      if (debugMode && (e.code === 'PageDown' || e.code === 'PageUp')) {
+        travel(e.code === 'PageDown' ? 1 : -1);
+        return;
+      }
       // ?debug: 1..9 toggle the additions in ADDITIONS order, so the candidate
       // sites and the quarter can be walked one at a time without reloading.
       if (debugMode && /^Digit[1-9]$/.test(e.code)) {
         const addition = ADDITIONS[Number(e.code.slice(5)) - 1];
         if (addition) {
           const now = level.setFeature(addition.id, FEATURES[addition.id] === false);
-          hud.renderIndex(ADDITIONS, FEATURES);
           hud.message(`${addition.label} ${now ? 'on' : 'off'}`, 1400);
         }
         return;
@@ -295,12 +298,6 @@ async function boot() {
     camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x));
   });
   window.addEventListener('mouseup', () => { dragLook = false; });
-
-  // The wheel scrolls the index. A captured pointer still delivers wheel
-  // events, so the list can be read without letting go of the mouse.
-  window.addEventListener('wheel', (e) => {
-    if (state === 'explore' && indexOn) hud.scrollIndex(e.deltaY);
-  }, { passive: true });
 
   document.addEventListener('pointerlockchange', () => {
     if (document.pointerLockElement === canvas) {
@@ -355,6 +352,66 @@ async function boot() {
   function wingLive(w) { return FEATURES[w.id] !== false; }
   const wingGate = (w) => ({ x: w.gateX, y: w.stairY0, w: 1, h: w.wall.y - w.stairY0 + 1 });
 
+  // ----- the approach card, and the dev's instant transport -----------------
+  // Walk up to a landmark and it names itself: what it was, and how a dev
+  // switches it off. It is a caption, not a threshold — nothing in the world
+  // gates on it.
+  const CARD_RANGE = 7;          // world units
+  let cardFor = null;
+
+  /** How to switch this one off, said the way a dev would need it. */
+  function toggleLine(l) {
+    if (l.fixed) return 'fixed landmark — not a dev addition';
+    const key = ADDITIONS.findIndex((a) => a.id === l.id) + 1;
+    const flag = `set <b>${l.id}: false</b> in src/config.js and reload`;
+    return key > 0 && debugMode
+      ? `dev · <b>${key}</b> toggles this &nbsp;·&nbsp; or ${flag}`
+      : `dev · ${flag}`;
+  }
+
+  function updateSiteCard() {
+    let near = null, best = CARD_RANGE;
+    for (const l of landmarks) {
+      if (!l.fixed && FEATURES[l.id] === false) continue;   // a hidden addition says nothing
+      const d = Math.hypot(player.pos.x - l.x, player.pos.z - l.z);
+      if (d < best) { best = d; near = l; }
+    }
+    if (!near) { hud.showSiteCard(false); cardFor = null; return; }
+    if (near !== cardFor) {
+      cardFor = near;
+      hud.setSiteCard({ label: near.label, note: near.note, toggle: toggleLine(near) });
+    }
+    hud.showSiteCard(true);
+  }
+
+  // Instant transport north and south (?debug, PageUp / PageDown): the stops of
+  // the walk, in order, so a dev can be anywhere in a keystroke.
+  const CELL_W = 3;
+  const WAYPOINTS = (() => {
+    const { court, ladder } = LEVEL_CFG.rooms;
+    const stop = (name, cx, cy, yaw) => ({ name, x: (cx + 0.5) * CELL_W, z: (cy + 0.5) * CELL_W, yaw });
+    return [
+      stop('The Gate Court', court.x + 4, court.y + 2),
+      stop('The Bottom Spine', 17, 13),
+      stop('The Pilgrim Way', 17, 55),
+      stop('The Ladder Chamber', ladder.x + 2, ladder.y + 2),
+      stop('Hagia Sophia', 17, 103, -Math.PI / 2),   // looking east, up at the dome
+      stop('The Chapel', 17, 110),
+      stop('The Port of Theodosius', 17, 118),
+    ];
+  })();
+  let waypoint = 0;
+  function travel(step) {
+    waypoint = (waypoint + step + WAYPOINTS.length) % WAYPOINTS.length;
+    const w = WAYPOINTS[waypoint];
+    player.keys = {};
+    player.pos.set(w.x, 0, w.z);
+    player.vel.set(0, 0, 0);
+    camera.position.set(w.x, camera.position.y, w.z);
+    if (w.yaw !== undefined) camera.rotation.y = w.yaw;
+    hud.message(`${w.name}  (${waypoint + 1}/${WAYPOINTS.length})`, 1500);
+  }
+
   function roomLabel() {
     const { court, chapel, tempter, brother, ladder } = LEVEL_CFG.rooms;
     if (isInRoom(court)) return 'The Gate Court';
@@ -407,8 +464,12 @@ async function boot() {
 
     // The map and the index are part of the explore HUD: they go for battle too.
     hud.setMinimap(state === 'explore' && minimapOn);
-    hud.setIndex(state === 'explore' && indexOn);
-    if (state === 'explore') minimap.update(player.pos.x, player.pos.z, camera.rotation.y);
+    if (state === 'explore') {
+      minimap.update(player.pos.x, player.pos.z, camera.rotation.y);
+      updateSiteCard();
+    } else {
+      hud.showSiteCard(false);
+    }
 
     if (state === 'battle') {
       const res = battle.update(dt, time);
@@ -477,8 +538,9 @@ async function boot() {
       harbours: () => HARBOURS.map((wing) => JSON.parse(JSON.stringify(wing))),
       sites: () => SITES.map((site) => JSON.parse(JSON.stringify(site))),
       additions: () => ADDITIONS.map((a) => ({ ...a, on: FEATURES[a.id] !== false })),
-      indexOn: () => indexOn,
-      setIndex: (on) => { indexOn = !!on; },
+      landmarks: () => landmarks.map((l) => ({ ...l })),
+      waypoints: () => WAYPOINTS.map((w) => ({ ...w })),
+      travel,
     };
   }
 }

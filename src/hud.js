@@ -43,8 +43,10 @@ export class Hud {
       prompt: $('engage-prompt'),
       mute: $('mute-btn'),
       minimap: $('minimap'),
-      index: $('index-panel'),
-      indexList: $('index-list'),
+      siteCard: $('site-card'),
+      siteCardName: $('site-card-name'),
+      siteCardNote: $('site-card-note'),
+      siteCardToggle: $('site-card-toggle'),
       fps: $('fps'),
     };
     this.msgTimer = null;
@@ -98,36 +100,21 @@ export class Hud {
     this.el.minimap.style.display = on ? 'block' : 'none';
   }
 
-  /** The index of what the city is made of: one entry per addition, its
-   *  explanation, and whether it is switched on. Re-rendered when the flags
-   *  change, so a dev toggle shows up in the list at once. */
-  renderIndex(additions, features) {
-    if (!this.el.indexList) return;
-    this.el.indexList.innerHTML = additions.map((a) => {
-      const on = features[a.id] !== false;
-      return `<div class="idx-entry">
-        <div class="idx-head"><span class="idx-name">${esc(a.label)}</span>` +
-        `<span class="idx-state ${on ? 'on' : 'off'}">${on ? 'ON' : 'OFF'}</span></div>
-        <p class="idx-note">${esc(a.note)}</p>
-      </div>`;
-    }).join('');
-    this.indexScroll = 0;
-    this.el.indexList.style.marginTop = '0px';
+  /** The card for whatever the pilgrim has walked up to: its name, what it
+   *  was, and the line that says how a dev switches it on and off. */
+  setSiteCard({ label, note, toggle }) {
+    if (!this.el.siteCard || this._cardLabel === label) return;
+    this.el.siteCardName.textContent = label;
+    this.el.siteCardNote.textContent = note;
+    this.el.siteCardToggle.innerHTML = toggle;
+    this._cardLabel = label;
   }
 
-  setIndex(on) {
-    if (!this.el.index || this._indexOn === on) return;
-    this._indexOn = on;
-    this.el.index.style.display = on ? 'flex' : 'none';
-  }
-
-  /** the wheel scrolls the list even with the pointer captured */
-  scrollIndex(dy) {
-    if (!this.el.indexList) return;
-    const list = this.el.indexList;
-    const max = Math.max(0, list.scrollHeight - list.clientHeight);
-    this.indexScroll = Math.max(0, Math.min(max, (this.indexScroll || 0) + dy));
-    list.style.transform = `translateY(${-this.indexScroll}px)`;
+  showSiteCard(on) {
+    if (!this.el.siteCard || this._cardOn === on) return;
+    this._cardOn = on;
+    this.el.siteCard.style.display = on ? 'block' : 'none';
+    if (!on) this._cardLabel = null;
   }
 
   showTitle() {

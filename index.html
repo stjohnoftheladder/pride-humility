@@ -52,7 +52,9 @@
     #room-label { color: var(--gold); letter-spacing: 1px; font-size: 12px; }
 
     #meters {
-      top: 10px; left: 10px; margin-top: 34px; width: 200px;
+      /* clear of the room label above it, which is a taller panel than the
+         margin used to allow for */
+      top: 10px; left: 10px; margin-top: 46px; width: 200px;
       opacity: 0; transform: translateY(-5px); transition: opacity 0.5s, transform 0.5s;
     }
     #meters.revealed { opacity: 1; transform: translateY(0); }
@@ -63,31 +65,25 @@
     #pride-fill  { background: linear-gradient(#e06a5a, var(--red-dim)); box-shadow: 0 0 6px #c0392b88; }
     #grace-fill  { background: linear-gradient(#ffd98a, #c9a227); box-shadow: 0 0 6px #f3d27688; }
 
-    #top-right { top: 10px; right: 10px; display: none; gap: 8px; align-items: center; }
+    /* below the sound button, which sits at the same corner in ?debug */
+    #top-right { top: 46px; right: 14px; display: none; gap: 8px; align-items: center; }
     #fps { color: var(--gold-dim); font-size: 11px; }
 
-    /* The index of what the city is made of: every addition, its explanation,
-       and whether it is switched on. Tall and scrollable; the wheel scrolls it
-       even with the pointer captured (see the wheel handler in main.js). */
-    #index-panel {
-      left: 10px; top: 50%; transform: translateY(-50%);
-      width: 350px; max-height: 88%; padding: 8px 10px;
-      display: flex; flex-direction: column;
+    /* The site card: what you have walked up to, its explanation, and how a dev
+       turns it on and off. Bottom-left, clear of the room label and meters above
+       it and of the map and sound button on the right. */
+    #site-card {
+      left: 10px; bottom: 12px; width: 336px; padding: 7px 10px;
     }
-    #index-head {
-      display: flex; justify-content: space-between; gap: 10px;
-      font-size: 10px; letter-spacing: 1px; color: var(--gold);
-      border-bottom: 1px solid var(--accent); padding-bottom: 5px; margin-bottom: 6px;
+    #site-card-name { font-size: 12px; color: var(--gold); letter-spacing: 1px; }
+    #site-card-note {
+      margin: 4px 0 0; font-size: 11px; line-height: 1.5; color: var(--text); opacity: 0.88;
     }
-    #index-hint { color: var(--gold-dim); letter-spacing: 0; }
-    #index-list { overflow: hidden; flex: 1 1 auto; min-height: 0; }
-    .idx-entry { margin: 0 0 9px; }
-    .idx-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-    .idx-name { font-size: 12px; color: var(--gold); letter-spacing: 0.6px; }
-    .idx-state { font-size: 10px; color: var(--gold-dim); }
-    .idx-state.on { color: #9fd18a; }
-    .idx-state.off { color: #d1796a; }
-    .idx-note { margin: 2px 0 0; font-size: 11px; line-height: 1.45; color: var(--text); opacity: 0.85; }
+    #site-card-toggle {
+      margin-top: 5px; font-size: 10px; letter-spacing: 0.4px; color: var(--gold-dim);
+      border-top: 1px solid var(--accent); padding-top: 4px;
+    }
+    #site-card-toggle b { color: var(--gold); font-weight: normal; }
 
     /* Whole-city mini-map: a tall thin strip, drawn from the level grid by
        src/minimap.js. Sized as a fraction of the stage so it keeps its
@@ -111,7 +107,8 @@
     #mute-btn:hover { border-color: var(--gold); }
 
     #msg {
-      position: absolute; top: 16%; left: 50%; transform: translateX(-50%);
+      /* low enough not to sit on the room label and meters in the top corner */
+      position: absolute; top: 26%; left: 50%; transform: translateX(-50%);
       font-size: 15px; text-align: center; color: var(--gold);
       text-shadow: 0 2px 0 #000, 0 0 12px #f3d27666; opacity: 0; transition: opacity 0.25s;
       max-width: 70vw; line-height: 1.6;
@@ -251,14 +248,12 @@
       <canvas id="minimap-canvas"></canvas>
     </div>
 
-    <!-- What the city is made of: every addition a dev can switch off, with the
-         explanation of what it was. Opened with I. -->
-    <div class="panel" id="index-panel" style="display:none">
-      <div id="index-head">
-        <span>THE CITY, AND WHAT IT IS MADE OF</span>
-        <span id="index-hint">I · close</span>
-      </div>
-      <div id="index-list"></div>
+    <!-- Walk up to a site and it names itself here: what it was, and how a dev
+         switches it on and off. -->
+    <div class="panel" id="site-card" style="display:none">
+      <div id="site-card-name"></div>
+      <p id="site-card-note"></p>
+      <div id="site-card-toggle"></div>
     </div>
 
     <div id="msg"></div>

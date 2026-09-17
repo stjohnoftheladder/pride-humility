@@ -67,7 +67,8 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 
 | Context | Input |
 |---|---|
-| Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact · `M` map · `I` the city index |
+| Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact · `M` map |
+| Dev (`?debug`) | `1`–`7` toggle an addition · `PageDown`/`PageUp` travel to the next/previous stop of the walk |
 | Battle dodge | `WASD` move the heart · hold `Space` to pray |
 | Battle choices | `WASD` choose · `Enter`/`Space` act · `X` back |
 | Global | `Esc` pause · `♪ sound` mute (top right) |
@@ -78,21 +79,19 @@ Work-in-progress additions are listed behind flags in `src/config.js`:
 
 ```js
 export const FEATURES = {
-  harbourWest: true, harbourEast: true, harbourSouth: true,   // sites for the port
-  augustaion: true, milion: true, chalke: true,               // the monumental quarter
+  harbour: true,                                   // the Port of Theodosius
+  augustaion: true, milion: true, chalke: true,     // the monumental quarter
   zeuxippus: true, cistern: true, hagiaEirene: true,
 };
 ```
 
 Set one to `false` and reload. The flag is read while the map is built, so it
-decides what is carved into the grid, what geometry is built and what blocks
-the pilgrim.
+decides what is carved into the grid, what geometry is built and what blocks the
+pilgrim.
 
-**The port** has three candidate sites because the one Port of Theodosius can sit
-three ways: `harbourWest` and `harbourEast` hang off the bottom spine either side
-of the road (with both built, the road becomes a causeway between their two
-seas), and `harbourSouth` stands at the road's foot in the rows the long map
-otherwise leaves empty below the chapel. Walk them and delete the losers.
+**The port** stands at the foot of the road, past the chapel, in the rows the
+long map otherwise leaves empty: the wing at the size it was drawn, wall to the
+north, quay, then open sea to the map's edge.
 
 **The quarter** is what actually stood around Hagia Sophia, raised at the
 pilgrimage's climax: the `augustaion` (the marble forecourt, carved out of the
@@ -102,20 +101,24 @@ through), the `chalke` (the palace gate, shut, with the icon of Christ above it)
 court of columns standing in water) and `hagiaEirene` (the other great church, a
 second dome on the band beside Hagia Sophia's).
 
-Press **`I`** for the index in game: every addition, its explanation, and whether
-it is switched on, with the wheel scrolling the list. With `?debug` on the URL,
-`1`–`9` toggle the additions in that order as you walk. A live toggle shows and
-hides the addition and lifts everything it was blocking, but the ground plan it
-claimed stays carved until the next reload — flip the flag for a plan-level
-change.
+**Walk up to any of them** and a card appears at the bottom left: the name, what
+it was, and the line that says how a dev switches it off — the number key while
+`?debug` is on, or the flag to set in `src/config.js`. Hagia Sophia itself is
+fixed scenery rather than an addition, but it is signed in the world, named on
+the map, and in the same card, so the landmark the road climbs toward can always
+be found.
+
+In `?debug`, `PageDown` and `PageUp` travel instantly to the next or previous
+stop of the walk — the Gate Court, the Bottom Spine, the Pilgrim Way, the Ladder
+Chamber, Hagia Sophia, the Chapel, the Port — naming where you land.
 
 The mini-map (`M`) shows the whole city as a strip and follows those flags:
 a switched-off addition empties out of it. The strip is turned half about, so the
 destination is at the top and walking south moves you up it — turning rather
 than mirroring keeps your left hand on the map's left, which is what you need
-when you pick a side at the spine. Each port is named on its own band
-(`WEST` / `EAST` / `SOUTH`) and each monument gets a ring; the same names stand
-over them in the world, so a sign and its band always agree.
+when you pick a side at the spine. The port is named on its band, Hagia Sophia is
+named beside its dome, and each monument of the quarter gets a ring; the same
+names stand over them in the world.
 
 ## Asset pipeline
 
