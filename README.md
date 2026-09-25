@@ -70,7 +70,7 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 | Context | Input |
 |---|---|
 | Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact · `M` map |
-| Dev (`?debug`) | `1`–`7` toggle an addition · `PageDown`/`PageUp` travel to the next/previous stop of the walk |
+| Dev (`?debug`) | `1`–`9`, `Shift+1`–`Shift+4` toggle additions · `PageDown`/`PageUp` travel to the next/previous stop |
 | Battle dodge | `WASD` move the heart · hold `Space` to pray |
 | Battle choices | `WASD` choose · `Enter`/`Space` act · `X` back |
 | Global | `Esc` pause · `♪ sound` mute (top right) |
@@ -84,6 +84,8 @@ export const FEATURES = {
   harbour: true,                                   // the Port of Theodosius
   augustaion: true, milion: true, chalke: true,     // the monumental quarter
   zeuxippus: true, cistern: true, hagiaEirene: true,
+  aqueduct: true, pantokrator: true, forumConstantine: true,
+  stoudios: true, hippodrome: true, mosaicPeristyle: true,
 };
 ```
 
@@ -102,6 +104,24 @@ through), the `chalke` (the palace gate, shut, with the icon of Christ above it)
 `zeuxippus` (the baths' peristyle and their statues), the `cistern` (a sunken
 court of columns standing in water) and `hagiaEirene` (the other great church, a
 second dome on the band beside Hagia Sophia's).
+
+**Along the road**, six more courts alternate west and east between rows 24
+and 91. They are procedural interpretations of [Byzantium 1200](https://www.byzantium1200.com/contents.html),
+not a geographically exact city plan. Each site's data includes its reference URL.
+
+| Key | Site | Side |
+| --- | --- | --- |
+| `8` | Aqueduct of Valens | West |
+| `9` | Pantokrator Monastery | East |
+| `Shift+1` | Forum of Constantine | West |
+| `Shift+2` | Saint John of Stoudios | East |
+| `Shift+3` | Hippodrome | West |
+| `Shift+4` | Mosaic Peristyle | East |
+
+The original `1`–`7` mappings are unchanged. All six use the same visibility,
+collision and minimap switches as the existing sites. Their cards appear at
+the road edge, and each has a north–south travel stop facing its frontage.
+The peristyle shows an earlier form; its card explains its later alterations.
 
 **Walk up to any of them** and a card appears at the bottom left: the name, what
 it was, and the line that says how a dev switches it off — the number key while

@@ -492,7 +492,7 @@ async function runInteractionRegressions(browser) {
   }));
   check(
     'features: every addition ships built and flagged on',
-    wings.groups.length === 7 && wings.additions.length === 7
+    wings.groups.length === 13 && wings.additions.length === 13
       && wings.additions.every((a) => wings.groups.includes(a.id) && a.on),
     JSON.stringify({ groups: wings.groups, additions: wings.additions.map((a) => `${a.id}:${a.on}`) }),
   );
@@ -500,7 +500,7 @@ async function runInteractionRegressions(browser) {
   const sites = await page.evaluate(() => window.__game.sites().map((s) => s.id));
   check(
     'sites: the quarter around Hagia Sophia is built',
-    sites.length === 6 && ['augustaion', 'milion', 'chalke', 'zeuxippus', 'cistern', 'hagiaEirene']
+    sites.length === 12 && ['augustaion', 'milion', 'chalke', 'zeuxippus', 'cistern', 'hagiaEirene']
       .every((id) => sites.includes(id)),
     JSON.stringify(sites),
   );
@@ -562,10 +562,47 @@ async function runInteractionRegressions(browser) {
   });
   check(
     'transport: the stops run north to south, and PageDown/PageUp walk them',
-    transport.count === 7 && transport.sorted && transport.southward && transport.atPort
+    transport.count === 13 && transport.sorted && transport.southward && transport.atPort
       && /Gate Court/.test(transport.wrapped) && /Port of Theodosius/.test(transport.backNorth),
     JSON.stringify(transport),
   );
+
+  // Each new roadside card and physical obstacle follows the actual keyboard
+  // switch, including shifted digits; the map and road stay usable throughout.
+  for (const [id, key, shifted] of [
+    ['aqueduct', 'Digit8', false], ['pantokrator', 'Digit9', false],
+    ['forumConstantine', 'Digit1', true], ['stoudios', 'Digit2', true],
+    ['hippodrome', 'Digit3', true], ['mosaicPeristyle', 'Digit4', true],
+  ]) {
+    const result = await page.evaluate(async ({ id, key, shifted }) => {
+      const g = window.__game;
+      const landmark = g.landmarks().find((s) => s.id === id);
+      g.teleport(landmark.x, landmark.z);
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 160));
+      await settle();
+      const name = document.getElementById('site-card-name').textContent;
+      const shortcut = document.getElementById('site-card-toggle').textContent;
+      const plan = () => g.minimap.plan.toDataURL();
+      const before = plan();
+      const flip = () => window.dispatchEvent(new KeyboardEvent('keydown', { code: key, shiftKey: shifted }));
+      const obstacles = g.level.colliders.filter((c) => c.feature === id);
+      flip(); await settle();
+      const hidden = !g.level.featureGroups[id].visible && !g.features()[id]
+        && getComputedStyle(document.getElementById('site-card')).display === 'none';
+      const mapChanged = before !== plan();
+      const nonblocking = obstacles.every((c) => !g.level.colliderLive(c));
+      flip(); await settle();
+      const restored = g.level.featureGroups[id].visible && g.features()[id] && before === plan();
+      const site = g.sites().find((s) => s.id === id);
+      const roadClear = !obstacles.some((c) => c.maxX > 45 && c.minX < 60);
+      return { name, label: landmark.label, shortcut, hidden, mapChanged, nonblocking,
+        restored, roadClear, obstacles: obstacles.length, source: site.source };
+    }, { id, key, shifted });
+    check(`road site: ${id} card, keyboard, geometry, map and clear road`,
+      result.name === result.label && result.shortcut.includes(shifted ? `Shift+${key.slice(5)}` : key.slice(5))
+        && result.hidden && result.mapChanged && result.nonblocking && result.restored
+        && result.roadClear && result.obstacles > 0 && !!result.source, JSON.stringify(result));
+  }
 
   // Every stop must be somewhere the pilgrim can actually stand.
   const standable = await page.evaluate(async () => {

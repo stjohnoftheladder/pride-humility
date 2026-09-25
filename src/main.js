@@ -1,6 +1,6 @@
 // Bootstraps the pilgrimage: explore state + triggers + battle/ending flow.
 import * as THREE from 'three';
-import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, SITES, ADDITIONS, FEATURES } from './config.js';
+import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, SITES, ADDITIONS, FEATURES, additionShortcut } from './config.js';
 import { Materials } from './textures.js';
 import { Level } from './level.js';
 import { Player } from './player.js';
@@ -269,7 +269,8 @@ async function boot() {
       // ?debug: 1..9 toggle the additions in ADDITIONS order, so the candidate
       // sites and the quarter can be walked one at a time without reloading.
       if (debugMode && /^Digit[1-9]$/.test(e.code)) {
-        const addition = ADDITIONS[Number(e.code.slice(5)) - 1];
+        if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return;
+        const addition = ADDITIONS[Number(e.code.slice(5)) - 1 + (e.shiftKey ? 9 : 0)];
         if (addition) {
           const now = level.setFeature(addition.id, FEATURES[addition.id] === false);
           hud.message(`${addition.label} ${now ? 'on' : 'off'}`, 1400);
@@ -366,9 +367,10 @@ async function boot() {
   /** How to switch this one off, said the way a dev would need it. */
   function toggleLine(l) {
     if (l.fixed) return 'fixed landmark — not a dev addition';
-    const key = ADDITIONS.findIndex((a) => a.id === l.id) + 1;
+    const index = ADDITIONS.findIndex((a) => a.id === l.id);
+    const key = additionShortcut(index);
     const flag = `set <b>${l.id}: false</b> in src/config.js and reload`;
-    return key > 0 && debugMode
+    return index >= 0 && debugMode
       ? `dev · <b>${key}</b> toggles this &nbsp;·&nbsp; or ${flag}`
       : `dev · ${flag}`;
   }
@@ -398,11 +400,14 @@ async function boot() {
       stop('The Gate Court', court.x + 4, court.y + 2),
       stop('The Bottom Spine', 17, 13),
       stop('The Pilgrim Way', 17, 55),
+      ...SITES.filter((s) => s.approach).map((s) =>
+        stop(s.label, s.approach.x - 0.5, s.approach.y - 0.5,
+          s.area.x < 15 ? Math.PI / 2 : -Math.PI / 2)),
       stop('The Ladder Chamber', ladder.x + 2, ladder.y + 2),
       stop('Hagia Sophia', 17, 103, -Math.PI / 2),   // looking east, up at the dome
       stop('The Chapel', 17, 110),
       stop('The Port of Theodosius', 17, 118),
-    ];
+    ].sort((a, b) => a.z - b.z);
   })();
   let waypoint = 0;
   function travel(step) {

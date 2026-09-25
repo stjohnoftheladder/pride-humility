@@ -5,6 +5,7 @@ import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOURS, SITES, FEATURES }
 import { HOUSE, HAGIA, HAGIA_MINARETS, HAGIA_NOTE, DOME_CELLS, TOWER_CELLS, roofKind } from './city.js';
 import { Materials } from './textures.js';
 import { AnimatedSprite } from './SpriteSystem.js';
+import { buildRoadSite } from './roadSites.js';
 
 // Light-blue daylight gradient sky, drawn once into a canvas texture and
 // stretched over a back-side dome so the whole walk is open air.
@@ -750,6 +751,7 @@ export class Level {
       domeBand: 'addHagiaEirene',
     };
     if (builders[site.kind]) this[builders[site.kind]](site, group);
+    else buildRoadSite(this, site, group);
 
     const label = makeWayfindingLabel(site.label);
     label.name = `site-label-${site.id}`;
@@ -976,7 +978,9 @@ export class Level {
         x: (w.quay.x + w.quay.w / 2) * CELL, z: (w.quay.y + w.quay.h / 2) * CELL,
       })),
       ...SITES.map((s) => {
-        const c = this.siteCentre(s);
+        const c = s.approach
+          ? { x: s.approach.x * CELL, z: s.approach.y * CELL }
+          : this.siteCentre(s);
         return { id: s.id, label: s.label, note: s.note, x: c.x, z: c.z };
       }),
     ];

@@ -60,6 +60,12 @@ export const FEATURES = {
   zeuxippus: true,
   cistern: true,
   hagiaEirene: true,
+  aqueduct: true,
+  pantokrator: true,
+  forumConstantine: true,
+  stoudios: true,
+  hippodrome: true,
+  mosaicPeristyle: true,
 };
 
 // ---------------------------------------------------------------------------
@@ -166,6 +172,41 @@ const SITE_DATA = [
     note: 'Hagia Eirene, the church of Holy Peace: the city’s other great church, sharing an outer wall with Hagia Sophia and the patriarchate, old before either was rebuilt — Justinian raised both again after the Nika fire, and this is the one that still stands in Istanbul. A second, smaller dome on the band along the church’s flank.',
   },
 ];
+
+// An interpretive route, not a reconstruction of the historical street plan.
+const ROAD_SITES = [
+  { id: 'aqueduct', label: 'THE AQUEDUCT OF VALENS', short: 'VALENS', kind: 'aqueduct',
+    area: { x: 2, y: 24, w: 13, h: 8 },
+    source: 'https://www.byzantium1200.com/aquaduct.html',
+    note: 'The Aqueduct of Valens carried water across the valley between two of the city’s hills. Completed in 368, it supplied a reservoir near the Forum of Theodosius. Here two tiers of stone arches rise west of the road, in the game’s compressed city layout.' },
+  { id: 'pantokrator', label: 'PANTOKRATOR MONASTERY', short: 'PANTOKRATOR', kind: 'monastery',
+    area: { x: 20, y: 36, w: 12, h: 8 },
+    source: 'https://www.byzantium1200.com/pantocra.html',
+    note: 'The Monastery of Christ the Almighty was built under John II Komnenos and Eirene in the twelfth century. Two churches and a burial chapel formed its joined sanctuary, with a hospital belonging to the foundation. Here clustered domes rise behind an eastern forecourt, in an adapted game setting.' },
+  { id: 'forumConstantine', label: 'THE FORUM OF CONSTANTINE', short: 'CONSTANTINE', kind: 'forum',
+    area: { x: 2, y: 48, w: 13, h: 9 },
+    source: 'https://www.byzantium1200.com/forum-c.html',
+    note: 'Constantine’s circular forum gathered porticoes and sculpture around his column. Its imperial statue fell in 1106 and was replaced by a cross under Manuel I. This western square echoes the circular colonnade and cross-crowned column; its location and scale serve the pilgrimage route.' },
+  { id: 'stoudios', label: 'SAINT JOHN OF STOUDIOS', short: 'STOUDIOS', kind: 'basilica',
+    area: { x: 20, y: 61, w: 12, h: 8 },
+    source: 'https://www.byzantium1200.com/studion.html',
+    note: 'Founded by the senator Stoudios in the fifth century, Saint John the Baptist became a major centre of Orthodox monastic life. Its church was a timber-roofed basilica with three aisles and galleries. Here a long red roof and colonnaded forecourt mark a quiet eastern stop in the game’s compressed layout.' },
+  { id: 'hippodrome', label: 'THE HIPPODROME', short: 'HIPPODROME', kind: 'hippodrome',
+    area: { x: 2, y: 73, w: 13, h: 9 },
+    source: 'https://www.byzantium1200.com/hipodrom.html',
+    note: 'The Hippodrome was the city’s great circus, decorated with a celebrated collection of monuments and statues. This miniature western arena suggests its racing ground, stepped stands and central spine. The footprint is deliberately compressed to leave the north–south pilgrimage road open.' },
+  { id: 'mosaicPeristyle', label: 'THE MOSAIC PERISTYLE', short: 'PERISTYLE', kind: 'mosaicCourt',
+    area: { x: 20, y: 84, w: 12, h: 8 },
+    source: 'https://www.byzantium1200.com/mosaic.html',
+    note: 'A colonnaded courtyard and apsed hall in the Great Palace once held elaborate mosaic floors. Later alterations covered the mosaics, and the hall was ruined by the mid-twelfth century. This eastern court offers an interpretive glimpse of its earlier form: patterned paving, pale columns and a curved apse.' },
+].map((site) => ({ ...site,
+  approach: { x: site.area.x < 15 ? 15.5 : 19.5, y: site.area.y + site.area.h / 2 },
+}));
+SITE_DATA.push(...ROAD_SITES);
+
+export function additionShortcut(index) {
+  return index < 9 ? String(index + 1) : `Shift+${index - 8}`;
+}
 
 export const HARBOURS = WING_DATA.filter((wing) => FEATURES[wing.id]);
 export const SITES = SITE_DATA.filter((site) => FEATURES[site.id]);
