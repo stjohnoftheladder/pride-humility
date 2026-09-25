@@ -24,7 +24,7 @@ export const HAGIA = { x: ladder.x + 1, y: ladder.y + ladder.h, w: 5, h: 1 }; //
 // Hagia Sophia is fixed scenery rather than a dev addition — the quarter was
 // raised around it — but it belongs in the same list the approach card reads, so
 // its explanation lives with its band.
-export const HAGIA_NOTE = 'Hagia Sophia, the Great Church: raised by Justinian in five years after the Nika riot burned the old one in 532, its dome the widest ever built, and for a thousand years the largest church in the world. The pilgrim’s road has climbed toward it: it stands above the wall on the east side of the road, level with the Ladder chamber, a little before the chapel. Justinian’s own words on entering it are said to have been “Solomon, I have surpassed thee.”';
+export const HAGIA_NOTE = 'Hagia Sophia, the Great Church, was raised by Justinian in five years after the Nika riot burned the old church in 532. Its dome was the widest of its age, and for nearly a thousand years it was the largest church in the world. On entering it, Justinian is said to have declared, “Solomon, I have surpassed thee.”';
 export const HAGIA_MINARETS = [
   { x: ladder.x + 1.5, z: HAGIA.y + 0.5 }, // west corner of the south band
   { x: ladder.x + 5.5, z: HAGIA.y + 0.5 }, // east corner of the south band

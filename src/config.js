@@ -106,7 +106,7 @@ const WING_DATA = [
     stairY0: 114,
     sea: { x0: 0, x1: 33, y0: 121, y1: 127 },   // water to the map's edge
     wrap: { west: 2, east: 2 },                 // cells of water wrapping each quay end
-    note: 'The city’s grain came ashore at a quay like this one, under the sea wall’s towers — the Horrea Theodosiana stood by the harbour, which is why the walk is dressed with cargo rather than with an encounter. Built from the sketch of the walled harbour, read as a plan: wall to the north, quay in front of it, sea to the south. It stands at the foot of the road, past the chapel, with the water running to the map’s edge.',
+    note: 'The city’s grain came ashore at quays like this one, under the towers of the sea wall, and the great state granaries, the Horrea Theodosiana, stood beside the harbor. Ships from Egypt unloaded here the bread that fed Constantinople.',
   },
 ];
 
@@ -127,7 +127,7 @@ const SITE_DATA = [
     short: 'AUGUSTAION',   // the mini-map's short form
     kind: 'court',
     area: { x: 20, y: 105, w: 13, h: 3 },       // east of the road, before the chapel
-    note: 'The marble square in front of Hagia Sophia and the forecourt of the Great Palace: the ceremonial heart of the city, paved by Justinian, where emperors were acclaimed and where the Mese — the avenue this road stands in for — began. Here it is the open court east of the road just before the chapel, so the last stretch of the walk opens into a square instead of a corridor.',
+    note: 'The marble square in front of Hagia Sophia and the forecourt of the Great Palace: the ceremonial heart of the city, paved by Justinian, where emperors were acclaimed and where the Mese, the city’s great avenue, began.',
   },
   {
     id: 'milion',
@@ -135,7 +135,7 @@ const SITE_DATA = [
     short: 'MILION',   // the mini-map's short form
     kind: 'tetrapylon',
     at: { x: 20, y: 105, w: 2, h: 2 },          // the square's road edge
-    note: 'Mile zero of the empire: a domed tetrapylon of four arches from which every road distance in Byzantium was measured, raised by Constantine over an older milestone and set about with statues of Constantine, Helena and the city’s fortune, with Justinian’s clock beside it. It stands where the pilgrim’s road meets the square — the point from which the road is measured.',
+    note: 'Mile zero of the empire: a domed monument of four arches from which every road distance in Byzantium was measured. Constantine raised it over an older milestone and set statues of himself, his mother Helena and the city’s Fortune around it, and Justinian’s clock stood beside it.',
   },
   {
     id: 'chalke',
@@ -143,7 +143,7 @@ const SITE_DATA = [
     short: 'CHALKE',   // the mini-map's short form
     kind: 'gate',
     at: { x: 24, y: 108 },                      // the palace frontage, south of the square
-    note: 'The Chalke, the Brazen House: the monumental bronze gate of the Great Palace, built by Anastasius and rebuilt by Justinian as a domed hall, its interior revetted in marble and mosaic. Above its doors hung the icon of Christ Chalkites, whose removal by Leo III about 726 was the first public act of iconoclasm and whose restoration ended it. The gate stays shut — the palace is not the pilgrim’s — but the icon looks out over the square.',
+    note: 'The Chalke, the Bronze House, was the great gate of the Great Palace, built by Anastasius and rebuilt by Justinian as a domed hall lined with marble and mosaic. Above its doors hung the icon of Christ Chalkites. Its removal by Leo III about 726 was the first public act of iconoclasm, and its restoration marked the end. The palace gate stays shut to pilgrims, but the icon still looks out over the square.',
   },
   {
     id: 'zeuxippus',
@@ -151,7 +151,7 @@ const SITE_DATA = [
     short: 'ZEUXIPPUS',   // the mini-map's short form
     kind: 'peristyle',
     area: { x: 2, y: 100, w: 13, h: 7 },        // west of the road, across from the square
-    note: 'The Baths of Zeuxippus, between the square and the Hippodrome: a bath complex of Severus’s founding, enlarged by Constantine and famed for some seventy bronze statues of gods, heroes, poets and statesmen, catalogued in verse about the year 500. They burned in the Nika riot of 532 — the riot that destroyed the old church, and that Justinian answered with this one. Later the courts held a prison and a silk workshop. Here a peristyle of columns and standing figures, west of the road.',
+    note: 'The Baths of Zeuxippus stood between the square and the Hippodrome. Founded under Septimius Severus and enlarged by Constantine, they were famed for some seventy bronze statues of gods, heroes, poets and statesmen, described in verse around the year 500. They burned in the Nika riot of 532, the same riot that destroyed the old Hagia Sophia and led Justinian to build the new one. Later the halls held a prison and a silk workshop.',
   },
   {
     id: 'cistern',
@@ -161,7 +161,7 @@ const SITE_DATA = [
     area: { x: 2, y: 93, w: 12, h: 6 },         // west of the road, north of the baths
     water: { x: 3, y: 94, w: 10, h: 4 },        // the sunken water, leaving a dry rim
     neck: { x: 14, y: 96, w: 1, h: 2 },         // the passage in from the road
-    note: 'The Basilica Cistern, dug under the Basilica — the stoa that held the law courts, the library and the university — west of the Milion, to keep the city’s summer water: about 336 columns in twelve rows carrying a brick vault, two Gorgon heads reused as column bases among them. Here a sunken court of columns standing in water, with a dry rim to walk.',
+    note: 'The Basilica Cistern lay beneath the Basilica, the great hall of the law courts, the library and the university, and stored the city’s summer water. About 336 columns in twelve rows hold up its brick vault, and two carved Gorgon heads were reused as column bases among them.',
   },
   {
     id: 'hagiaEirene',
@@ -169,7 +169,7 @@ const SITE_DATA = [
     short: 'HAGIA EIRENE',   // the mini-map's short form
     kind: 'domeBand',
     band: { x: 28, y: 104, w: 5 },              // sharing its wall with the Sophia band
-    note: 'Hagia Eirene, the church of Holy Peace: the city’s other great church, sharing an outer wall with Hagia Sophia and the patriarchate, old before either was rebuilt — Justinian raised both again after the Nika fire, and this is the one that still stands in Istanbul. A second, smaller dome on the band along the church’s flank.',
+    note: 'Hagia Eirene, the church of Holy Peace, was the city’s other great church, sharing an outer wall with Hagia Sophia and the patriarchate, and older than either. Justinian rebuilt both after the Nika fire, and Hagia Eirene still stands in Istanbul today.',
   },
 ];
 
