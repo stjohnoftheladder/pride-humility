@@ -312,13 +312,10 @@ async function boot() {
       state = 'paused';
       hud.hidePrompt();
       hud.showPause();
+      audio.suspend();            // the rest screen is quiet
     }
   });
 
-      audio.suspend();            // the rest screen is quiet
-  const enterDragFallback = (message = true) => {
-    if (state === 'menu' || state === 'paused') {
-      state = 'explore';
   // Leaving the tab or window silences the game; coming back restores it,
   // unless the pilgrim is resting on the pause screen.
   document.addEventListener('visibilitychange', () => {
@@ -326,11 +323,14 @@ async function boot() {
     else if (audio.ctx && state !== 'paused') audio.resume();
   });
 
+  const enterDragFallback = (message = true) => {
+    if (state === 'menu' || state === 'paused') {
+      state = 'explore';
       hud.hidePause();
+      audio.resume();
       hud.showExplore();
       if (message) hud.message('Mouse capture unavailable — hold mouse button & drag to look', 3600);
     }
-      audio.resume();
   };
 
   hud.onStart = async () => {
@@ -559,10 +559,10 @@ async function boot() {
       landmarks: () => landmarks.map((l) => ({ ...l })),
       waypoints: () => WAYPOINTS.map((w) => ({ ...w })),
       travel,
+      audioState: () => audio.ctx?.state ?? 'none',
     };
   }
 }
-      audioState: () => audio.ctx?.state ?? 'none',
 
 boot().catch((err) => {
   console.error(err);
