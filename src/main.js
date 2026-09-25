@@ -1,6 +1,6 @@
 // Bootstraps the pilgrimage: explore state + triggers + battle/ending flow.
 import * as THREE from 'three';
-import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, SITES, ADDITIONS, FEATURES, additionShortcut } from './config.js';
+import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, SITES, ADDITIONS, FEATURES } from './config.js';
 import { Materials } from './textures.js';
 import { Level } from './level.js';
 import { Player } from './player.js';
@@ -358,34 +358,34 @@ async function boot() {
   const wingGate = (w) => ({ x: w.gateX, y: w.stairY0, w: 1, h: w.wall.y - w.stairY0 + 1 });
 
   // ----- the approach card, and the dev's instant transport -----------------
-  // Walk up to a landmark and it names itself: what it was, and how a dev
-  // switches it off. It is a caption, not a threshold — nothing in the world
-  // gates on it.
-  const CARD_RANGE = 7;          // world units
+  // Walk up to a landmark and it names itself: what it was, for the player.
+  // (The dev keys live in the DEV panel, not here.) It is a caption, not a
+  // threshold; nothing in the world gates on it.
+  const CARD_RANGE = 7;          // world units, from a landmark's point
+  // From a roadside site's footprint: the road is 15 units wide, so anywhere
+  // on the road beside a site is in range. Where two sites' reach overlaps,
+  // the nearer one wins.
+  const CARD_RANGE_BOX = 15;
   let cardFor = null;
 
-  /** How to switch this one off, said the way a dev would need it. */
-  function toggleLine(l) {
-    if (l.fixed) return 'fixed landmark — not a dev addition';
-    const index = ADDITIONS.findIndex((a) => a.id === l.id);
-    const key = additionShortcut(index);
-    const flag = `set <b>${l.id}: false</b> in src/config.js and reload`;
-    return index >= 0 && debugMode
-      ? `dev · <b>${key}</b> toggles this &nbsp;·&nbsp; or ${flag}`
-      : `dev · ${flag}`;
+  function cardDistance(l) {
+    if (!l.box) return Math.hypot(player.pos.x - l.x, player.pos.z - l.z);
+    const dx = Math.max(l.box.minX - player.pos.x, 0, player.pos.x - l.box.maxX);
+    const dz = Math.max(l.box.minZ - player.pos.z, 0, player.pos.z - l.box.maxZ);
+    return Math.hypot(dx, dz) * (CARD_RANGE / CARD_RANGE_BOX);   // same scale as a point
   }
 
   function updateSiteCard() {
     let near = null, best = CARD_RANGE;
     for (const l of landmarks) {
       if (!l.fixed && FEATURES[l.id] === false) continue;   // a hidden addition says nothing
-      const d = Math.hypot(player.pos.x - l.x, player.pos.z - l.z);
+      const d = cardDistance(l);
       if (d < best) { best = d; near = l; }
     }
     if (!near) { hud.showSiteCard(false); cardFor = null; return; }
     if (near !== cardFor) {
       cardFor = near;
-      hud.setSiteCard({ label: near.label, note: near.note, toggle: toggleLine(near) });
+      hud.setSiteCard({ label: near.label, note: near.note });
     }
     hud.showSiteCard(true);
   }

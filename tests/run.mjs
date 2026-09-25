@@ -506,7 +506,7 @@ async function runInteractionRegressions(browser) {
   );
 
   // The approach card: walk up to a site and it names itself with its
-  // explanation and how to switch it off; walk away and it goes.
+  // explanation, written for the player (no dev keys); walk away and it goes.
   const card = await page.evaluate(async () => {
     const g = window.__game;
     const at = (l) => { g.teleport(l.x, l.z); };
@@ -516,7 +516,7 @@ async function runInteractionRegressions(browser) {
         display: getComputedStyle(el).display,
         name: document.getElementById('site-card-name').textContent,
         note: document.getElementById('site-card-note').textContent.length,
-        toggle: document.getElementById('site-card-toggle').textContent,
+        devText: /dev|toggle|config\.js/i.test(el.textContent),
       };
     };
     const mile = g.landmarks().find((l) => l.id === 'milion');
@@ -525,16 +525,16 @@ async function runInteractionRegressions(browser) {
     const hagia = g.landmarks().find((l) => l.id === 'hagiaSophia');
     at(hagia); await new Promise((r) => setTimeout(r, 260));
     const atHagia = read();
-    g.teleport(52.5, 166.5);                       // the empty middle of the road
+    g.teleport(52.5, 40);                          // the empty road north of the roadside sites
     await new Promise((r) => setTimeout(r, 260));
     const away = read();
     return { onSite, atHagia, away };
   });
   check(
-    'card: walking up to a site names it, explains it, and says how to toggle it',
+    'card: walking up to a site names it and explains it, with no dev text',
     card.onSite.display !== 'none' && card.onSite.name === 'THE MILION'
-      && card.onSite.note > 120 && /milion/.test(card.onSite.toggle)
-      && card.atHagia.name === 'HAGIA SOPHIA' && /fixed landmark/.test(card.atHagia.toggle)
+      && card.onSite.note > 120 && !card.onSite.devText
+      && card.atHagia.name === 'HAGIA SOPHIA' && !card.atHagia.devText
       && card.away.display === 'none',
     JSON.stringify(card),
   );
@@ -581,7 +581,18 @@ async function runInteractionRegressions(browser) {
       const settle = () => new Promise((resolve) => setTimeout(resolve, 160));
       await settle();
       const name = document.getElementById('site-card-name').textContent;
-      const shortcut = document.getElementById('site-card-toggle').textContent;
+      // The card answers anywhere on the road beside the site, and inside it,
+      // not only at the one approach point.
+      const cardAt = async (x, z) => {
+        g.teleport(x, z); await settle();
+        const shown = getComputedStyle(document.getElementById('site-card')).display !== 'none';
+        return shown ? document.getElementById('site-card-name').textContent : null;
+      };
+      const b = landmark.box;
+      const west = b.maxX <= 45;
+      const roadFar = await cardAt(west ? 58.5 : 46.5, (b.minZ + b.maxZ) / 2);
+      const inside = await cardAt(west ? b.maxX - 1.5 : b.minX + 1.5, b.maxZ - 1.5);
+      g.teleport(landmark.x, landmark.z); await settle();
       const plan = () => g.minimap.plan.toDataURL();
       const before = plan();
       const flip = () => window.dispatchEvent(new KeyboardEvent('keydown', { code: key, shiftKey: shifted }));
@@ -595,11 +606,11 @@ async function runInteractionRegressions(browser) {
       const restored = g.level.featureGroups[id].visible && g.features()[id] && before === plan();
       const site = g.sites().find((s) => s.id === id);
       const roadClear = !obstacles.some((c) => c.maxX > 45 && c.minX < 60);
-      return { name, label: landmark.label, shortcut, hidden, mapChanged, nonblocking,
+      return { name, label: landmark.label, roadFar, inside, hidden, mapChanged, nonblocking,
         restored, roadClear, obstacles: obstacles.length, source: site.source };
     }, { id, key, shifted });
     check(`road site: ${id} card, keyboard, geometry, map and clear road`,
-      result.name === result.label && result.shortcut.includes(shifted ? `Shift+${key.slice(5)}` : key.slice(5))
+      result.name === result.label && result.roadFar === result.label && result.inside === result.label
         && result.hidden && result.mapChanged && result.nonblocking && result.restored
         && result.roadClear && result.obstacles > 0 && !!result.source, JSON.stringify(result));
   }

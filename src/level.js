@@ -981,7 +981,13 @@ export class Level {
         const c = s.approach
           ? { x: s.approach.x * CELL, z: s.approach.y * CELL }
           : this.siteCentre(s);
-        return { id: s.id, label: s.label, note: s.note, x: c.x, z: c.z };
+        // Roadside sites are big enough to walk into, so the card answers to
+        // their whole footprint, not just the point at the road edge.
+        const box = s.approach && {
+          minX: s.area.x * CELL, maxX: (s.area.x + s.area.w) * CELL,
+          minZ: s.area.y * CELL, maxZ: (s.area.y + s.area.h) * CELL,
+        };
+        return { id: s.id, label: s.label, note: s.note, x: c.x, z: c.z, ...(box && { box }) };
       }),
     ];
     if (this.hagiaCentre) {

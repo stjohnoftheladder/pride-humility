@@ -76,8 +76,8 @@
     .dev-row { color: var(--gold-dim); }
     #dev-hints b { color: var(--gold); font-weight: normal; }
 
-    /* The site card: what you have walked up to, its explanation, and how a dev
-       turns it on and off. Bottom-left, clear of the room label and meters above
+    /* The site card: what you have walked up to and what it was, for the
+       player. Bottom-left, clear of the room label and meters above
        it and of the map and sound button on the right. */
     #site-card {
       left: 10px; bottom: 12px; width: 336px; padding: 7px 10px;
@@ -86,11 +86,6 @@
     #site-card-note {
       margin: 4px 0 0; font-size: 11px; line-height: 1.5; color: var(--text); opacity: 0.88;
     }
-    #site-card-toggle {
-      margin-top: 5px; font-size: 10px; letter-spacing: 0.4px; color: var(--gold-dim);
-      border-top: 1px solid var(--accent); padding-top: 4px;
-    }
-    #site-card-toggle b { color: var(--gold); font-weight: normal; }
 
     /* Whole-city mini-map: a tall thin strip, drawn from the level grid by
        src/minimap.js. Sized as a fraction of the stage so it keeps its
@@ -269,7 +264,6 @@
     <div class="panel" id="site-card" style="display:none">
       <div id="site-card-name"></div>
       <p id="site-card-note"></p>
-      <div id="site-card-toggle"></div>
     </div>
 
     <div id="msg"></div>

@@ -46,7 +46,6 @@ export class Hud {
       siteCard: $('site-card'),
       siteCardName: $('site-card-name'),
       siteCardNote: $('site-card-note'),
-      siteCardToggle: $('site-card-toggle'),
       fps: $('fps'),
     };
     this.msgTimer = null;
@@ -102,11 +101,10 @@ export class Hud {
 
   /** The card for whatever the pilgrim has walked up to: its name, what it
    *  was, and the line that says how a dev switches it on and off. */
-  setSiteCard({ label, note, toggle }) {
+  setSiteCard({ label, note }) {
     if (!this.el.siteCard || this._cardLabel === label) return;
     this.el.siteCardName.textContent = label;
     this.el.siteCardNote.textContent = note;
-    this.el.siteCardToggle.innerHTML = toggle;
     this._cardLabel = label;
   }
 
