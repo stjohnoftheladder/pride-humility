@@ -539,6 +539,28 @@ async function runInteractionRegressions(browser) {
     JSON.stringify(card),
   );
 
+  // Esc to the rest screen silences the game, ambient included; CONTINUE
+  // brings the sound back.
+  const quiet = await page.evaluate(async () => {
+    const g = window.__game;
+    const wait = () => new Promise((r) => setTimeout(r, 200));
+    const before = { state: g.state(), audio: g.audioState() };
+    document.dispatchEvent(new Event('pointerlockchange'));   // the lock is let go
+    await wait();
+    const paused = { state: g.state(), audio: g.audioState() };
+    document.getElementById('resume-btn').click();
+    await wait(); await wait();
+    const back = { state: g.state(), audio: g.audioState() };
+    return { before, paused, back };
+  });
+  check(
+    'audio: the rest screen is silent, and CONTINUE brings the sound back',
+    quiet.before.audio === 'running' && quiet.paused.state === 'paused'
+      && quiet.paused.audio === 'suspended' && quiet.back.state === 'explore'
+      && quiet.back.audio === 'running',
+    JSON.stringify(quiet),
+  );
+
   // ?debug: instant transport north and south along the walk, naming each stop.
   const transport = await page.evaluate(async () => {
     const g = window.__game;

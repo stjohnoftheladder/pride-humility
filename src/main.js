@@ -307,7 +307,7 @@ async function boot() {
   document.addEventListener('pointerlockchange', () => {
     if (document.pointerLockElement === canvas) {
       if (state === 'menu') { state = 'explore'; hud.showExplore(); }
-      else if (state === 'paused') { state = 'explore'; hud.hidePause(); }
+      else if (state === 'paused') { state = 'explore'; hud.hidePause(); audio.resume(); }
     } else if (state === 'explore') {
       state = 'paused';
       hud.hidePrompt();
@@ -315,13 +315,22 @@ async function boot() {
     }
   });
 
+      audio.suspend();            // the rest screen is quiet
   const enterDragFallback = (message = true) => {
     if (state === 'menu' || state === 'paused') {
       state = 'explore';
+  // Leaving the tab or window silences the game; coming back restores it,
+  // unless the pilgrim is resting on the pause screen.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) audio.suspend();
+    else if (audio.ctx && state !== 'paused') audio.resume();
+  });
+
       hud.hidePause();
       hud.showExplore();
       if (message) hud.message('Mouse capture unavailable — hold mouse button & drag to look', 3600);
     }
+      audio.resume();
   };
 
   hud.onStart = async () => {
@@ -553,6 +562,7 @@ async function boot() {
     };
   }
 }
+      audioState: () => audio.ctx?.state ?? 'none',
 
 boot().catch((err) => {
   console.error(err);

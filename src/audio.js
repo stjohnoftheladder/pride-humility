@@ -27,6 +27,9 @@ export class AudioFX {
 
   resume() { this.ensure(); if (this.ctx?.state === 'suspended') this.ctx.resume(); }
 
+  /** Silence everything, ambient loops included, until resume(). */
+  suspend() { if (this.ctx?.state === 'running') this.ctx.suspend(); }
+
   toggleMute() {
     this.muted = !this.muted;
     if (this.master) this.master.gain.value = this.muted ? 0 : 0.5;
