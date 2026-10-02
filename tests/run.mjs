@@ -755,6 +755,81 @@ async function runInteractionRegressions(browser) {
     JSON.stringify(orientation),
   );
 
+  // ---- the chariot race in the Hippodrome -----------------------------------
+  await resetState(page);
+  const raceRun = await page.evaluate(async () => {
+    const g = window.__game;
+    const settle = () => new Promise((r) => setTimeout(r, 160));
+    const board = async () => {
+      const b = g.race.boardSpot();
+      g.teleport(b.x, b.z); await settle();
+      const prompt = document.getElementById('engage-prompt').textContent;
+      g.key('KeyE');
+      return prompt;
+    };
+    const stepDown = async () => { document.getElementById('race-btn').click(); await settle(); };
+
+    // First race: stop for the wrecked Blue driver. The meters move once.
+    const prompt = await board();
+    const started = g.state();
+    g.race.tick(200);
+    const off = g.race.snapshot();
+    g.race.tick(60, { KeyW: true });
+    const driving = g.race.snapshot();
+    g.race.advance({ blueWreck: true });
+    g.race.stopByWreck();
+    g.key('KeyE');
+    g.race.tick(2);
+    const helped = { state: g.state(), title: document.getElementById('race-title').textContent,
+      grace: g.branch.grace, pride: g.branch.pride, flag: g.branch.flags.helpedCharioteer };
+    await stepDown();
+    const home = { state: g.state(), snap: g.race.snapshot() };
+
+    // Second race, run to the end: every dolphin turns, the Blue still comes
+    // to grief, and the meters stay where the first race left them.
+    await board();
+    g.race.tick(200);
+    const res = g.race.autopilot(60 * 90);
+    const full = { res, snap: g.race.snapshot(), state: g.state(), pride: g.branch.pride, grace: g.branch.grace,
+      text: document.getElementById('race-text').textContent };
+    await stepDown();
+
+    // Third: Q hands the reins back mid-race, with no result screen.
+    await board();
+    g.race.tick(200);
+    g.key('KeyQ');
+    g.race.tick(2);
+    const abandoned = { state: g.state(), screen: getComputedStyle(document.getElementById('race-screen')).display,
+      phase: g.race.snapshot().phase };
+
+    // Switched off, the Hippodrome offers no race.
+    g.setFeature('hippodrome', false);
+    const b = g.race.boardSpot(); g.teleport(b.x, b.z);
+    const offline = g.race.canBoard();
+    g.setFeature('hippodrome', true);
+    g.teleport(52.5, 40);
+    return { prompt, started, off, driving, helped, home, full, abandoned, offline };
+  });
+  check('race: the Greens’ chariot offers the reins, and E takes them',
+    /Greens/.test(raceRun.prompt) && raceRun.started === 'race' && raceRun.off.phase === 'running'
+      && raceRun.driving.speed > 4 && raceRun.driving.progress > 1 && !raceRun.off.idleBlocking,
+    JSON.stringify({ prompt: raceRun.prompt, started: raceRun.started, off: raceRun.off.phase, driving: raceRun.driving }));
+  check('race: stopping for the wrecked Blue ends the race with grace, once',
+    raceRun.helped.state === 'raceResult' && raceRun.helped.title === 'THE RACE NOT FINISHED'
+      && raceRun.helped.grace === 5 && raceRun.helped.pride === 0 && raceRun.helped.flag
+      && raceRun.home.state === 'explore' && raceRun.home.snap.phase === 'idle' && raceRun.home.snap.idleBlocking,
+    JSON.stringify({ helped: raceRun.helped, home: raceRun.home.state, phase: raceRun.home.snap.phase }));
+  check('race: seven laps turn every dolphin, and a second race leaves the meters alone',
+    ['won', 'placed'].includes(raceRun.full.res?.outcome) && raceRun.full.snap.dolphinsDown === 7
+      && raceRun.full.snap.crashed && raceRun.full.state === 'raceResult'
+      && raceRun.full.grace === 5 && raceRun.full.pride === 0 && /meters do not move/.test(raceRun.full.text),
+    JSON.stringify({ res: raceRun.full.res, dolphins: raceRun.full.snap.dolphinsDown, crashed: raceRun.full.snap.crashed,
+      grace: raceRun.full.grace, pride: raceRun.full.pride }));
+  check('race: Q steps down mid-race, and a hidden Hippodrome holds no race',
+    raceRun.abandoned.state === 'explore' && raceRun.abandoned.screen === 'none'
+      && raceRun.abandoned.phase === 'idle' && raceRun.offline === false,
+    JSON.stringify({ abandoned: raceRun.abandoned, offline: raceRun.offline }));
+
   check('interactions: no console errors', errors.length === 0, JSON.stringify(errors));
   await page.close();
 }

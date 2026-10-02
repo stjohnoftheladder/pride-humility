@@ -63,6 +63,13 @@ farmed; falling in battle is a fall, not an end — *repent and rise*.
 Three endings await: THE LADDER IS NOT CLIMBED · A PARTLY-WASHED PILGRIM ·
 THE EMPTY SUMMIT.
 
+Off the road, **the Hippodrome** holds a diversion: take the Greens' reins
+and race the Blues, Reds and Whites for seven laps round the spina, while the
+dolphins of the lap counter tip one by one. On the fifth lap the Blue chariot
+is wrecked at the turning post. Race on and you may win the wreath (+pride);
+stop to help its driver and the race goes on without you (+grace). The meters
+move for the first race only.
+
 See **THEOLOGY.md** for the full mechanic→source mapping.
 
 ## Controls
@@ -71,6 +78,7 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 |---|---|
 | Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact · `M` map |
 | Dev (`?debug`) | `1`–`9`, `Shift+1`–`Shift+4` toggle additions · `PageDown`/`PageUp` travel to the next/previous stop |
+| Chariot race | `W` drive on · `S` rein in · `A`/`D` steer · `Shift` lash · `E` help the fallen driver · `Q` step down |
 | Battle dodge | `WASD` move the heart · hold `Space` to pray |
 | Battle choices | `WASD` choose · `Enter`/`Space` act · `X` back |
 | Global | `Esc` pause · `♪ sound` mute (top right) |
@@ -165,14 +173,16 @@ the layout convention (or update `manifest.json`), and it just works — see
 ```
 index.html             byzantine-styled HUD + battle UI + screens
 src/
-  main.js              boot, states (explore/battle/fall/confess/ending), triggers
+  main.js              boot, states (explore/battle/race/fall/confess/ending), triggers
   config.js            pilgrimage map + palette + constants + FEATURES flags
   city.js              wall-band dressing: the nobleman's house, Hagia Sophia, roof cells
   level.js             geometry, physical lights, passion-specific room storytelling
+  roadSites.js         the six roadside landmarks (aqueduct to Hippodrome)
   minimap.js           whole-city HUD mini-map strip (M)
   textures.js          PBR material loader
   SpriteSystem.js      chroma-key billboard shader + animation (shared)
   player.js            pilgrim exploration controller (no combat)
+  race.js              the chariot race in the Hippodrome (track, rivals, crowd, results)
   branch.js            persisted pride/grace state + endings disposition
   encounters.js        the three thresholds (dialogue, patterns, outcomes)
   battle/battle.js     Undertale-style battle (box, heart, menu, shield)

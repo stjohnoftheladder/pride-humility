@@ -125,6 +125,22 @@
       padding: 4px 14px; border-radius: 3px; display: none;
     }
 
+    /* ---------------- the chariot race ---------------- */
+    #race-hud { top: 10px; left: 50%; transform: translateX(-50%); min-width: 300px; text-align: center; }
+    #race-lap { color: var(--gold); font-size: 13px; letter-spacing: 1px; }
+    #race-place { color: var(--gold); font-size: 22px; letter-spacing: 2px; text-shadow: 0 0 10px #f3d27666; }
+    #race-order { display: flex; justify-content: center; gap: 5px; margin: 3px 0 4px; }
+    .race-chip { font-size: 9px; padding: 1px 5px; border-left: 4px solid; color: var(--gold-dim); background: #0d0a05; }
+    .race-chip.me { color: var(--gold); outline: 1px solid var(--gold); }
+    .race-chip.out { opacity: 0.4; text-decoration: line-through; }
+    #race-hud .meter .label { width: 36px; }
+    #race-lash { background: linear-gradient(#ffd98a, #c9a227); width: 100%; }
+    #race-call {
+      position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); white-space: nowrap;
+      font-size: 11px; color: var(--gold-dim); letter-spacing: 0.5px; text-shadow: 0 1px 0 #000, 0 0 6px #000;
+    }
+    #race-call.urgent { color: var(--gold); font-size: 13px; animation: mercyPulse 1.1s steps(2) infinite; }
+
     /* ---------------- battle UI ---------------- */
     #battle-ui { display: none; position: absolute; inset: 0; }
     #battle-ui.show { display: block; }
@@ -266,6 +282,15 @@
       <p id="site-card-note"></p>
     </div>
 
+    <!-- the chariot race: lap, place, the running order, and the lash -->
+    <div class="panel" id="race-hud" style="display:none">
+      <div id="race-lap"></div>
+      <div id="race-place"></div>
+      <div id="race-order"></div>
+      <div class="meter"><span class="label">LASH</span><div class="track"><div class="fill" id="race-lash"></div></div></div>
+    </div>
+    <div id="race-call" style="display:none"></div>
+
     <div id="msg"></div>
     <div id="engage-prompt"></div>
 
@@ -321,6 +346,13 @@
     <p id="ending-text"></p>
     <p class="verse" id="ending-verse"></p>
     <button class="btn" id="restart-btn">WALK THE LADDER AGAIN</button>
+  </div>
+
+  <div class="screen" id="race-screen" style="display:none">
+    <h2 id="race-title"></h2>
+    <p id="race-text"></p>
+    <p class="verse" id="race-verse"></p>
+    <button class="btn" id="race-btn">STEP DOWN FROM THE CHARIOT</button>
   </div>
 
   <div id="fatal"><div>Fatal error — see console</div><div id="fatal-msg"></div></div>

@@ -5,6 +5,25 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { CELL } from './config.js';
 
+/** Where the Hippodrome's parts stand, in world units: shared by the builder
+ *  below and by the chariot race (src/race.js), which drives round the same
+ *  spina and between the same stands. */
+export function hippodromeLayout(site) {
+  const { x, y, h } = site.area;
+  const spina = { a: 21, b: 33.5, h: 0.9 };
+  return {
+    cz: (y + h / 2) * CELL,   // the spina's axis
+    half: 7.5,                // the track's half-width, spina axis to the stands
+    tiers: 5, tierDepth: 1.1, tierRise: 0.8,
+    curveX: x * CELL + 14,    // centre of the sphendone's curve
+    standEnd: 41,             // the long stands stop short of the gates
+    gateX: 42.8,              // the carceres, with a narrow forecourt off the road
+    kx: 30,                   // the Kathisma's centre, and the finish line
+    spina,
+    metaW: spina.a - 1, metaE: spina.b + 1,   // the turning posts
+  };
+}
+
 export function buildRoadSite(level, site, group) {
   const { x, y, w, h } = site.area;
   const cx = (x + w / 2) * CELL, cz = (y + h / 2) * CELL;
@@ -95,12 +114,8 @@ export function buildRoadSite(level, site, group) {
     // southern stands, the side the palace lies on in this map. The spina
     // carries the monuments as they stood in 1200, before the Crusaders
     // stripped them in 1204.
-    const x0 = x * CELL;
-    const half = 7.5;                      // the track's half-width
-    const tiers = 5, tierDepth = 1.1, tierRise = 0.8;
-    const curveX = x0 + 14;                // centre of the sphendone's curve
-    const standEnd = 38;                   // the long stands stop short of the gates
-    const gateX = 40.5;                    // the carceres, with the forecourt off the road
+    const L = hippodromeLayout(site);
+    const { half, tiers, tierDepth, tierRise, curveX, standEnd, gateX, kx } = L;
     const top = tiers * tierRise;
     for (let t = 0; t < tiers; t++) {
       const rise = (t + 1) * tierRise, r = half + tierDepth / 2 + t * tierDepth;
@@ -122,7 +137,6 @@ export function buildRoadSite(level, site, group) {
     function crownColumn(px, pz) {
       shape(new THREE.CylinderGeometry(0.18, 0.2, 2.8, 8), 'plaster', px, top + 1.4, pz);
     }
-    const kx = 30;   // the Kathisma's centre, where the south colonnade gives way to it
     for (let px = curveX; px <= standEnd; px += 3) {
       crownColumn(px, cz - crown);
       if (Math.abs(px - kx) > 3.6) crownColumn(px, cz + crown);
@@ -152,10 +166,10 @@ export function buildRoadSite(level, site, group) {
     shape(new THREE.SphereGeometry(0.35, 10, 8), 'gold', kx, kh + 5.1, kzc);
 
     // The spina (euripos), with a turning post (meta) of three cones at each end.
-    const spA = 21.5, spB = 37.5, spH = 0.9;
+    const { a: spA, b: spB, h: spH } = L.spina;
     box((spA + spB) / 2, spH / 2, cz, spB - spA, spH, 2.2, 'stone_wall', true);
     box((spA + spB) / 2, spH + 0.07, cz, spB - spA + 0.2, 0.14, 2.4, 'plaster');
-    for (const mx of [spA - 1, spB + 1]) {
+    for (const mx of [L.metaW, L.metaE]) {
       shape(new THREE.CylinderGeometry(1.3, 1.4, 1.1, 16), 'stone_wall', mx, 0.55, cz);
       level.addCollider(mx, cz, 2.8, 2.8, 1.1, site.id);
       for (const dz of [-0.75, 0, 0.75]) {
@@ -164,50 +178,59 @@ export function buildRoadSite(level, site, group) {
     }
     // The Walled Obelisk, still sheathed in the gilded bronze plates Constantine
     // VII gave it, the tallest thing on the spina.
-    box(23, spH + 0.5, cz, 2, 1, 2, 'stone_wall');
-    shape(new THREE.CylinderGeometry(0.45, 0.95, 12, 4), 'gold', 23, spH + 7, cz, Math.PI / 4);
+    box(22.2, spH + 0.5, cz, 2, 1, 2, 'stone_wall');
+    shape(new THREE.CylinderGeometry(0.45, 0.95, 12, 4), 'gold', 22.2, spH + 7, cz, Math.PI / 4);
     // A gilded Victory on a column.
-    shape(new THREE.CylinderGeometry(0.25, 0.3, 4, 10), 'plaster', 25.3, spH + 2, cz);
-    shape(new THREE.CapsuleGeometry(0.22, 0.7, 4, 8), 'gold', 25.3, spH + 4.6, cz);
+    shape(new THREE.CylinderGeometry(0.25, 0.3, 4, 10), 'plaster', 24.2, spH + 2, cz);
+    shape(new THREE.CapsuleGeometry(0.22, 0.7, 4, 8), 'gold', 24.2, spH + 4.6, cz);
     for (const sign of [-1, 1]) {
-      shape(new THREE.BoxGeometry(0.1, 0.9, 0.5).rotateX(sign * 0.5), 'gold', 25.3, spH + 4.9, cz + sign * 0.35);
+      shape(new THREE.BoxGeometry(0.1, 0.9, 0.5).rotateX(sign * 0.5), 'gold', 24.2, spH + 4.9, cz + sign * 0.35);
     }
     // The Serpent Column from Delphi: three bronze snakes twisted together,
     // their heads holding up a tripod bowl.
-    box(27.5, spH + 0.3, cz, 1.3, 0.6, 1.3, 'stone_wall');
+    box(26.2, spH + 0.3, cz, 1.3, 0.6, 1.3, 'stone_wall');
     for (let k = 0; k < 3; k++) {
       const points = [];
       for (let i = 0; i <= 24; i++) {
         const t = i / 24, a = k * Math.PI * 2 / 3 + t * Math.PI * 6;
         points.push(new THREE.Vector3(Math.cos(a) * 0.28, t * 4.4, Math.sin(a) * 0.28));
       }
-      shape(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 48, 0.13, 6), 'gold', 27.5, spH + 0.6, cz);
+      shape(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 48, 0.13, 6), 'gold', 26.2, spH + 0.6, cz);
       const a = k * Math.PI * 2 / 3;
-      shape(new THREE.SphereGeometry(0.2, 8, 6), 'gold', 27.5 + Math.cos(a) * 0.55, spH + 5.15, cz + Math.sin(a) * 0.55);
+      shape(new THREE.SphereGeometry(0.2, 8, 6), 'gold', 26.2 + Math.cos(a) * 0.55, spH + 5.15, cz + Math.sin(a) * 0.55);
     }
-    shape(new THREE.CylinderGeometry(0.85, 0.35, 0.45, 14), 'gold', 27.5, spH + 5.55, cz);
+    shape(new THREE.CylinderGeometry(0.85, 0.35, 0.45, 14), 'gold', 26.2, spH + 5.55, cz);
     // A bronze Herakles, one of the many statues gathered onto the spina.
-    box(30, spH + 0.7, cz, 1, 1.4, 1, 'stone_wall');
-    shape(new THREE.CapsuleGeometry(0.32, 1.1, 4, 8), 'gold', 30, spH + 2.4, cz);
-    shape(new THREE.SphereGeometry(0.24, 10, 8), 'gold', 30, spH + 3.45, cz);
+    box(28.2, spH + 0.7, cz, 1, 1.4, 1, 'stone_wall');
+    shape(new THREE.CapsuleGeometry(0.32, 1.1, 4, 8), 'gold', 28.2, spH + 2.4, cz);
+    shape(new THREE.SphereGeometry(0.24, 10, 8), 'gold', 28.2, spH + 3.45, cz);
     // The Obelisk of Theodosius: Thutmose III's red granite from Karnak, set on
     // four bronze blocks above a marble base carved with the emperor in the
     // Kathisma.
-    box(32.8, spH + 0.6, cz, 2.2, 1.2, 2.2, 'plaster');
-    box(32.8, spH + 1.9, cz, 1.8, 1.4, 1.8, 'plaster');
+    box(30.6, spH + 0.6, cz, 2.2, 1.2, 2.2, 'plaster');
+    box(30.6, spH + 1.9, cz, 1.8, 1.4, 1.8, 'plaster');
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      box(32.8 + sx * 0.55, spH + 2.78, cz + sz * 0.55, 0.36, 0.36, 0.36, 'gold');
+      box(30.6 + sx * 0.55, spH + 2.78, cz + sz * 0.55, 0.36, 0.36, 0.36, 'gold');
     }
-    shape(new THREE.CylinderGeometry(0.32, 0.62, 7, 4), 'brick', 32.8, spH + 6.46, cz, Math.PI / 4);
-    shape(new THREE.ConeGeometry(0.32, 0.6, 4), 'brick', 32.8, spH + 10.26, cz, Math.PI / 4);
+    shape(new THREE.CylinderGeometry(0.32, 0.62, 7, 4), 'brick', 30.6, spH + 6.46, cz, Math.PI / 4);
+    shape(new THREE.ConeGeometry(0.32, 0.6, 4), 'brick', 30.6, spH + 10.26, cz, Math.PI / 4);
     // The lap counter: seven bronze dolphins, one turned down for each lap.
-    for (const px of [35, 37]) {
+    // They are separate meshes (not merged) so the chariot race can tip them.
+    for (const px of [32, 33.3]) {
       shape(new THREE.CylinderGeometry(0.1, 0.12, 3, 8), 'gold', px, spH + 1.5, cz);
     }
-    box(36, spH + 3.05, cz, 2.4, 0.16, 0.3, 'gold');
+    box(32.65, spH + 3.05, cz, 1.6, 0.16, 0.3, 'gold');
+    const dolphins = new THREE.Group();
+    dolphins.name = 'hippodrome-dolphins';
     for (let i = 0; i < 7; i++) {
-      shape(new THREE.BoxGeometry(0.2, 0.45, 0.18), 'gold', 35.1 + i * 0.3, spH + 3.35, cz, 0, 0.5);
+      // pivot at the beam, so a dolphin swings down over it
+      const dolphin = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.42, 0.16).translate(0, 0.21, 0), level.mat.get('gold'));
+      dolphin.position.set(32.05 + i * 0.2, spH + 3.13, cz);
+      dolphin.rotation.z = 0.5;
+      dolphin.castShadow = true;
+      dolphins.add(dolphin);
     }
+    group.add(dolphins);
 
     // The carceres: arched starting stalls facing the road, open for walking
     // through, with a tower at each end and the gilded quadriga on top.

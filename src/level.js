@@ -79,6 +79,7 @@ export class Level {
   /** Is this collider live right now? A disabled addition neither blocks the
    *  pilgrim nor shadows a light. */
   colliderLive(c) {
+    if (c.off) return false;   // set aside for a moment (the chariots leave their start line)
     return !c.feature || FEATURES[c.feature] !== false;
   }
 

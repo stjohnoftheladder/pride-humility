@@ -10,6 +10,7 @@ import { Branch } from './branch.js';
 import { AudioFX } from './audio.js';
 import { Hud } from './hud.js';
 import { Minimap } from './minimap.js';
+import { ChariotRace, RACE_RESULTS } from './race.js';
 
 // ----- content (drafted; refined in the content pass) --------------------------
 const ELDER_LINES = [
@@ -105,12 +106,17 @@ async function boot() {
   const branch = Branch.load();
   level.setLadderRevealed(!!branch.encountersDone.pride);
   const battle = new BattleSystem();
+  // The chariot race in the Hippodrome, wherever that site is built.
+  const hippodrome = SITES.find((s) => s.kind === 'hippodrome');
+  const race = hippodrome ? new ChariotRace(level, hippodrome, camera, audio, hud) : null;
+  const raceOpen = () => !!race && FEATURES[hippodrome.id] !== false;
 
   const v = validateLevel();
   if (!v.ok) console.warn('level problems:', v.problems);
 
   // ----- state -------------------------------------------------------------------
-  let state = 'menu';            // menu | explore | battle | fall | confess | ending | paused
+  let state = 'menu';            // menu | explore | battle | race | raceResult | fall | confess | ending | paused
+  let resumeTo = 'explore';      // where CONTINUE on the rest screen goes back to
   let startTime = 0;
   let elderIdx = 0;
   let elderCooldown = 0;
@@ -136,6 +142,7 @@ async function boot() {
     if (armed.tempter && near('K', 2.4)) { startEncounter('tempter'); return; }
     if (armed.brother && near('B', 2.4)) { startEncounter('brother'); return; }
     if (armed.pride && near('P', 2.4)) { startEncounter('pride'); return; }
+    if (raceOpen() && race.canBoard(player.pos)) { startRace(); return; }
     if (near('E', 2.4) && elderCooldown <= 0) {
       hud.message(ELDER_LINES[elderIdx % ELDER_LINES.length], 3200);
       if (elderIdx < ELDER_LINES.length) {
@@ -219,6 +226,55 @@ async function boot() {
     hud.revealMeters();
   }
 
+  function startRace() {
+    if (state !== 'explore') return;
+    state = 'race';
+    player.clearKeys();
+    hud.hidePrompt();
+    hud.setRoom('The Hippodrome');
+    race.start();
+  }
+
+  /** The race is over: the result screen (moving the meters the first time
+   *  only, like the confession's grace), or straight back onto the sand if
+   *  the pilgrim stepped down mid-race. */
+  function finishRace(res) {
+    if (state !== 'race') return;
+    race.restoreCamera();
+    if (res.outcome === 'abandoned') {
+      stepDownFromChariot();
+      hud.message('You hand back the reins. The crowd whistles, then forgets you.', 2600);
+      return;
+    }
+    const r = RACE_RESULTS[res.outcome];
+    let note = '(You have raced before; the meters do not move again.)';
+    if (!branch.flag('raced')) {
+      branch.setFlag('raced');
+      if (r.flag) branch.setFlag(r.flag);
+      if (r.pride) { branch.addPride(r.pride); note = `(+${r.pride} pride)`; }
+      if (r.grace) { branch.addGrace(r.grace); note = `(+${r.grace} grace)`; }
+      branch.save();
+      hud.setMeters(branch.pride, branch.grace);
+      hud.revealMeters();
+    }
+    state = 'raceResult';
+    player.unlock();
+    hud.showRace(false);
+    hud.showRaceResult(r.title, `${r.text(res.place)} ${note}`, r.verse);
+    if (res.outcome === 'helped') audio.mercy(); else audio.win();
+  }
+
+  /** Back on foot on the north straight, the chariots home on their line. */
+  function stepDownFromChariot() {
+    race.reset();
+    const spot = race.stepDownSpot();
+    player.clearKeys();
+    player.setStart(new THREE.Vector3(spot.x, 0, spot.z));
+    camera.rotation.set(0, spot.yaw, 0);
+    state = 'explore';
+    hud.showExplore();
+  }
+
   function confess() {
     const receivesGrace = !branch.confessionGraceReceived;
     branch.hp = 20;
@@ -258,6 +314,12 @@ async function boot() {
   // ----- input ------------------------------------------------------------------------
   window.addEventListener('keydown', (e) => {
     if (state === 'battle') { battle.onKey(e, true); return; }
+    if (state === 'race') {
+      if (e.code === 'KeyE') race.help();
+      else if (e.code === 'KeyQ') race.abandon();
+      else race.onKey(e, true);
+      return;
+    }
     if (state === 'explore') {
       if (e.code === 'KeyE') { tryEngage(); return; }
       if (e.code === 'KeyM') { minimapOn = !minimapOn; return; }
@@ -282,22 +344,24 @@ async function boot() {
   });
   window.addEventListener('keyup', (e) => {
     if (state === 'battle') { battle.onKey(e, false); return; }
+    if (state === 'race') { race.onKey(e, false); return; }
     if (state === 'explore') player.onKey(e, false);
   });
 
   let dragLook = false;
   canvas.addEventListener('mousedown', async (e) => {
-    if (state === 'explore') {
+    if (state === 'explore' || state === 'race') {
       if (document.pointerLockElement !== canvas) dragLook = true;
       if (document.pointerLockElement === canvas) return;
       await player.lock();
     }
   });
   window.addEventListener('mousemove', (e) => {
-    if (state !== 'explore') return;
+    if (state !== 'explore' && state !== 'race') return;
     const captured = document.pointerLockElement === canvas;
     if (!captured && !dragLook) return;
     const s = 0.0026;
+    if (state === 'race') { race.lookBy(e.movementX * s, e.movementY * s); return; }
     camera.rotation.y -= e.movementX * s;
     camera.rotation.x -= e.movementY * s;
     camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x));
@@ -307,8 +371,10 @@ async function boot() {
   document.addEventListener('pointerlockchange', () => {
     if (document.pointerLockElement === canvas) {
       if (state === 'menu') { state = 'explore'; hud.showExplore(); }
-      else if (state === 'paused') { state = 'explore'; hud.hidePause(); audio.resume(); }
-    } else if (state === 'explore') {
+      else if (state === 'paused') { state = resumeTo; resumeTo = 'explore'; hud.hidePause(); audio.resume(); }
+    } else if (state === 'explore' || state === 'race') {
+      if (state === 'race') race.keys = {};   // a key let go on the rest screen never reaches the race
+      resumeTo = state;
       state = 'paused';
       hud.hidePrompt();
       hud.showPause();
@@ -325,7 +391,8 @@ async function boot() {
 
   const enterDragFallback = (message = true) => {
     if (state === 'menu' || state === 'paused') {
-      state = 'explore';
+      state = resumeTo;
+      resumeTo = 'explore';
       hud.hidePause();
       audio.resume();
       hud.showExplore();
@@ -355,6 +422,10 @@ async function boot() {
     hud.message('Repentance restores the heart. Rise, and try again.', 2200);
   };
   hud.onConfess = () => confess();
+  hud.onRaceContinue = async () => {
+    stepDownFromChariot();
+    await player.lock();
+  };
 
   // ----- update ------------------------------------------------------------------------
   function isInRoom(r) {
@@ -440,6 +511,7 @@ async function boot() {
     // every live wing answers to the one name for now (they are candidate sites)
     if (HARBOURS.some((w) => wingLive(w) && isInRoom(w.quay))) return 'The Port of Theodosius';
     if (HARBOURS.some((w) => wingLive(w) && isInRoom(wingGate(w)))) return 'The Sea Gate';
+    if (raceOpen() && isInRoom(hippodrome.area)) return 'The Hippodrome';
     return 'The Pilgrim Way';
   }
 
@@ -464,6 +536,7 @@ async function boot() {
       else if (armed.pride && near('P', 2.6)) promptText = 'Face the Demon of Pride — press E';
       else if (near('E', 2.6)) promptText = 'Speak with the Elder — press E';
       else if (near('A', 2.6)) promptText = 'Confess at the altar — press E';
+      else if (raceOpen() && race.canBoard(player.pos)) promptText = 'The Greens need a driver: press E to take the reins';
       else if (branch.encountersDone.pride && isInRoom(LEVEL_CFG.rooms.ladder)) promptText = 'Follow the gold path to THE LADDER';
       if (promptText) hud.showPrompt(promptText); else hud.hidePrompt();
 
@@ -488,6 +561,13 @@ async function boot() {
     } else {
       hud.showSiteCard(false);
     }
+
+    if (state === 'race') {
+      const res = race.update(dt);
+      if (res) finishRace(res);
+    }
+    race?.animate(dt, time, player.pos);
+    hud.showRace(state === 'race');
 
     if (state === 'battle') {
       const res = battle.update(dt, time);
@@ -560,6 +640,42 @@ async function boot() {
       waypoints: () => WAYPOINTS.map((w) => ({ ...w })),
       travel,
       audioState: () => audio.ctx?.state ?? 'none',
+      race: race && {
+        start: () => startRace(),
+        canBoard: () => raceOpen() && race.canBoard(player.pos),
+        boardSpot: () => ({ x: race.me.x + 3.4, z: race.me.z }),
+        snapshot: () => race.snapshot(),
+        /** run the race frame by frame at 60 fps, holding these keys */
+        tick: (frames, keys = {}) => {
+          race.keys = { ...keys };
+          let res = null;
+          for (let f = 0; f < frames && !res && state === 'race'; f++) {
+            res = race.update(1 / 60);
+            if (res) finishRace(res);
+          }
+          race.keys = {};
+          return res && { ...res };
+        },
+        /** drive like a player would: steer at a point on the racing line ahead */
+        autopilot: (frames, { lane = 0.9, ahead = 3.2, lash = false } = {}) => {
+          let res = null;
+          for (let f = 0; f < frames && !res && state === 'race'; f++) {
+            const me = race.me;
+            const s = race.track.project(me.x, me.z) + ahead;
+            const p = race.track.at(s, lane);
+            let turn = Math.atan2(p.z - me.z, p.x - me.x) - me.heading;
+            turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+            race.keys = { KeyW: true, KeyD: turn > 0.05, KeyA: turn < -0.05 };
+            if (lash && race.lash > 0.95) race.layOnLash();
+            res = race.update(1 / 60);
+            if (res) finishRace(res);
+          }
+          race.keys = {};
+          return res && { ...res };
+        },
+        advance: (o) => race.debugAdvance(o),
+        stopByWreck: () => race.debugStopBy(race.crashSpot),
+      },
     };
   }
 }

@@ -157,6 +157,77 @@ export class AudioFX {
     }
   }
 
+  // ---- the chariot race (the Hippodrome) -----------------------------------
+  /** The crowd's roar: a loop that swells with the race (see setRaceMix). */
+  raceStart() {
+    this.raceStop();
+    if (!this.ctx) return;
+    const t0 = this.ctx.currentTime;
+    const roar = this.ctx.createBufferSource();
+    roar.buffer = this._noiseBuffer(4);
+    roar.loop = true;
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 540;
+    bp.Q.value = 0.45;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(0.09, t0 + 1.5);
+    roar.connect(bp).connect(g).connect(this.master);
+    roar.start(t0);
+    this._race = { roar, bp, g };
+  }
+
+  /** speed and excitement, 0..1: the roar rises and brightens with both. */
+  setRaceMix(speed, excitement) {
+    if (!this._race || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    this._race.g.gain.setTargetAtTime(0.06 + excitement * 0.16, t, 0.4);
+    this._race.bp.frequency.setTargetAtTime(480 + excitement * 420 + speed * 120, t, 0.5);
+  }
+
+  raceStop() {
+    if (!this._race) return;
+    const { roar, g } = this._race;
+    if (this.ctx) {
+      const t = this.ctx.currentTime;
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.linearRampToValueAtTime(0.0001, t + 1.2);
+      try { roar.stop(t + 1.3); } catch { /* */ }
+    }
+    this._race = null;
+  }
+
+  hoof(vol = 1) {
+    this._noise(0.05, 0.14 * vol, 260);
+    this._t(70, 0.07, 'sine', 0.16 * vol, 0, -20);
+  }
+  lash() { this._noise(0.04, 0.32, 5200); this._t(1900, 0.05, 'square', 0.08, 0.01, -1300); }
+  thud() { this._noise(0.16, 0.3, 380); this._t(95, 0.18, 'sine', 0.2, 0, -40); }
+  skid() { this._noise(0.25, 0.08, 1800); }
+  trumpet(f = 392) {
+    this._t(f, 0.42, 'sawtooth', 0.09);
+    this._t(f * 2, 0.42, 'square', 0.035);
+  }
+  fanfare() {
+    for (const [f, t] of [[392, 0], [523, 0.14], [659, 0.28], [784, 0.42]]) {
+      this._t(f, 0.5, 'sawtooth', 0.08, t);
+      this._t(f * 2, 0.5, 'square', 0.03, t);
+    }
+    this.cheer();
+  }
+  cheer() {
+    for (let i = 0; i < 5; i++) this._voice(0.5 + Math.random() * 0.7, 0.07, 520 + Math.random() * 780);
+  }
+  crash() {
+    this._noise(0.7, 0.45, 900);
+    this._noise(0.12, 0.3, 3200, 0.05);
+    this._noise(0.1, 0.25, 2600, 0.22);
+    this._t(120, 0.45, 'sawtooth', 0.2, 0, -70);
+    for (let i = 0; i < 4; i++) this._voice(0.9 + Math.random() * 0.5, 0.08, 300 + Math.random() * 300);
+  }
+
   // ---- harbour layer (the Port of Theodosius) ------------------------------
   /** Lazy-built surf bed + occasional gull, gated by one harbour gain so the
    * sea fades in over the street ambience without touching the other nodes. */

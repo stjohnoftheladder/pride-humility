@@ -47,6 +47,16 @@ export class Hud {
       siteCardName: $('site-card-name'),
       siteCardNote: $('site-card-note'),
       fps: $('fps'),
+      race: $('race-hud'),
+      raceLap: $('race-lap'),
+      racePlace: $('race-place'),
+      raceOrder: $('race-order'),
+      raceLash: $('race-lash'),
+      raceCall: $('race-call'),
+      raceScreen: $('race-screen'),
+      raceTitle: $('race-title'),
+      raceText: $('race-text'),
+      raceVerse: $('race-verse'),
     };
     this.msgTimer = null;
     this.onStart = null;
@@ -55,12 +65,14 @@ export class Hud {
     this.onMute = null;
     this.onFallContinue = null;
     this.onConfess = null;
+    this.onRaceContinue = null;
 
     $('start-btn')?.addEventListener('click', () => this.onStart?.());
     $('resume-btn')?.addEventListener('click', () => this.onResume?.());
     $('restart-btn')?.addEventListener('click', () => this.onRestart?.());
     $('fall-btn')?.addEventListener('click', () => this.onFallContinue?.());
     $('confess-btn')?.addEventListener('click', () => this.onConfess?.());
+    $('race-btn')?.addEventListener('click', () => this.onRaceContinue?.());
     this.el.mute?.addEventListener('click', () => this.onMute?.());
   }
 
@@ -153,9 +165,47 @@ export class Hud {
   }
 
   _hideScreens() {
-    for (const id of ['title-screen', 'pause-screen', 'fall-screen', 'confess-screen', 'ending-screen']) {
+    for (const id of ['title-screen', 'pause-screen', 'fall-screen', 'confess-screen', 'ending-screen', 'race-screen']) {
       document.getElementById(id).style.display = 'none';
     }
+  }
+
+  // ---------------- the chariot race ----------------
+  showRace(on) {
+    if (!this.el.race || this._raceOn === on) return;
+    this._raceOn = on;
+    this.el.race.style.display = on ? 'block' : 'none';
+    this.el.raceCall.style.display = on ? 'block' : 'none';
+    if (!on) this._raceKey = null;
+  }
+
+  /** Lap, place, the running order as faction colors, and the lash. */
+  setRace({ lap, laps, place, order, lash, help, countdown }) {
+    if (!this.el.race) return;
+    const key = `${lap}|${place}|${order.map((o) => o.name + o.out).join()}|${help}|${countdown}`;
+    if (key !== this._raceKey) {
+      this._raceKey = key;
+      this.el.raceLap.textContent = countdown ? `THE MAPPA FALLS IN ${countdown}` : `LAP ${lap} / ${laps}`;
+      this.el.racePlace.textContent = ['1ST', '2ND', '3RD', '4TH'][place - 1];
+      this.el.raceOrder.innerHTML = order.map((o) => {
+        const hex = `#${o.color.toString(16).padStart(6, '0')}`;
+        const cls = ['race-chip', o.me ? 'me' : '', o.out ? 'out' : ''].join(' ');
+        return `<span class="${cls}" style="border-color:${hex}">${esc(o.name)}</span>`;
+      }).join('');
+      this.el.raceCall.textContent = help
+        ? 'A Blue driver lies in the sand. S to rein in, then E to help him.'
+        : 'W · drive on   S · rein in   A / D · steer   SHIFT · lash   Q · step down';
+      this.el.raceCall.classList.toggle('urgent', !!help);
+    }
+    this.el.raceLash.style.width = `${Math.round(lash * 100)}%`;
+  }
+
+  showRaceResult(title, text, verse) {
+    this._hideScreens();
+    this.el.raceScreen.style.display = 'flex';
+    this.el.raceTitle.textContent = title;
+    this.el.raceText.textContent = text;
+    this.el.raceVerse.textContent = verse;
   }
 
   // ---------------- battle ----------------
