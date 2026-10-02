@@ -194,7 +194,7 @@ const ROAD_SITES = [
   { id: 'hippodrome', label: 'THE HIPPODROME', short: 'HIPPODROME', kind: 'hippodrome',
     area: { x: 2, y: 73, w: 13, h: 9 },
     source: 'https://www.byzantium1200.com/hipodrom.html',
-    note: 'The Hippodrome was the city’s great racecourse, where crowds cheered the Blue and Green chariot teams from tiered stands. Along its central spine stood a famous collection of monuments, among them an Egyptian obelisk and the bronze Serpent Column from Delphi, both still standing in the square today.' },
+    note: 'The city’s great racecourse, some 450 meters long, where up to 100,000 people cheered the Blue and Green chariot teams. Begun under Septimius Severus and enlarged by Constantine, it ran beside the Great Palace, and the emperor watched from the Kathisma, a lodge reached straight from the palace. The central spine was a museum of trophies: the Egyptian obelisk Theodosius raised in 390, the bronze Serpent Column cast after the Greek victory over Persia in 479 BC, and the Walled Obelisk sheathed in gilded bronze. Four gilded horses crowned the starting gates. Some 30,000 people died here in the Nika riot of 532. In 1204 the Crusaders melted its bronzes and carried the horses off to Venice.' },
   { id: 'mosaicPeristyle', label: 'THE MOSAIC PERISTYLE', short: 'PERISTYLE', kind: 'mosaicCourt',
     area: { x: 20, y: 84, w: 12, h: 8 },
     source: 'https://www.byzantium1200.com/mosaic.html',
