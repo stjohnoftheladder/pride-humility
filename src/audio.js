@@ -244,7 +244,7 @@ export class AudioFX {
     surf.loop = true;
     const lp = this.ctx.createBiquadFilter();
     lp.type = 'lowpass';
-    lp.frequency.value = 430;
+    lp.frequency.value = 260;
     lp.Q.value = 0.7;
     surf.connect(lp).connect(g);
     surf.start(t0);
@@ -253,7 +253,7 @@ export class AudioFX {
     const lfo = this.ctx.createOscillator();
     lfo.frequency.value = 0.07;
     const lfoGain = this.ctx.createGain();
-    lfoGain.gain.value = 210;
+    lfoGain.gain.value = 90;
     lfo.connect(lfoGain).connect(lp.frequency);
     lfo.start(t0);
 
@@ -305,7 +305,8 @@ export class AudioFX {
     const gain = this._harbourGain.gain;
     gain.cancelScheduledValues(t);
     gain.setValueAtTime(gain.value, t);
-    gain.linearRampToValueAtTime(this._harbourOn ? 0.13 : 0.0001, t + 2.2);
+    // Keep surf and gulls behind the street voices and gameplay cues.
+    gain.linearRampToValueAtTime(this._harbourOn ? 0.012 : 0.0001, t + 2.2);
     if (this._harbourOn) this._scheduleGulls();
   }
 
@@ -337,14 +338,14 @@ export class AudioFX {
     crowdBP.Q.value = 0.5;
     const crowdG = this.ctx.createGain();
     crowdG.gain.setValueAtTime(0.0001, t0);
-    crowdG.gain.linearRampToValueAtTime(0.05, t0 + 4);
+    crowdG.gain.linearRampToValueAtTime(0.004, t0 + 4);
     crowd.connect(crowdBP).connect(crowdG).connect(this.master);
     crowd.start(t0);
     push(crowd, crowdBP, crowdG);
     every(() => {
       const now = this.ctx.currentTime;
       crowdG.gain.cancelScheduledValues(now);
-      crowdG.gain.linearRampToValueAtTime(0.028 + Math.random() * 0.05, now + 2.2 + Math.random() * 2.8);
+      crowdG.gain.linearRampToValueAtTime(0.002 + Math.random() * 0.003, now + 2.2 + Math.random() * 2.8);
     }, 3500, 4000, 8000);
 
     // distant voices / merchant calls
