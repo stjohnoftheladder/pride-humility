@@ -8,6 +8,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { testActivities } from './activities.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -15,10 +16,9 @@ const PORT = 5310;
 
 function startServer() {
   execSync('npx vite build', { cwd: ROOT, stdio: 'inherit' });
-  const proc = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
+  const proc = spawn(process.execPath, [path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js'), 'preview', '--port', String(PORT), '--strictPort'], {
     cwd: ROOT,
     stdio: 'ignore',
-    shell: process.platform === 'win32',
   });
   return proc;
 }
@@ -789,7 +789,7 @@ async function runInteractionRegressions(browser) {
     // to grief, and the meters stay where the first race left them.
     await board();
     g.race.tick(200);
-    const res = g.race.autopilot(60 * 90);
+    const res = g.race.autopilot(60 * 120);
     const full = { res, snap: g.race.snapshot(), state: g.state(), pride: g.branch.pride, grace: g.branch.grace,
       text: document.getElementById('race-text').textContent };
     await stepDown();
@@ -840,6 +840,127 @@ let aborted = null;
 try {
   await waitForServer(`http://localhost:${PORT}/`);
   const browser = await chromium.launch();
+  const exits = await newPage(browser);
+  // World sprite sheets load asynchronously after the debug hook is installed.
+  await exits.page.waitForFunction(() => Object.values(window.__game.level.worldEnemies).every(enemy => enemy.sprite.mesh.visible));
+  for (const id of ['tempter', 'brother', 'pride']) {
+    const result = await exits.page.evaluate(id => {
+      const g = window.__game;
+      const before = JSON.stringify(g.branch);
+      let clear = true;
+      for (const phase of ['intro', 'menu', 'fight', 'enemy']) {
+        g.setState('explore'); g.hud.showExplore();
+        const pos = g.player.pos.clone();
+        g.startEncounter(id); g.battle.phase = phase;
+        g.battle.keys.KeyW = true;
+        g.key(phase === 'enemy' ? 'KeyQ' : 'Escape');
+        clear &&= g.state() === 'explore' && !g.battle.active && g.battle.sprites.length === 0
+          && g.level.group.visible && g.player.pos.distanceTo(pos) < 0.001
+          && Object.keys(g.battle.keys).length === 0 && g.armed()[id];
+      }
+      return { clear, unchanged: before === JSON.stringify(g.branch), visible: g.level.worldEnemies[id].sprite.mesh.visible };
+    }, id);
+    check(`escape: ${id} can be left in every active phase without resolving or changing the journey`, result.clear && result.unchanged && result.visible, JSON.stringify(result));
+  }
+  await exits.page.evaluate(() => { const g = window.__game; g.setState('explore'); g.startEncounter('tempter'); });
+  await exits.page.locator('#leave-encounter').click();
+  check('escape: visible Leave button returns to the road', await exits.page.evaluate(() => window.__game.state() === 'explore'));
+  await exits.page.evaluate(() => {
+    const g = window.__game; g.startEncounter('tempter');
+    g.battle.done = { outcome: 'spared' }; g.battle.phase = 'resolving'; g.battle.phaseT = 0;
+    g.key('Escape');
+  });
+  check('escape: an already resolved outcome is not discarded during its animation', await exits.page.evaluate(() => window.__game.state() === 'battle' && window.__game.battle.done.outcome === 'spared'));
+  check('escape: no page errors', exits.errors.length === 0, JSON.stringify(exits.errors));
+  await exits.page.close();
+  await testActivities(browser, newPage, check);
+
+  const crowd = await newPage(browser);
+  const citizens = await crowd.page.evaluate(() => {
+    const g = window.__game, m = g.market;
+    const walker = m.npcs.find(n => n.role === 'walker');
+    walker.wait = 0;
+    const before = walker.z;
+    m.update(1, 1, null);
+    return { total: m.npcs.length, vendors: m.npcs.filter(n => n.role === 'vendor').length, moved: before !== walker.z };
+  });
+  check('market: tracked crowd and roaming citizens', citizens.total === 140 && citizens.vendors === 20 && citizens.moved, JSON.stringify(citizens));
+  const identities = await crowd.page.evaluate(() => {
+    const m = window.__game.market, vendors = m.npcs.filter(n => n.role === 'vendor'), walkers = m.npcs.filter(n => n.role === 'walker');
+    const unique = (list, key) => new Set(list.map(n => n[key])).size === list.length;
+    return { names: unique(m.npcs, 'name'), lines: unique(walkers, 'line'), trades: unique(vendors.map(n => n.trade), 'name'), scenes: unique(vendors.map(n => n.trade), 'text'), meshes: m.group.children.length, bodyInstances: m.bodies.count };
+  });
+  check('market: no duplicate citizen identities, dialogue, vendor trades or scenes', identities.names && identities.lines && identities.trades && identities.scenes, JSON.stringify(identities));
+  check('market: unique people still use six shared instanced meshes', identities.meshes === 6 && identities.bodyInstances === 140, JSON.stringify(identities));
+  await crowd.page.evaluate(() => {
+    const g = window.__game, n = g.market.npcs[0];
+    g.setState('explore'); g.teleport(n.x, n.z); g.key('KeyE');
+  });
+  check('market: E opens vendor conversation', await crowd.page.evaluate(() => window.__game.state()) === 'market');
+  await crowd.page.keyboard.press('1');
+  const firstChoice = await crowd.page.evaluate(() => {
+    const g = window.__game;
+    const before = g.branch.grace;
+    const duplicate = g.market.choose(g.market.npcs[0], 'proud', g.branch);
+    return { grace: before, pride: g.branch.pride, duplicate, saved: JSON.parse(localStorage.getItem('pride-humility-save-v1')).flags['market:vendor-0--1'] };
+  });
+  check('market: choice persists and cannot be farmed or reversed', firstChoice.grace === 1 && firstChoice.pride === 0 && !firstChoice.duplicate && firstChoice.saved === 'humble', JSON.stringify(firstChoice));
+  await crowd.page.evaluate(() => {
+    const g = window.__game, n = g.market.npcs.find(n => n.id === 'vendor-4--1');
+    g.setState('explore'); g.teleport(n.x, n.z); g.key('KeyE');
+  });
+  await crowd.page.keyboard.press('3');
+  check('errands: accepting a delivery grants no meter reward', await crowd.page.evaluate(() => {
+    const g = window.__game;
+    return g.market.activeErrand(g.branch)?.id === 'bread' && g.branch.grace === 1 && g.branch.pride === 0;
+  }));
+  await crowd.page.reload();
+  await crowd.page.waitForFunction(() => window.__game);
+  const delivery = await crowd.page.evaluate(() => {
+    const g = window.__game, m = g.market;
+    const active = m.activeErrand(g.branch);
+    const wrong = m.errandAction(m.npcs[0], 'deliverQuietly', g.branch);
+    const second = m.errandAction(m.npcs.find(n => n.id === 'vendor-4-1'), 'accept', g.branch);
+    const target = m.npcs.find(n => n.id === active.to);
+    const guidance = m.objective(g.branch, g.player.pos);
+    g.setState('explore'); g.teleport(target.x, target.z); g.key('KeyE');
+    return { restored: active.id, wrong, second, guidance };
+  });
+  check('errands: reload restores parcel; wrong recipient and second parcel are rejected', delivery.restored === 'bread' && !delivery.wrong && !delivery.second && delivery.guidance.includes('Water carrier'), JSON.stringify(delivery));
+  await crowd.page.keyboard.press('1');
+  check('errands: quiet handoff changes grace once and clears the objective', await crowd.page.evaluate(() => {
+    const g = window.__game, m = g.market;
+    const duplicate = m.errandAction(m.npcs.find(n => n.id === 'vendor-5-1'), 'deliverForPraise', g.branch);
+    return g.branch.grace === 3 && g.branch.pride === 0 && !duplicate && !m.objective(g.branch, g.player.pos);
+  }));
+  const errands = await crowd.page.evaluate(() => {
+    const g = window.__game, m = g.market;
+    const cupsFrom = m.npcs.find(n => n.id === 'vendor-7--1'), cupsTo = m.npcs.find(n => n.id === 'vendor-8--1');
+    const fruitFrom = m.npcs.find(n => n.id === 'vendor-4-1'), fruitTo = m.npcs.find(n => n.id === 'vendor-6--1');
+    const results = [m.errandAction(cupsFrom, 'accept', g.branch), m.errandAction(cupsTo, 'deliverForPraise', g.branch), m.errandAction(fruitFrom, 'accept', g.branch), m.errandAction(fruitTo, 'deliverQuietly', g.branch)];
+    return { results, pride: g.branch.pride, grace: g.branch.grace, repeat: m.errandAction(cupsFrom, 'accept', g.branch) };
+  });
+  check('errands: all three routes complete with distinct motives and no repeat rewards', errands.results.every(Boolean) && errands.pride === 3 && errands.grace === 5 && !errands.repeat, JSON.stringify(errands));
+  const recognition = await crowd.page.evaluate(() => {
+    const g = window.__game, m = g.market, n = m.npcs.find(n => n.id === 'vendor-4--1');
+    g.branch.setFlag('wonRace');
+    const winner = m.conversation(n, g.branch).paragraphs.join(' ');
+    g.branch.setFlag('helpedCharioteer');
+    const helper = m.conversation(n, g.branch).paragraphs.join(' ');
+    return { winner: winner.includes('champion'), helper: helper.includes('he is alive') };
+  });
+  check('market: vendors recognize race victory and mercy', recognition.winner && recognition.helper, JSON.stringify(recognition));
+  await crowd.page.evaluate(() => {
+    const g = window.__game, worker = g.market.npcs.find(n => n.role === 'worker');
+    g.setState('explore'); g.teleport(worker.x, worker.z); g.key('KeyE');
+  });
+  await crowd.page.keyboard.press('2');
+  check('workers: asking for public praise changes pride and is remembered', await crowd.page.evaluate(() => {
+    const g = window.__game, worker = g.market.npcs.find(n => n.role === 'worker');
+    return g.branch.pride === 5 && g.branch.flags[`market:${worker.id}`] === 'proud' && !g.market.choose(worker, 'humble', g.branch);
+  }));
+  check('market: no console errors', crowd.errors.length === 0, JSON.stringify(crowd.errors));
+  await crowd.page.close();
 
   // ---- humility run ----
   const hum = await runJourney(browser, 'humble');

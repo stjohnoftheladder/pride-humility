@@ -33,9 +33,12 @@ Test suite (builds, serves, plays both journeys with keyboard-only input):
 npm test
 ```
 
-Deploy (Cloudflare Pages). Two branches publish, both gated on the suite:
-pushing `main` deploys the live site, pushing `dev` deploys a preview of its own
-at **dev.pride-humility.pages.dev** — work that is not ready for players yet.
+Deploy (Cloudflare Pages), gated on the suite. **For now the `dev` branch is
+what publishes**: pushing it runs the tests and then deploys to
+https://pride-humility.pages.dev, built with `VITE_DEBUG_DEFAULT=1` so the dev
+tools are on without needing `?debug`. When this is ready for players, point
+`on.push.branches` at `main` in `.github/workflows/ci.yml` and drop the
+`VITE_DEBUG_DEFAULT` line.
 
 ```bash
 npm run build && npx wrangler pages deploy dist --project-name pride-humility --branch main

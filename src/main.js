@@ -11,6 +11,9 @@ import { AudioFX } from './audio.js';
 import { Hud } from './hud.js';
 import { Minimap } from './minimap.js';
 import { ChariotRace, RACE_RESULTS } from './race.js';
+import { RoadMarket } from './market.js';
+import { ACTIVITY_STOPS, nearbyActivity } from './activitySites.js';
+import { HarbourCart } from './harbourCart.js';
 
 // ----- content (drafted; refined in the content pass) --------------------------
 const ELDER_LINES = [
@@ -87,7 +90,10 @@ async function boot() {
   const hud = new Hud();
   const minimap = new Minimap(document.getElementById('minimap-canvas'));
   let minimapOn = true;            // the city is long; the map is on to start with
-  const debugMode = new URLSearchParams(location.search).has('debug');
+  // The deployed dev build is built with VITE_DEBUG_DEFAULT=1, so the dev tools
+  // are simply on there; any other build opts in with ?debug.
+  const debugMode = import.meta.env.VITE_DEBUG_DEFAULT === '1'
+    || new URLSearchParams(location.search).has('debug');
   if (debugMode) {
     document.getElementById('top-right').style.display = 'flex';
     document.getElementById('dev-hints').style.display = 'block';
@@ -98,12 +104,26 @@ async function boot() {
 
   const level = new Level(scene, materials);
   const spawns = level.build();
+  const market = new RoadMarket(level);
+  level.npcs = [...market.npcs];
   // Every addition and landmark the approach card knows about, with positions.
   const landmarks = level.landmarks();
   const player = new Player(camera, canvas, level);
   scene.add(camera);
 
   const branch = Branch.load();
+  // Small, feature-owned entry signs make the new activities discoverable.
+  for (const stop of ACTIVITY_STOPS) {
+    const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 96;
+    const ink = signCanvas.getContext('2d'); ink.fillStyle = '#20180f'; ink.fillRect(0, 0, 512, 96);
+    ink.strokeStyle = '#f3d276'; ink.lineWidth = 5; ink.strokeRect(3, 3, 506, 90);
+    ink.fillStyle = '#f3d276'; ink.font = '22px monospace'; ink.textAlign = 'center';
+    ink.fillText(stop.label.toUpperCase(), 256, 38); ink.font = '17px monospace'; ink.fillText('APPROACH · E', 256, 72);
+    const texture = new THREE.CanvasTexture(signCanvas);
+    const marker = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }));
+    marker.name = `activity-${stop.id}`; marker.position.set(stop.x, 2.6, stop.z); marker.scale.set(3.4, 0.64, 1);
+    level.featureGroups[stop.id]?.add(marker);
+  }
   level.setLadderRevealed(!!branch.encountersDone.pride);
   const battle = new BattleSystem();
   // The chariot race in the Hippodrome, wherever that site is built.
@@ -123,6 +143,108 @@ async function boot() {
   let confessCooldown = 0;
   const armed = { tempter: true, brother: true, pride: true };
   let battleEncounterId = null;
+  let encounterReturnPos = null;
+  const leaveEncounterButton = document.createElement('button');
+  leaveEncounterButton.id = 'leave-encounter';
+  leaveEncounterButton.className = 'btn';
+  leaveEncounterButton.textContent = 'Leave · Q / Esc';
+  leaveEncounterButton.style.cssText = 'position:absolute;right:14px;bottom:34px;z-index:8;font-size:11px;padding:6px 10px;letter-spacing:0;display:none';
+  leaveEncounterButton.onclick = leaveEncounter;
+  document.getElementById('stage').appendChild(leaveEncounterButton);
+  let activeVendor = null;
+  let marketChoices = [];
+  const marketScreen = document.createElement('div');
+  marketScreen.className = 'screen';
+  marketScreen.style.display = 'none';
+  marketScreen.style.overflowY = 'auto';
+  marketScreen.setAttribute('role', 'dialog');
+  marketScreen.setAttribute('aria-modal', 'true');
+  marketScreen.setAttribute('aria-label', 'Market conversation');
+  document.getElementById('confess-screen').parentElement.appendChild(marketScreen);
+  const errandHud = document.getElementById('errand-info');
+  const playDock = document.createElement('div');
+  playDock.id = 'world-play-dock'; document.getElementById('hud').appendChild(playDock);
+  function arrangePlayHud() {
+    const playing = ['activity', 'cart', 'race'].includes(state)
+      || (state === 'paused' && ['activity', 'cart', 'race'].includes(resumeTo));
+    playDock.style.display = playing ? 'flex' : 'none';
+    for (const id of ['msg', 'world-activity-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt']) {
+      const el = document.getElementById(id); if (!el) continue;
+      const parent = playing ? playDock : document.getElementById(id === 'engage-prompt' ? 'explore-info' : 'hud');
+      if (el.parentElement !== parent) parent.appendChild(el);
+    }
+  }
+  let activities = null;
+  const harbourCart = new HarbourCart({ level, player, camera, branch, hud,
+    leave: () => { state = 'explore'; hud.setRoom(roomLabel()); },
+  });
+  function startCart() {
+    if (state !== 'explore' || !harbourCart.canBoard(player.pos)) return;
+    state = 'cart'; hud.showExplore(); hud.setRoom('The Port of Theodosius'); harbourCart.start();
+  }
+  async function startActivity(stop) {
+    if (state !== 'explore' || FEATURES[stop.id] === false) return;
+    if (stop.id === 'harbour') { startCart(); return; }
+    state = 'activityLoading';
+    hud.showExplore();
+    player.clearKeys(); hud.hidePrompt();
+    try {
+      const module = await import('./activities.js');
+      activities ??= new module.LocationActivities({
+        level, player, hud, branch, parent: document.getElementById('hud'),
+        leave: async () => { state = 'explore'; player.clearKeys(); await player.lock(); },
+        onResult: () => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); },
+      });
+      state = 'activity';
+      hud.setRoom(stop.id === 'aqueduct' ? 'The Aqueduct of Valens' : 'The Forum of Constantine');
+      activities.start(module.ACTIVITIES.find(a => a.id === stop.id));
+    } catch (error) {
+      state = 'explore';
+      hud.message('This activity could not load. Press E to try again.', 3500);
+      console.error(error);
+    }
+  }
+  async function closeMarket() {
+    marketScreen.style.display = 'none';
+    activeVendor = null;
+    marketChoices = [];
+    state = 'explore';
+    player.clearKeys();
+    await player.lock();
+  }
+  function showMarket(npc) {
+    activeVendor = npc;
+    state = 'market';
+    player.clearKeys();
+    player.unlock();
+    hud.hidePrompt();
+    marketScreen.replaceChildren();
+    marketScreen.style.display = 'flex';
+    const title = document.createElement('h2');
+    title.textContent = npc.name;
+    const text = document.createElement('p');
+    const conversation = market.conversation(npc, branch);
+    marketChoices = conversation.choices;
+    text.textContent = conversation.paragraphs.join(' ');
+    marketScreen.append(title, text);
+    const button = (label, action) => {
+      const b = document.createElement('button'); b.className = 'btn'; b.textContent = label; b.onclick = action;
+      marketScreen.appendChild(b); return b;
+    };
+    for (const [i, choice] of marketChoices.entries()) button(`${i + 1} · ${choice.label}`, () => resolveMarket(choice.action));
+    button('Leave · Escape', closeMarket);
+    marketScreen.querySelector('button').focus();
+  }
+  function resolveMarket(choice) {
+    if (!activeVendor || !marketChoices.some(c => c.action === choice)) return;
+    const changed = ['humble', 'proud'].includes(choice)
+      ? market.choose(activeVendor, choice, branch)
+      : market.errandAction(activeVendor, choice, branch);
+    if (!changed) return;
+    hud.setMeters(branch.pride, branch.grace);
+    if (choice !== 'accept') hud.revealMeters();
+    showMarket(activeVendor);
+  }
 
   player.setStart(spawns.S[0]);
   // Face the fountain and chapel route, not the north wall. The first frame
@@ -143,6 +265,14 @@ async function boot() {
     if (armed.brother && near('B', 2.4)) { startEncounter('brother'); return; }
     if (armed.pride && near('P', 2.4)) { startEncounter('pride'); return; }
     if (raceOpen() && race.canBoard(player.pos)) { startRace(); return; }
+    const stop = nearbyActivity(player.pos, FEATURES);
+    if (stop) { startActivity(stop); return; }
+    const citizen = !near('E', 2.6) && !near('A', 2.6) && market.nearest(player.pos);
+    if (citizen) {
+      if (citizen.trade) showMarket(citizen);
+      else hud.message(`${citizen.name}: “${citizen.line}”`, 6500);
+      return;
+    }
     if (near('E', 2.4) && elderCooldown <= 0) {
       hud.message(ELDER_LINES[elderIdx % ELDER_LINES.length], 3200);
       if (elderIdx < ELDER_LINES.length) {
@@ -164,6 +294,7 @@ async function boot() {
   };
 
   function startEncounter(id) {    if (state !== 'explore') return;
+    encounterReturnPos = player.pos.clone();
     const def = ENCOUNTERS[id];
     state = 'battle';
     battleEncounterId = id;
@@ -175,6 +306,23 @@ async function boot() {
     hud.hidePrompt();
     level.group.visible = false;
     battle.start(def, { hud, branch, audio, player, level, scene, renderer, camera });
+  }
+
+  function leaveEncounter() {
+    if (state !== 'battle' || battle.done) return;
+    battle.keys = {};
+    battle.dispose();
+    level.group.visible = true;
+    player.clearKeys();
+    if (encounterReturnPos) player.setStart(encounterReturnPos);
+    player.vel.set(0, 0, 0);
+    branch.save();
+    state = 'explore';
+    hud.showExplore();
+    hud.setRoom(roomLabel());
+    hud.message('You step away. The encounter waits if you choose to return.', 2600);
+    leaveEncounterButton.style.display = 'none';
+    // Leave mouse capture to the next click, just like other exploration screens.
   }
 
   function finishEncounter(outcome) {
@@ -313,7 +461,23 @@ async function boot() {
 
   // ----- input ------------------------------------------------------------------------
   window.addEventListener('keydown', (e) => {
-    if (state === 'battle') { battle.onKey(e, true); return; }
+    if (state === 'cart') { harbourCart.key(e, true); return; }
+    if (state === 'activity') { activities.key(e, true); return; }
+    if (state === 'activityLoading') return;
+    if (state === 'market') {
+      if (e.repeat) return;
+      if (/^Digit[1-9]$/.test(e.code)) {
+        const choice = marketChoices[Number(e.code.slice(5)) - 1];
+        if (choice) resolveMarket(choice.action);
+      }
+      else if (e.code === 'Escape') closeMarket();
+      return;
+    }
+    if (state === 'battle') {
+      if (e.code === 'KeyQ' || e.code === 'Escape') { e.preventDefault(); leaveEncounter(); }
+      else battle.onKey(e, true);
+      return;
+    }
     if (state === 'race') {
       if (e.code === 'KeyE') race.help();
       else if (e.code === 'KeyQ') race.abandon();
@@ -343,6 +507,8 @@ async function boot() {
     }
   });
   window.addEventListener('keyup', (e) => {
+    if (state === 'cart') { harbourCart.key(e, false); return; }
+    if (state === 'activity') { activities.key(e, false); return; }
     if (state === 'battle') { battle.onKey(e, false); return; }
     if (state === 'race') { race.onKey(e, false); return; }
     if (state === 'explore') player.onKey(e, false);
@@ -350,18 +516,19 @@ async function boot() {
 
   let dragLook = false;
   canvas.addEventListener('mousedown', async (e) => {
-    if (state === 'explore' || state === 'race') {
+    if (state === 'explore' || state === 'race' || state === 'cart' || state === 'activity') {
       if (document.pointerLockElement !== canvas) dragLook = true;
       if (document.pointerLockElement === canvas) return;
       await player.lock();
     }
   });
   window.addEventListener('mousemove', (e) => {
-    if (state !== 'explore' && state !== 'race') return;
+    if (state !== 'explore' && state !== 'race' && state !== 'cart' && state !== 'activity') return;
     const captured = document.pointerLockElement === canvas;
     if (!captured && !dragLook) return;
     const s = 0.0026;
     if (state === 'race') { race.lookBy(e.movementX * s, e.movementY * s); return; }
+    if (state === 'cart') { harbourCart.lookBy(e.movementX * s, e.movementY * s); return; }
     camera.rotation.y -= e.movementX * s;
     camera.rotation.x -= e.movementY * s;
     camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x));
@@ -372,8 +539,10 @@ async function boot() {
     if (document.pointerLockElement === canvas) {
       if (state === 'menu') { state = 'explore'; hud.showExplore(); }
       else if (state === 'paused') { state = resumeTo; resumeTo = 'explore'; hud.hidePause(); audio.resume(); }
-    } else if (state === 'explore' || state === 'race') {
+    } else if (state === 'explore' || state === 'race' || state === 'cart' || state === 'activity') {
       if (state === 'race') race.keys = {};   // a key let go on the rest screen never reaches the race
+      if (state === 'cart') harbourCart.keys = {};
+      if (state === 'activity') { activities.keys = {}; player.clearKeys(); }
       resumeTo = state;
       state = 'paused';
       hud.hidePrompt();
@@ -516,6 +685,15 @@ async function boot() {
   }
 
   function update(dt, time) {
+    arrangePlayHud();
+    if (debugMode) document.getElementById('dev-hints').style.display = ['cart', 'activity'].includes(state) ? 'none' : 'block';
+    if (state === 'cart') harbourCart.update(dt);
+    leaveEncounterButton.style.display = state === 'battle' && !battle.done ? 'block' : 'none';
+    if (state === 'activity') activities.update(dt);
+    const objective = state === 'explore' ? market.objective(branch, player.pos) : null;
+    errandHud.textContent = objective ?? '';
+    errandHud.style.display = objective ? 'block' : 'none';
+    if (state === 'explore') market.update(dt, time, player.pos);
     if (state === 'explore' || state === 'paused') {
       if (state === 'explore') player.update(dt);
       // world mood shifts with the heart (daylight base, cooling into dusk-red)
@@ -537,6 +715,8 @@ async function boot() {
       else if (near('E', 2.6)) promptText = 'Speak with the Elder — press E';
       else if (near('A', 2.6)) promptText = 'Confess at the altar — press E';
       else if (raceOpen() && race.canBoard(player.pos)) promptText = 'The Greens need a driver: press E to take the reins';
+      else if (nearbyActivity(player.pos, FEATURES)) promptText = `${nearbyActivity(player.pos, FEATURES).label} — press E`;
+      else if (market.nearest(player.pos)) promptText = `Speak with ${market.nearest(player.pos).name} — press E`;
       else if (branch.encountersDone.pride && isInRoom(LEVEL_CFG.rooms.ladder)) promptText = 'Follow the gold path to THE LADDER';
       if (promptText) hud.showPrompt(promptText); else hud.hidePrompt();
 
@@ -604,6 +784,10 @@ async function boot() {
       player,
       branch,
       level,
+      market,
+      activityStops: ACTIVITY_STOPS,
+      activities: () => activities,
+      harbourCart,
       hud,
       battle,
       tickBattle: (frames, praying) => {

@@ -80,11 +80,22 @@
        player. Bottom-left, clear of the room label and meters above
        it and of the map and sound button on the right. */
     #site-card {
-      left: 10px; bottom: 12px; width: 336px; padding: 7px 10px;
+      position: static; width: min(336px, 100%); padding: 7px 10px;
+      align-self: flex-start;
+    }
+    #explore-info {
+      position: absolute; left: 10px; right: 10px; bottom: 12px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    #errand-info {
+      width: min(560px, 100%); text-align: center; color: var(--gold);
+      background: #120d07dd; padding: 7px; font-size: 11px;
     }
     #site-card-name { font-size: 12px; color: var(--gold); letter-spacing: 1px; }
     #site-card-note {
       margin: 4px 0 0; font-size: 11px; line-height: 1.5; color: var(--text); opacity: 0.88;
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4;
+      max-height: 66px; overflow: hidden;
     }
 
     /* Whole-city mini-map: a tall thin strip, drawn from the level grid by
@@ -118,12 +129,31 @@
     #msg.show { opacity: 1; }
 
     #engage-prompt {
-      position: absolute; left: 50%; bottom: 11%; transform: translateX(-50%);
+      position: static; max-width: 100%; text-align: center;
       font-size: 13px; color: var(--gold); letter-spacing: 0.5px;
       text-shadow: 0 2px 0 #000, 0 0 10px #f3d27666;
       background: rgba(18, 13, 7, 0.6); border: 1px solid var(--accent);
       padding: 4px 14px; border-radius: 3px; display: none;
     }
+
+    #cart-hud { top: 72px; left: 50%; transform: translateX(-50%); max-width: 90%; text-align: center; font-size: 11px; line-height: 1.7; }
+    #cart-hud strong { color: var(--gold); }
+    #world-play-dock {
+      position: absolute; bottom: 10px; left: 10px; right: 10px;
+      display: none; flex-direction: column; align-items: center; gap: 5px;
+      max-height: 42%; overflow-y: auto; pointer-events: none;
+    }
+    #world-play-dock > #msg, #world-play-dock > #engage-prompt,
+    #world-play-dock > #race-call, #world-play-dock > .panel {
+      position: static !important; transform: none !important;
+      width: min(580px, 100%); max-width: 100% !important; box-sizing: border-box;
+      margin: 0; font-size: 11px; line-height: 1.45; text-align: center;
+      white-space: normal;
+    }
+    #world-play-dock > #msg { display: none; background: #120d07ed; padding: 8px 12px; border: 1px solid var(--gold-dim); }
+    #world-play-dock > #msg.show { display: block; }
+    #world-play-dock > .panel { padding: 5px 9px; }
+    .cart-controls { color: var(--gold-dim); font-size: 10px; }
 
     /* ---------------- the chariot race ---------------- */
     #race-hud { top: 10px; left: 50%; transform: translateX(-50%); min-width: 300px; text-align: center; }
@@ -277,10 +307,6 @@
 
     <!-- Walk up to a site and it names itself here: what it was, and how a dev
          switches it on and off. -->
-    <div class="panel" id="site-card" style="display:none">
-      <div id="site-card-name"></div>
-      <p id="site-card-note"></p>
-    </div>
 
     <!-- the chariot race: lap, place, the running order, and the lash -->
     <div class="panel" id="race-hud" style="display:none">
@@ -292,7 +318,14 @@
     <div id="race-call" style="display:none"></div>
 
     <div id="msg"></div>
-    <div id="engage-prompt"></div>
+    <div id="explore-info">
+      <div class="panel" id="site-card" style="display:none">
+        <div id="site-card-name"></div>
+        <p id="site-card-note"></p>
+      </div>
+      <div id="errand-info" style="display:none"></div>
+      <div id="engage-prompt"></div>
+    </div>
 
     <!-- battle overlay -->
     <div id="battle-ui">

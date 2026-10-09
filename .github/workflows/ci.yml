@@ -1,18 +1,22 @@
 name: CI
 
 # One pipeline, two jobs: the suite runs first, and the deploy cannot start
-# until it passes (`needs: test`). This is deliberate — a red suite must not be
-# able to reach production, which the previous split (ci.yml + deploy.yml, both
-# firing independently on a push to main) allowed.
+# until it passes (`needs: test`). A red suite must not be able to reach the
+# live site.
 #
-# Two branches deploy, and they are not the same thing:
-#   main -> the production site (pride-humility.pages.dev)
-#   dev  -> a preview alias of its own (dev.pride-humility.pages.dev), for work
-#           that is not ready for players yet
-# Both are gated on the suite, so neither can publish a red build.
+# FOR NOW the dev branch is what publishes. Nobody is playing the live build
+# yet, and the point is one link that always carries the newest build with the
+# dev tools already on: a push to `dev` runs the suite and, if it passes,
+# deploys to the production URL (wrangler `--branch main`) built with
+# VITE_DEBUG_DEFAULT=1 — the same mode `?debug` switches on locally, so the dev
+# panel, the travel keys and the approach cards are there without a query
+# string.
+#
+# When this is ready for players: point `on.push.branches` at `main`, drop the
+# VITE_DEBUG_DEFAULT line, and dev goes back to being a branch nobody deploys.
 on:
   push:
-    branches: [main, dev]
+    branches: [dev]
   pull_request:
 
 permissions:
@@ -37,12 +41,12 @@ jobs:
   deploy:
     name: Deploy to Cloudflare Pages
     needs: test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
-    # Serialise each branch's deploys; queue rather than cancel so an older
-    # commit can never land on top of a newer one.
+    # Serialise deploys; queue rather than cancel so an older commit can never
+    # land on top of a newer one.
     concurrency:
-      group: deploy-${{ github.ref_name }}
+      group: deploy-live
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -51,11 +55,14 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build
+      - name: Build the dev build (dev tools on)
+        run: npm run build
+        env:
+          VITE_DEBUG_DEFAULT: '1'
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        # --branch decides where it lands: `main` is production, any other name
-        # is a preview alias, so the dev branch publishes to dev.pride-humility.pages.dev
-        run: npx wrangler pages deploy dist --project-name pride-humility --branch ${{ github.ref_name }}
+        # --branch main publishes this build as the live site, so
+        # pride-humility.pages.dev serves the dev build for now.
+        run: npx wrangler pages deploy dist --project-name pride-humility --branch main
