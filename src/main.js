@@ -14,6 +14,7 @@ import { ChariotRace, RACE_RESULTS } from './race.js';
 import { RoadMarket } from './market.js';
 import { ACTIVITY_STOPS, nearbyActivity } from './activitySites.js';
 import { HarbourCart } from './harbourCart.js';
+import { Morning, CHURCH_STEPS } from './morning.js';
 
 // ----- content (drafted; refined in the content pass) --------------------------
 const ELDER_LINES = [
@@ -175,7 +176,16 @@ async function boot() {
     }
   }
   let activities = null;
+  const morning = new Morning({branch,player,hud,audio,market,onArrival:(title,text)=>{
+    state='ending';player.clearKeys();player.unlock();hud.showEnding(title,text,'“Let us attend.”');
+  }});
+  const churchCanvas=document.createElement('canvas');churchCanvas.width=512;churchCanvas.height=96;
+  const churchInk=churchCanvas.getContext('2d');churchInk.fillStyle='#20180fe6';churchInk.fillRect(0,0,512,96);
+  churchInk.fillStyle='#f3d276';churchInk.font='24px monospace';churchInk.textAlign='center';churchInk.fillText('HAGIA SOPHIA · FORECOURT',256,38);churchInk.fillText('E · ENTER FOR THE SERVICE',256,74);
+  const churchSign = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(churchCanvas)}));
+  churchSign.position.set(CHURCH_STEPS.x,2.8,CHURCH_STEPS.z);churchSign.scale.set(4,0.75,1);level.group.add(churchSign);
   const harbourCart = new HarbourCart({ level, player, camera, branch, hud,
+    onDelivery:()=>morning.reward('harbour',10),
     leave: () => { state = 'explore'; hud.setRoom(roomLabel()); },
   });
   function startCart() {
@@ -193,7 +203,7 @@ async function boot() {
       activities ??= new module.LocationActivities({
         level, player, hud, branch, parent: document.getElementById('hud'),
         leave: async () => { state = 'explore'; player.clearKeys(); await player.lock(); },
-        onResult: () => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); },
+        onResult: () => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); morning.reward(`activity:${activities.active.id}`,6); },
       });
       state = 'activity';
       hud.setRoom(stop.id === 'aqueduct' ? 'The Aqueduct of Valens' : 'The Forum of Constantine');
@@ -225,13 +235,19 @@ async function boot() {
     const text = document.createElement('p');
     const conversation = market.conversation(npc, branch);
     marketChoices = conversation.choices;
-    text.textContent = conversation.paragraphs.join(' ');
+    text.textContent = conversation.paragraphs.join(' ') + (morning.run ? ` Your purse holds ${morning.run.gold} gold.` : '');
     marketScreen.append(title, text);
     const button = (label, action) => {
       const b = document.createElement('button'); b.className = 'btn'; b.textContent = label; b.onclick = action;
       marketScreen.appendChild(b); return b;
     };
     for (const [i, choice] of marketChoices.entries()) button(`${i + 1} · ${choice.label}`, () => resolveMarket(choice.action));
+    if(morning.run && !morning.run.boots) {
+      const shoes=button(morning.run.gold>=20?'Buy swift shoes · 20 gold (+15% walking speed)':'Swift shoes · 20 gold required',()=>{
+        if(morning.buyShoes())showMarket(npc);
+      });
+      shoes.disabled=morning.run.gold<20;
+    }
     button('Leave · Escape', closeMarket);
     marketScreen.querySelector('button').focus();
   }
@@ -241,6 +257,7 @@ async function boot() {
       ? market.choose(activeVendor, choice, branch)
       : market.errandAction(activeVendor, choice, branch);
     if (!changed) return;
+    if(choice==='proud') morning.reward(`market:${activeVendor.id}`,5);
     hud.setMeters(branch.pride, branch.grace);
     if (choice !== 'accept') hud.revealMeters();
     showMarket(activeVendor);
@@ -261,6 +278,7 @@ async function boot() {
   /** Pressing E near a figure engages it (enemy threshold, elder, altar). */
   function tryEngage() {
     if (state !== 'explore') return;
+    if(morning.near(player.pos)){morning.arrive();return;}
     if (armed.tempter && near('K', 2.4)) { startEncounter('tempter'); return; }
     if (armed.brother && near('B', 2.4)) { startEncounter('brother'); return; }
     if (armed.pride && near('P', 2.4)) { startEncounter('pride'); return; }
@@ -395,6 +413,7 @@ async function boot() {
       return;
     }
     const r = RACE_RESULTS[res.outcome];
+    if(['won','placed'].includes(res.outcome)) morning.reward('race',20);
     let note = '(You have raced before; the meters do not move again.)';
     if (!branch.flag('raced')) {
       branch.setFlag('raced');
@@ -461,6 +480,11 @@ async function boot() {
 
   // ----- input ------------------------------------------------------------------------
   window.addEventListener('keydown', (e) => {
+    if(state==='journal') {if(e.code==='KeyJ'||e.code==='Escape'){morning.journal.style.display='none';state='explore';player.clearKeys();}return;}
+    if(state==='explore'&&morning.run&&!e.repeat){
+      if(e.code==='KeyC'){morning.clock=!morning.clock;return;}
+      if(e.code==='KeyJ'){state='journal';player.clearKeys();player.unlock();morning.journal.style.display='flex';return;}
+    }
     if (state === 'cart') { harbourCart.key(e, true); return; }
     if (state === 'activity') { activities.key(e, true); return; }
     if (state === 'activityLoading') return;
@@ -570,6 +594,8 @@ async function boot() {
   };
 
   hud.onStart = async () => {
+    morning.begin();
+    if(morning.run.arrived){morning.arrive();return;}
     audio.resume();
     audio.ensure();
     audio.startAmbient();
@@ -685,6 +711,7 @@ async function boot() {
   }
 
   function update(dt, time) {
+    morning.update(dt,state==='battle'&&!['fight','enemy'].includes(battle.phase)?'reading':state);
     arrangePlayHud();
     if (debugMode) document.getElementById('dev-hints').style.display = ['cart', 'activity'].includes(state) ? 'none' : 'block';
     if (state === 'cart') harbourCart.update(dt);
@@ -709,7 +736,8 @@ async function boot() {
     if (state === 'explore') {
       // Figures wait for a deliberate interaction; proximity only teaches E.
       let promptText = null;
-      if (armed.tempter && near('K', 2.6)) promptText = 'Face the Tempter — press E';
+      if(morning.near(player.pos))promptText='Enter Hagia Sophia · E';
+      else if (armed.tempter && near('K', 2.6)) promptText = 'Face the Tempter — press E';
       else if (armed.brother && near('B', 2.6)) promptText = 'Face the Wounded Brother — press E';
       else if (armed.pride && near('P', 2.6)) promptText = 'Face the Demon of Pride — press E';
       else if (near('E', 2.6)) promptText = 'Speak with the Elder — press E';
@@ -720,7 +748,7 @@ async function boot() {
       else if (branch.encountersDone.pride && isInRoom(LEVEL_CFG.rooms.ladder)) promptText = 'Follow the gold path to THE LADDER';
       if (promptText) hud.showPrompt(promptText); else hud.hidePrompt();
 
-      if (near('L', 1.6) && branch.encountersDone.pride) {
+      if (!morning.run && near('L', 1.6) && branch.encountersDone.pride) {
         finishEnding();
       }
       elderCooldown = Math.max(0, elderCooldown - dt);
@@ -788,6 +816,7 @@ async function boot() {
       activityStops: ACTIVITY_STOPS,
       activities: () => activities,
       harbourCart,
+      morning,
       hud,
       battle,
       tickBattle: (frames, praying) => {

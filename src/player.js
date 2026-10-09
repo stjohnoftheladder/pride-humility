@@ -68,7 +68,7 @@ export class Player {
     const len = Math.hypot(wx, wz);
     if (len > 0) { wx /= len; wz /= len; }
     const run = this.keys.ShiftLeft || this.keys.ShiftRight;
-    const maxSpeed = run ? RUN_SPEED : WALK_SPEED;
+    const maxSpeed = (run ? RUN_SPEED : WALK_SPEED) * (this.travelBoost ?? 1);
     const k = 1 - Math.exp(-(len > 0 ? ACCEL : FRICTION) * dt);
     this.vel.x += (wx * maxSpeed - this.vel.x) * k;
     this.vel.z += (wz * maxSpeed - this.vel.z) * k;

@@ -8,8 +8,8 @@ const DOCK = { x: 34, z: 359.5 };
 
 /** A small vehicle inside the existing quay. No second scene or renderer. */
 export class HarbourCart {
-  constructor({ level, player, camera, branch, hud, leave }) {
-    Object.assign(this, { level, player, camera, branch, hud, leave });
+  constructor({ level, player, camera, branch, hud, leave, onDelivery = () => {} }) {
+    Object.assign(this, { level, player, camera, branch, hud, leave, onDelivery });
     this.keys = {}; this.active = false;
     this.porter = { id: 'harbour-porter', name: 'Gregorios · Dock porter', role: 'worker', ...PORTER };
     level.npcs.push(this.porter);
@@ -123,6 +123,7 @@ export class HarbourCart {
   }
   finish(outcome) {
     this.result=outcome;this.speed=0;this.keys={};
+    if(outcome!=='unfinished')this.onDelivery();
     const key='activity:harbour',reward=outcome!=='unfinished'&&!this.branch.flags[key];
     if(reward){this.branch.setFlag(key,outcome);if(outcome==='humble')this.branch.addGrace(3);else this.branch.addPride(4);this.branch.save();this.hud.revealMeters();this.hud.setMeters(this.branch.pride,this.branch.grace);}
     const text=outcome==='humble'?'You bring the grain aboard together. The foreman thanks you both.' : outcome==='proud'?'You take the foreman’s praise. Gregorios is still struggling back on the quay.' : 'The bell rings before your delivery. Try again; the meters are unchanged.';

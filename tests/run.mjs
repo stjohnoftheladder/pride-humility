@@ -9,6 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { testActivities } from './activities.mjs';
+import { testMorning } from './morning.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -196,7 +197,7 @@ async function runJourney(browser, mode) {
 async function runInteractionRegressions(browser) {
   const { page, errors } = await newPage(browser);
 
-  await page.getByRole('button', { name: 'BEGIN THE PILGRIMAGE' }).click();
+  await page.getByRole('button', { name: 'BEGIN THE MORNING' }).click();
   await sleep(250);
   check('input: rejected pointer lock falls back without page errors', errors.length === 0, JSON.stringify(errors));
   await resetState(page);
@@ -874,6 +875,7 @@ try {
   check('escape: no page errors', exits.errors.length === 0, JSON.stringify(exits.errors));
   await exits.page.close();
   await testActivities(browser, newPage, check);
+  await testMorning(browser, newPage, check);
 
   const crowd = await newPage(browser);
   const citizens = await crowd.page.evaluate(() => {
