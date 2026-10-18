@@ -2018,5 +2018,1920 @@
    }
   ],
   "qa_ok": true
+ },
+ {
+  "id": "h06_fountain",
+  "title": "Pride, the fountain of wickedness",
+  "source": "Homily 15 on Matthew, 2 (NPNF 1/10)",
+  "text": "Though fasting, prayer, almsgiving, temperance, any other good thing whatever, be gathered together in you, without humility all fall away and perish. It was this very thing that took place in the instance of the Pharisee. For even after he had arrived at the very summit, he went down with the loss of all, because he had not the mother of virtues. For as pride is the fountain of all wickedness, so is humility the principle of all self-command.",
+  "file": "assets/audio/chrysostom/h06_fountain.ogg",
+  "dur": 32.65,
+  "words": [
+   {
+    "w": "Though",
+    "s": 0.0,
+    "e": 0.1
+   },
+   {
+    "w": "fasting,",
+    "s": 0.1,
+    "e": 0.62
+   },
+   {
+    "w": "prayer,",
+    "s": 0.84,
+    "e": 1.12
+   },
+   {
+    "w": "almsgiving,",
+    "s": 1.42,
+    "e": 2.06
+   },
+   {
+    "w": "temperance,",
+    "s": 2.2,
+    "e": 2.82
+   },
+   {
+    "w": "any",
+    "s": 2.96,
+    "e": 3.54
+   },
+   {
+    "w": "other",
+    "s": 3.54,
+    "e": 3.82
+   },
+   {
+    "w": "good",
+    "s": 3.82,
+    "e": 4.06
+   },
+   {
+    "w": "thing",
+    "s": 4.06,
+    "e": 4.32
+   },
+   {
+    "w": "whatever,",
+    "s": 4.32,
+    "e": 4.6
+   },
+   {
+    "w": "be",
+    "s": 4.96,
+    "e": 5.5
+   },
+   {
+    "w": "gathered",
+    "s": 5.5,
+    "e": 5.88
+   },
+   {
+    "w": "together",
+    "s": 5.88,
+    "e": 6.18
+   },
+   {
+    "w": "anew,",
+    "s": 6.18,
+    "e": 6.68
+   },
+   {
+    "w": "without",
+    "s": 6.88,
+    "e": 7.66
+   },
+   {
+    "w": "humility",
+    "s": 7.66,
+    "e": 8.2
+   },
+   {
+    "w": "all",
+    "s": 8.2,
+    "e": 8.88
+   },
+   {
+    "w": "fall",
+    "s": 8.88,
+    "e": 9.26
+   },
+   {
+    "w": "away",
+    "s": 9.26,
+    "e": 9.6
+   },
+   {
+    "w": "and",
+    "s": 9.6,
+    "e": 9.8
+   },
+   {
+    "w": "perish.",
+    "s": 9.8,
+    "e": 10.14
+   },
+   {
+    "w": "It",
+    "s": 11.04,
+    "e": 11.6
+   },
+   {
+    "w": "was",
+    "s": 11.6,
+    "e": 11.82
+   },
+   {
+    "w": "this",
+    "s": 11.82,
+    "e": 12.18
+   },
+   {
+    "w": "very",
+    "s": 12.18,
+    "e": 12.46
+   },
+   {
+    "w": "thing",
+    "s": 12.46,
+    "e": 12.78
+   },
+   {
+    "w": "that",
+    "s": 12.78,
+    "e": 13.08
+   },
+   {
+    "w": "took",
+    "s": 13.08,
+    "e": 13.28
+   },
+   {
+    "w": "place",
+    "s": 13.28,
+    "e": 13.6
+   },
+   {
+    "w": "in",
+    "s": 13.6,
+    "e": 13.84
+   },
+   {
+    "w": "the",
+    "s": 13.84,
+    "e": 13.94
+   },
+   {
+    "w": "instance",
+    "s": 13.94,
+    "e": 14.32
+   },
+   {
+    "w": "of",
+    "s": 14.32,
+    "e": 14.78
+   },
+   {
+    "w": "the",
+    "s": 14.78,
+    "e": 14.96
+   },
+   {
+    "w": "Pharisee.",
+    "s": 14.96,
+    "e": 15.7
+   },
+   {
+    "w": "For",
+    "s": 16.28,
+    "e": 16.84
+   },
+   {
+    "w": "even",
+    "s": 16.84,
+    "e": 17.02
+   },
+   {
+    "w": "after",
+    "s": 17.02,
+    "e": 17.38
+   },
+   {
+    "w": "he",
+    "s": 17.38,
+    "e": 17.6
+   },
+   {
+    "w": "had",
+    "s": 17.6,
+    "e": 17.72
+   },
+   {
+    "w": "arrived",
+    "s": 17.72,
+    "e": 18.1
+   },
+   {
+    "w": "at",
+    "s": 18.1,
+    "e": 18.38
+   },
+   {
+    "w": "the",
+    "s": 18.38,
+    "e": 18.44
+   },
+   {
+    "w": "very",
+    "s": 18.44,
+    "e": 18.66
+   },
+   {
+    "w": "summit,",
+    "s": 18.66,
+    "e": 19.06
+   },
+   {
+    "w": "he",
+    "s": 19.34,
+    "e": 20.06
+   },
+   {
+    "w": "went",
+    "s": 20.06,
+    "e": 20.26
+   },
+   {
+    "w": "down",
+    "s": 20.26,
+    "e": 20.6
+   },
+   {
+    "w": "with",
+    "s": 20.6,
+    "e": 20.86
+   },
+   {
+    "w": "the",
+    "s": 20.86,
+    "e": 20.96
+   },
+   {
+    "w": "loss",
+    "s": 20.96,
+    "e": 21.2
+   },
+   {
+    "w": "of",
+    "s": 21.2,
+    "e": 21.38
+   },
+   {
+    "w": "all,",
+    "s": 21.38,
+    "e": 21.66
+   },
+   {
+    "w": "because",
+    "s": 22.3,
+    "e": 22.58
+   },
+   {
+    "w": "he",
+    "s": 22.58,
+    "e": 22.8
+   },
+   {
+    "w": "had",
+    "s": 22.8,
+    "e": 22.96
+   },
+   {
+    "w": "not",
+    "s": 22.96,
+    "e": 23.2
+   },
+   {
+    "w": "the",
+    "s": 23.2,
+    "e": 23.38
+   },
+   {
+    "w": "mother",
+    "s": 23.38,
+    "e": 23.62
+   },
+   {
+    "w": "of",
+    "s": 23.62,
+    "e": 23.88
+   },
+   {
+    "w": "virtues.",
+    "s": 23.88,
+    "e": 24.26
+   },
+   {
+    "w": "For",
+    "s": 25.12,
+    "e": 25.78
+   },
+   {
+    "w": "as",
+    "s": 25.78,
+    "e": 25.98
+   },
+   {
+    "w": "pride",
+    "s": 25.98,
+    "e": 26.32
+   },
+   {
+    "w": "is",
+    "s": 26.32,
+    "e": 26.56
+   },
+   {
+    "w": "the",
+    "s": 26.56,
+    "e": 26.66
+   },
+   {
+    "w": "fountain",
+    "s": 26.66,
+    "e": 26.98
+   },
+   {
+    "w": "of",
+    "s": 26.98,
+    "e": 27.34
+   },
+   {
+    "w": "all",
+    "s": 27.34,
+    "e": 27.54
+   },
+   {
+    "w": "wickedness,",
+    "s": 27.54,
+    "e": 28.08
+   },
+   {
+    "w": "so",
+    "s": 28.3,
+    "e": 29.1
+   },
+   {
+    "w": "is",
+    "s": 29.1,
+    "e": 29.34
+   },
+   {
+    "w": "humility",
+    "s": 29.34,
+    "e": 29.7
+   },
+   {
+    "w": "the",
+    "s": 29.7,
+    "e": 30.16
+   },
+   {
+    "w": "principle",
+    "s": 30.16,
+    "e": 30.52
+   },
+   {
+    "w": "of",
+    "s": 30.52,
+    "e": 30.84
+   },
+   {
+    "w": "all",
+    "s": 30.84,
+    "e": 31.02
+   },
+   {
+    "w": "self",
+    "s": 31.02,
+    "e": 31.38
+   },
+   {
+    "w": "-command.",
+    "s": 31.38,
+    "e": 31.9
+   }
+  ],
+  "qa_ok": true
+ },
+ {
+  "id": "h07_foundation",
+  "title": "Humility, the foundation",
+  "source": "Homily Concerning Lowliness of Mind, 2 (NPNF 1/9)",
+  "text": "Humbleness of mind is the foundation of the love of wisdom which pertains to us. Even if you should have built a superstructure of things innumerable, even if almsgiving, even if prayers, even if fastings, even if all virtue, unless this have first been laid as a foundation, all will be built upon it to no purpose and in vain, and it will fall down easily, like that building which had been placed on the sand.",
+  "file": "assets/audio/chrysostom/h07_foundation.ogg",
+  "dur": 31.95,
+  "words": [
+   {
+    "w": "Humbleness",
+    "s": 0.0,
+    "e": 0.36
+   },
+   {
+    "w": "of",
+    "s": 0.36,
+    "e": 0.64
+   },
+   {
+    "w": "mind",
+    "s": 0.64,
+    "e": 1.0
+   },
+   {
+    "w": "is",
+    "s": 1.0,
+    "e": 1.42
+   },
+   {
+    "w": "the",
+    "s": 1.42,
+    "e": 1.52
+   },
+   {
+    "w": "foundation",
+    "s": 1.52,
+    "e": 1.96
+   },
+   {
+    "w": "of",
+    "s": 1.96,
+    "e": 2.42
+   },
+   {
+    "w": "the",
+    "s": 2.42,
+    "e": 2.5
+   },
+   {
+    "w": "love",
+    "s": 2.5,
+    "e": 2.84
+   },
+   {
+    "w": "of",
+    "s": 2.84,
+    "e": 2.98
+   },
+   {
+    "w": "wisdom",
+    "s": 2.98,
+    "e": 3.3
+   },
+   {
+    "w": "which",
+    "s": 3.3,
+    "e": 3.6
+   },
+   {
+    "w": "pertains",
+    "s": 3.6,
+    "e": 4.08
+   },
+   {
+    "w": "to",
+    "s": 4.08,
+    "e": 4.3
+   },
+   {
+    "w": "us.",
+    "s": 4.3,
+    "e": 4.6
+   },
+   {
+    "w": "Even",
+    "s": 5.5,
+    "e": 6.06
+   },
+   {
+    "w": "if",
+    "s": 6.06,
+    "e": 6.28
+   },
+   {
+    "w": "you",
+    "s": 6.28,
+    "e": 6.4
+   },
+   {
+    "w": "should",
+    "s": 6.4,
+    "e": 6.62
+   },
+   {
+    "w": "have",
+    "s": 6.62,
+    "e": 6.74
+   },
+   {
+    "w": "built",
+    "s": 6.74,
+    "e": 7.02
+   },
+   {
+    "w": "a",
+    "s": 7.02,
+    "e": 7.2
+   },
+   {
+    "w": "superstructure",
+    "s": 7.2,
+    "e": 7.98
+   },
+   {
+    "w": "of",
+    "s": 7.98,
+    "e": 8.18
+   },
+   {
+    "w": "things",
+    "s": 8.18,
+    "e": 8.44
+   },
+   {
+    "w": "innumerable,",
+    "s": 8.44,
+    "e": 9.2
+   },
+   {
+    "w": "even",
+    "s": 9.32,
+    "e": 10.34
+   },
+   {
+    "w": "if",
+    "s": 10.34,
+    "e": 10.58
+   },
+   {
+    "w": "almsgiving,",
+    "s": 10.58,
+    "e": 11.1
+   },
+   {
+    "w": "even",
+    "s": 12.18,
+    "e": 12.74
+   },
+   {
+    "w": "if",
+    "s": 12.74,
+    "e": 12.92
+   },
+   {
+    "w": "prayers,",
+    "s": 12.92,
+    "e": 13.48
+   },
+   {
+    "w": "even",
+    "s": 13.66,
+    "e": 14.44
+   },
+   {
+    "w": "if",
+    "s": 14.44,
+    "e": 14.62
+   },
+   {
+    "w": "fastings,",
+    "s": 14.62,
+    "e": 15.3
+   },
+   {
+    "w": "even",
+    "s": 15.3,
+    "e": 16.22
+   },
+   {
+    "w": "if",
+    "s": 16.22,
+    "e": 16.4
+   },
+   {
+    "w": "all",
+    "s": 16.4,
+    "e": 16.56
+   },
+   {
+    "w": "virtue,",
+    "s": 16.56,
+    "e": 17.08
+   },
+   {
+    "w": "unless",
+    "s": 17.32,
+    "e": 18.68
+   },
+   {
+    "w": "this",
+    "s": 18.68,
+    "e": 19.08
+   },
+   {
+    "w": "have",
+    "s": 19.08,
+    "e": 19.28
+   },
+   {
+    "w": "first",
+    "s": 19.28,
+    "e": 19.6
+   },
+   {
+    "w": "been",
+    "s": 19.6,
+    "e": 19.84
+   },
+   {
+    "w": "laid",
+    "s": 19.84,
+    "e": 20.1
+   },
+   {
+    "w": "as",
+    "s": 20.1,
+    "e": 20.34
+   },
+   {
+    "w": "a",
+    "s": 20.34,
+    "e": 20.44
+   },
+   {
+    "w": "foundation,",
+    "s": 20.44,
+    "e": 20.88
+   },
+   {
+    "w": "all",
+    "s": 21.18,
+    "e": 22.0
+   },
+   {
+    "w": "will",
+    "s": 22.0,
+    "e": 22.28
+   },
+   {
+    "w": "be",
+    "s": 22.28,
+    "e": 22.48
+   },
+   {
+    "w": "built",
+    "s": 22.48,
+    "e": 22.74
+   },
+   {
+    "w": "upon",
+    "s": 22.74,
+    "e": 22.98
+   },
+   {
+    "w": "it",
+    "s": 22.98,
+    "e": 23.24
+   },
+   {
+    "w": "to",
+    "s": 23.24,
+    "e": 23.4
+   },
+   {
+    "w": "no",
+    "s": 23.4,
+    "e": 23.56
+   },
+   {
+    "w": "purpose",
+    "s": 23.56,
+    "e": 23.98
+   },
+   {
+    "w": "and",
+    "s": 23.98,
+    "e": 24.92
+   },
+   {
+    "w": "in",
+    "s": 24.92,
+    "e": 25.1
+   },
+   {
+    "w": "vain,",
+    "s": 25.1,
+    "e": 25.44
+   },
+   {
+    "w": "and",
+    "s": 25.6,
+    "e": 26.48
+   },
+   {
+    "w": "it",
+    "s": 26.48,
+    "e": 26.58
+   },
+   {
+    "w": "will",
+    "s": 26.58,
+    "e": 26.68
+   },
+   {
+    "w": "fall",
+    "s": 26.68,
+    "e": 26.98
+   },
+   {
+    "w": "down",
+    "s": 26.98,
+    "e": 27.22
+   },
+   {
+    "w": "easily,",
+    "s": 27.22,
+    "e": 27.74
+   },
+   {
+    "w": "like",
+    "s": 27.94,
+    "e": 28.92
+   },
+   {
+    "w": "that",
+    "s": 28.92,
+    "e": 29.1
+   },
+   {
+    "w": "building",
+    "s": 29.1,
+    "e": 29.48
+   },
+   {
+    "w": "which",
+    "s": 29.48,
+    "e": 29.78
+   },
+   {
+    "w": "had",
+    "s": 29.78,
+    "e": 29.9
+   },
+   {
+    "w": "been",
+    "s": 29.9,
+    "e": 30.06
+   },
+   {
+    "w": "placed",
+    "s": 30.06,
+    "e": 30.42
+   },
+   {
+    "w": "on",
+    "s": 30.42,
+    "e": 30.64
+   },
+   {
+    "w": "the",
+    "s": 30.64,
+    "e": 30.76
+   },
+   {
+    "w": "sand.",
+    "s": 30.76,
+    "e": 31.02
+   }
+  ],
+  "qa_ok": true
+ },
+ {
+  "id": "h08_chariots",
+  "title": "Two chariots: the Pharisee and the publican",
+  "source": "Homily Concerning Lowliness of Mind, 1 (NPNF 1/9)",
+  "text": "We made mention of the Pharisee and the publican, and yoked two chariots, out of virtue and vice. Pride, even when joined with righteousness and fastings and tithes, fell behind. While humility, even when yoked with sin, outstripped the Pharisee's pair, although the charioteer it had was a poor one. For what was worse than the publican? But since he made his soul contrite, and called himself a sinner, he surpassed the Pharisee.",
+  "file": "assets/audio/chrysostom/h08_chariots.ogg",
+  "dur": 35.05,
+  "words": [
+   {
+    "w": "We",
+    "s": 0.0,
+    "e": 0.1
+   },
+   {
+    "w": "made",
+    "s": 0.1,
+    "e": 0.36
+   },
+   {
+    "w": "mention",
+    "s": 0.36,
+    "e": 0.82
+   },
+   {
+    "w": "of",
+    "s": 0.82,
+    "e": 1.1
+   },
+   {
+    "w": "the",
+    "s": 1.1,
+    "e": 1.2
+   },
+   {
+    "w": "Pharisee",
+    "s": 1.2,
+    "e": 1.94
+   },
+   {
+    "w": "and",
+    "s": 1.94,
+    "e": 2.12
+   },
+   {
+    "w": "the",
+    "s": 2.12,
+    "e": 2.22
+   },
+   {
+    "w": "publican,",
+    "s": 2.22,
+    "e": 2.84
+   },
+   {
+    "w": "and",
+    "s": 2.86,
+    "e": 3.52
+   },
+   {
+    "w": "yoked",
+    "s": 3.52,
+    "e": 3.94
+   },
+   {
+    "w": "two",
+    "s": 3.94,
+    "e": 4.18
+   },
+   {
+    "w": "chariots,",
+    "s": 4.18,
+    "e": 5.02
+   },
+   {
+    "w": "out",
+    "s": 5.06,
+    "e": 5.78
+   },
+   {
+    "w": "of",
+    "s": 5.78,
+    "e": 5.92
+   },
+   {
+    "w": "virtue",
+    "s": 5.92,
+    "e": 6.36
+   },
+   {
+    "w": "and",
+    "s": 6.36,
+    "e": 6.74
+   },
+   {
+    "w": "vice.",
+    "s": 6.74,
+    "e": 7.08
+   },
+   {
+    "w": "Pride,",
+    "s": 8.2,
+    "e": 8.92
+   },
+   {
+    "w": "even",
+    "s": 9.12,
+    "e": 9.78
+   },
+   {
+    "w": "when",
+    "s": 9.78,
+    "e": 10.0
+   },
+   {
+    "w": "joined",
+    "s": 10.0,
+    "e": 10.34
+   },
+   {
+    "w": "with",
+    "s": 10.34,
+    "e": 10.74
+   },
+   {
+    "w": "righteousness",
+    "s": 10.74,
+    "e": 11.16
+   },
+   {
+    "w": "and",
+    "s": 11.16,
+    "e": 11.76
+   },
+   {
+    "w": "fastings",
+    "s": 11.76,
+    "e": 12.48
+   },
+   {
+    "w": "and",
+    "s": 12.48,
+    "e": 12.64
+   },
+   {
+    "w": "tithes,",
+    "s": 12.64,
+    "e": 13.38
+   },
+   {
+    "w": "fell",
+    "s": 13.4,
+    "e": 14.0
+   },
+   {
+    "w": "behind.",
+    "s": 14.0,
+    "e": 14.44
+   },
+   {
+    "w": "While",
+    "s": 15.44,
+    "e": 16.16
+   },
+   {
+    "w": "humility,",
+    "s": 16.16,
+    "e": 16.62
+   },
+   {
+    "w": "even",
+    "s": 17.0,
+    "e": 17.74
+   },
+   {
+    "w": "when",
+    "s": 17.74,
+    "e": 17.98
+   },
+   {
+    "w": "yoked",
+    "s": 17.98,
+    "e": 18.4
+   },
+   {
+    "w": "with",
+    "s": 18.4,
+    "e": 18.58
+   },
+   {
+    "w": "sin,",
+    "s": 18.58,
+    "e": 18.86
+   },
+   {
+    "w": "outstripped",
+    "s": 19.08,
+    "e": 19.84
+   },
+   {
+    "w": "the",
+    "s": 19.84,
+    "e": 20.06
+   },
+   {
+    "w": "Pharisee's",
+    "s": 20.06,
+    "e": 20.66
+   },
+   {
+    "w": "pair,",
+    "s": 20.66,
+    "e": 20.94
+   },
+   {
+    "w": "although",
+    "s": 21.74,
+    "e": 22.1
+   },
+   {
+    "w": "the",
+    "s": 22.1,
+    "e": 22.4
+   },
+   {
+    "w": "charioteer",
+    "s": 22.4,
+    "e": 23.14
+   },
+   {
+    "w": "it",
+    "s": 23.14,
+    "e": 23.26
+   },
+   {
+    "w": "had",
+    "s": 23.26,
+    "e": 23.44
+   },
+   {
+    "w": "was",
+    "s": 23.44,
+    "e": 23.68
+   },
+   {
+    "w": "a",
+    "s": 23.68,
+    "e": 23.78
+   },
+   {
+    "w": "poor",
+    "s": 23.78,
+    "e": 24.0
+   },
+   {
+    "w": "one.",
+    "s": 24.0,
+    "e": 24.3
+   },
+   {
+    "w": "For",
+    "s": 25.06,
+    "e": 25.62
+   },
+   {
+    "w": "what",
+    "s": 25.62,
+    "e": 25.86
+   },
+   {
+    "w": "was",
+    "s": 25.86,
+    "e": 26.08
+   },
+   {
+    "w": "worse",
+    "s": 26.08,
+    "e": 26.44
+   },
+   {
+    "w": "than",
+    "s": 26.44,
+    "e": 26.68
+   },
+   {
+    "w": "the",
+    "s": 26.68,
+    "e": 26.82
+   },
+   {
+    "w": "publican?",
+    "s": 26.82,
+    "e": 27.38
+   },
+   {
+    "w": "But",
+    "s": 27.74,
+    "e": 28.3
+   },
+   {
+    "w": "since",
+    "s": 28.3,
+    "e": 28.56
+   },
+   {
+    "w": "he",
+    "s": 28.56,
+    "e": 28.76
+   },
+   {
+    "w": "made",
+    "s": 28.76,
+    "e": 29.04
+   },
+   {
+    "w": "his",
+    "s": 29.04,
+    "e": 29.22
+   },
+   {
+    "w": "soul",
+    "s": 29.22,
+    "e": 29.5
+   },
+   {
+    "w": "contrite",
+    "s": 29.5,
+    "e": 30.26
+   },
+   {
+    "w": "and",
+    "s": 30.26,
+    "e": 30.68
+   },
+   {
+    "w": "called",
+    "s": 30.68,
+    "e": 31.2
+   },
+   {
+    "w": "himself",
+    "s": 31.2,
+    "e": 31.5
+   },
+   {
+    "w": "a",
+    "s": 31.5,
+    "e": 31.84
+   },
+   {
+    "w": "sinner,",
+    "s": 31.84,
+    "e": 32.12
+   },
+   {
+    "w": "he",
+    "s": 32.28,
+    "e": 33.02
+   },
+   {
+    "w": "surpassed",
+    "s": 33.02,
+    "e": 33.76
+   },
+   {
+    "w": "the",
+    "s": 33.76,
+    "e": 33.82
+   },
+   {
+    "w": "Pharisee.",
+    "s": 33.82,
+    "e": 34.42
+   }
+  ],
+  "qa_ok": true
+ },
+ {
+  "id": "h09_common",
+  "title": "What is the Lord's is common",
+  "source": "Homily 12 on First Timothy (NPNF 1/13)",
+  "text": "Is not this an evil, that you alone should have the Lord's property, that you alone should enjoy what is common? Is not the earth God's, and the fullness thereof? If then our possessions belong to one common Lord, they belong also to our fellow servants. The possessions of one Lord are all common. The king's possessions are all common, as cities, market places, and public walks. We all share them equally.",
+  "file": "assets/audio/chrysostom/h09_common.ogg",
+  "dur": 29.7,
+  "words": [
+   {
+    "w": "is",
+    "s": 0.0,
+    "e": 0.08
+   },
+   {
+    "w": "not",
+    "s": 0.08,
+    "e": 0.32
+   },
+   {
+    "w": "this",
+    "s": 0.32,
+    "e": 0.62
+   },
+   {
+    "w": "an",
+    "s": 0.62,
+    "e": 0.76
+   },
+   {
+    "w": "evil",
+    "s": 0.76,
+    "e": 1.12
+   },
+   {
+    "w": "that",
+    "s": 1.12,
+    "e": 1.52
+   },
+   {
+    "w": "you",
+    "s": 1.52,
+    "e": 1.7
+   },
+   {
+    "w": "alone",
+    "s": 1.7,
+    "e": 1.94
+   },
+   {
+    "w": "should",
+    "s": 1.94,
+    "e": 2.32
+   },
+   {
+    "w": "have",
+    "s": 2.32,
+    "e": 2.5
+   },
+   {
+    "w": "the",
+    "s": 2.5,
+    "e": 2.66
+   },
+   {
+    "w": "lord's",
+    "s": 2.66,
+    "e": 2.96
+   },
+   {
+    "w": "property",
+    "s": 2.96,
+    "e": 3.3
+   },
+   {
+    "w": "that",
+    "s": 3.3,
+    "e": 4.22
+   },
+   {
+    "w": "you",
+    "s": 4.22,
+    "e": 4.36
+   },
+   {
+    "w": "alone",
+    "s": 4.36,
+    "e": 4.62
+   },
+   {
+    "w": "should",
+    "s": 4.62,
+    "e": 5.06
+   },
+   {
+    "w": "enjoy",
+    "s": 5.06,
+    "e": 5.36
+   },
+   {
+    "w": "what",
+    "s": 5.36,
+    "e": 5.7
+   },
+   {
+    "w": "is",
+    "s": 5.7,
+    "e": 5.84
+   },
+   {
+    "w": "common",
+    "s": 5.84,
+    "e": 6.18
+   },
+   {
+    "w": "is",
+    "s": 6.18,
+    "e": 7.46
+   },
+   {
+    "w": "not",
+    "s": 7.46,
+    "e": 7.66
+   },
+   {
+    "w": "the",
+    "s": 7.66,
+    "e": 7.88
+   },
+   {
+    "w": "earth",
+    "s": 7.88,
+    "e": 8.1
+   },
+   {
+    "w": "gods",
+    "s": 8.1,
+    "e": 8.38
+   },
+   {
+    "w": "and",
+    "s": 8.38,
+    "e": 9.1
+   },
+   {
+    "w": "the",
+    "s": 9.1,
+    "e": 9.22
+   },
+   {
+    "w": "fullness",
+    "s": 9.22,
+    "e": 9.58
+   },
+   {
+    "w": "thereof",
+    "s": 9.58,
+    "e": 10.24
+   },
+   {
+    "w": "if",
+    "s": 10.24,
+    "e": 11.7
+   },
+   {
+    "w": "then",
+    "s": 11.7,
+    "e": 11.98
+   },
+   {
+    "w": "our",
+    "s": 11.98,
+    "e": 12.24
+   },
+   {
+    "w": "possessions",
+    "s": 12.24,
+    "e": 12.66
+   },
+   {
+    "w": "belong",
+    "s": 12.66,
+    "e": 13.2
+   },
+   {
+    "w": "to",
+    "s": 13.2,
+    "e": 13.5
+   },
+   {
+    "w": "one",
+    "s": 13.5,
+    "e": 13.7
+   },
+   {
+    "w": "common",
+    "s": 13.7,
+    "e": 14.06
+   },
+   {
+    "w": "lord",
+    "s": 14.06,
+    "e": 14.36
+   },
+   {
+    "w": "they",
+    "s": 14.36,
+    "e": 15.06
+   },
+   {
+    "w": "belong",
+    "s": 15.06,
+    "e": 15.3
+   },
+   {
+    "w": "also",
+    "s": 15.3,
+    "e": 15.72
+   },
+   {
+    "w": "to",
+    "s": 15.72,
+    "e": 16.08
+   },
+   {
+    "w": "our",
+    "s": 16.08,
+    "e": 16.26
+   },
+   {
+    "w": "fellow",
+    "s": 16.26,
+    "e": 16.52
+   },
+   {
+    "w": "servants",
+    "s": 16.52,
+    "e": 17.06
+   },
+   {
+    "w": "the",
+    "s": 17.06,
+    "e": 18.22
+   },
+   {
+    "w": "possessions",
+    "s": 18.22,
+    "e": 18.6
+   },
+   {
+    "w": "of",
+    "s": 18.6,
+    "e": 18.94
+   },
+   {
+    "w": "one",
+    "s": 18.94,
+    "e": 19.14
+   },
+   {
+    "w": "lord",
+    "s": 19.14,
+    "e": 19.48
+   },
+   {
+    "w": "are",
+    "s": 19.48,
+    "e": 19.78
+   },
+   {
+    "w": "all",
+    "s": 19.78,
+    "e": 20.06
+   },
+   {
+    "w": "common",
+    "s": 20.06,
+    "e": 20.42
+   },
+   {
+    "w": "the",
+    "s": 20.42,
+    "e": 21.48
+   },
+   {
+    "w": "king's",
+    "s": 21.48,
+    "e": 21.86
+   },
+   {
+    "w": "possessions",
+    "s": 21.86,
+    "e": 22.22
+   },
+   {
+    "w": "are",
+    "s": 22.22,
+    "e": 22.6
+   },
+   {
+    "w": "all",
+    "s": 22.6,
+    "e": 22.76
+   },
+   {
+    "w": "common",
+    "s": 22.76,
+    "e": 23.14
+   },
+   {
+    "w": "as",
+    "s": 23.14,
+    "e": 23.7
+   },
+   {
+    "w": "cities",
+    "s": 23.7,
+    "e": 24.08
+   },
+   {
+    "w": "marketplaces",
+    "s": 24.08,
+    "e": 25.4
+   },
+   {
+    "w": "and",
+    "s": 25.4,
+    "e": 26.04
+   },
+   {
+    "w": "public",
+    "s": 26.04,
+    "e": 26.34
+   },
+   {
+    "w": "walks",
+    "s": 26.34,
+    "e": 26.8
+   },
+   {
+    "w": "we",
+    "s": 26.8,
+    "e": 27.7
+   },
+   {
+    "w": "all",
+    "s": 27.7,
+    "e": 27.86
+   },
+   {
+    "w": "share",
+    "s": 27.86,
+    "e": 28.2
+   },
+   {
+    "w": "them",
+    "s": 28.2,
+    "e": 28.36
+   },
+   {
+    "w": "equally",
+    "s": 28.36,
+    "e": 28.74
+   }
+  ],
+  "qa_ok": true
+ },
+ {
+  "id": "h10_descent",
+  "title": "His descent became the ascent of all",
+  "source": "Homily 65 on Matthew, 4 (NPNF 1/10)",
+  "text": "Be not afraid, as though your honor were plucked down. For however much you humble yourself, you cannot descend so much as your Lord. And yet His descent has become the ascent of all, and has made His own glory shine forth. For before He was made man, He was known among angels only. But after He was made man and was crucified, so far from lessening that glory, He acquired other besides.",
+  "file": "assets/audio/chrysostom/h10_descent.ogg",
+  "dur": 32.6,
+  "words": [
+   {
+    "w": "Be",
+    "s": 0.0,
+    "e": 0.04
+   },
+   {
+    "w": "not",
+    "s": 0.04,
+    "e": 0.28
+   },
+   {
+    "w": "afraid,",
+    "s": 0.28,
+    "e": 0.72
+   },
+   {
+    "w": "as",
+    "s": 0.94,
+    "e": 1.72
+   },
+   {
+    "w": "though",
+    "s": 1.72,
+    "e": 1.9
+   },
+   {
+    "w": "your",
+    "s": 1.9,
+    "e": 2.2
+   },
+   {
+    "w": "honour",
+    "s": 2.2,
+    "e": 2.48
+   },
+   {
+    "w": "were",
+    "s": 2.48,
+    "e": 2.72
+   },
+   {
+    "w": "plucked",
+    "s": 2.72,
+    "e": 3.16
+   },
+   {
+    "w": "down.",
+    "s": 3.16,
+    "e": 3.52
+   },
+   {
+    "w": "For",
+    "s": 3.88,
+    "e": 4.52
+   },
+   {
+    "w": "however",
+    "s": 4.52,
+    "e": 4.84
+   },
+   {
+    "w": "much",
+    "s": 4.84,
+    "e": 5.2
+   },
+   {
+    "w": "you",
+    "s": 5.2,
+    "e": 5.4
+   },
+   {
+    "w": "humble",
+    "s": 5.4,
+    "e": 5.72
+   },
+   {
+    "w": "yourself,",
+    "s": 5.72,
+    "e": 6.08
+   },
+   {
+    "w": "you",
+    "s": 6.5,
+    "e": 7.04
+   },
+   {
+    "w": "cannot",
+    "s": 7.04,
+    "e": 7.4
+   },
+   {
+    "w": "descend",
+    "s": 7.4,
+    "e": 7.78
+   },
+   {
+    "w": "so",
+    "s": 7.78,
+    "e": 8.14
+   },
+   {
+    "w": "much",
+    "s": 8.14,
+    "e": 8.4
+   },
+   {
+    "w": "as",
+    "s": 8.4,
+    "e": 8.6
+   },
+   {
+    "w": "your",
+    "s": 8.6,
+    "e": 8.74
+   },
+   {
+    "w": "Lord.",
+    "s": 8.74,
+    "e": 9.08
+   },
+   {
+    "w": "And",
+    "s": 9.9,
+    "e": 10.54
+   },
+   {
+    "w": "yet",
+    "s": 10.54,
+    "e": 10.76
+   },
+   {
+    "w": "his",
+    "s": 10.76,
+    "e": 10.98
+   },
+   {
+    "w": "descent",
+    "s": 10.98,
+    "e": 11.38
+   },
+   {
+    "w": "has",
+    "s": 11.38,
+    "e": 11.9
+   },
+   {
+    "w": "become",
+    "s": 11.9,
+    "e": 12.28
+   },
+   {
+    "w": "the",
+    "s": 12.28,
+    "e": 12.54
+   },
+   {
+    "w": "ascent",
+    "s": 12.54,
+    "e": 12.92
+   },
+   {
+    "w": "of",
+    "s": 12.92,
+    "e": 13.12
+   },
+   {
+    "w": "all,",
+    "s": 13.12,
+    "e": 13.44
+   },
+   {
+    "w": "and",
+    "s": 13.64,
+    "e": 14.36
+   },
+   {
+    "w": "has",
+    "s": 14.36,
+    "e": 14.5
+   },
+   {
+    "w": "made",
+    "s": 14.5,
+    "e": 14.76
+   },
+   {
+    "w": "his",
+    "s": 14.76,
+    "e": 14.96
+   },
+   {
+    "w": "own",
+    "s": 14.96,
+    "e": 15.2
+   },
+   {
+    "w": "glory",
+    "s": 15.2,
+    "e": 15.66
+   },
+   {
+    "w": "shine",
+    "s": 15.66,
+    "e": 16.12
+   },
+   {
+    "w": "forth.",
+    "s": 16.12,
+    "e": 16.5
+   },
+   {
+    "w": "For",
+    "s": 17.54,
+    "e": 18.18
+   },
+   {
+    "w": "before",
+    "s": 18.18,
+    "e": 18.46
+   },
+   {
+    "w": "he",
+    "s": 18.46,
+    "e": 18.72
+   },
+   {
+    "w": "was",
+    "s": 18.72,
+    "e": 18.92
+   },
+   {
+    "w": "made",
+    "s": 18.92,
+    "e": 19.16
+   },
+   {
+    "w": "man,",
+    "s": 19.16,
+    "e": 19.44
+   },
+   {
+    "w": "he",
+    "s": 19.72,
+    "e": 20.44
+   },
+   {
+    "w": "was",
+    "s": 20.44,
+    "e": 20.62
+   },
+   {
+    "w": "known",
+    "s": 20.62,
+    "e": 20.92
+   },
+   {
+    "w": "among",
+    "s": 20.92,
+    "e": 21.26
+   },
+   {
+    "w": "angels",
+    "s": 21.26,
+    "e": 21.82
+   },
+   {
+    "w": "only.",
+    "s": 21.82,
+    "e": 22.32
+   },
+   {
+    "w": "But",
+    "s": 22.32,
+    "e": 23.68
+   },
+   {
+    "w": "after",
+    "s": 23.68,
+    "e": 24.14
+   },
+   {
+    "w": "he",
+    "s": 24.14,
+    "e": 24.38
+   },
+   {
+    "w": "was",
+    "s": 24.38,
+    "e": 24.56
+   },
+   {
+    "w": "made",
+    "s": 24.56,
+    "e": 24.84
+   },
+   {
+    "w": "man",
+    "s": 24.84,
+    "e": 25.14
+   },
+   {
+    "w": "and",
+    "s": 25.14,
+    "e": 25.68
+   },
+   {
+    "w": "was",
+    "s": 25.68,
+    "e": 25.86
+   },
+   {
+    "w": "crucified,",
+    "s": 25.86,
+    "e": 26.3
+   },
+   {
+    "w": "so",
+    "s": 26.82,
+    "e": 27.68
+   },
+   {
+    "w": "far",
+    "s": 27.68,
+    "e": 28.02
+   },
+   {
+    "w": "from",
+    "s": 28.02,
+    "e": 28.32
+   },
+   {
+    "w": "lessening",
+    "s": 28.32,
+    "e": 28.76
+   },
+   {
+    "w": "that",
+    "s": 28.76,
+    "e": 28.96
+   },
+   {
+    "w": "glory,",
+    "s": 28.96,
+    "e": 29.26
+   },
+   {
+    "w": "he",
+    "s": 29.58,
+    "e": 30.22
+   },
+   {
+    "w": "acquired",
+    "s": 30.22,
+    "e": 30.56
+   },
+   {
+    "w": "other",
+    "s": 30.56,
+    "e": 31.04
+   },
+   {
+    "w": "besides.",
+    "s": 31.04,
+    "e": 31.42
+   }
+  ],
+  "qa_ok": true
  }
 ]
