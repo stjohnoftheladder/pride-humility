@@ -16,6 +16,7 @@ import { ACTIVITY_STOPS, nearbyActivity } from './activitySites.js';
 import { HarbourCart } from './harbourCart.js';
 import { Morning, CHURCH_STEPS } from './morning.js';
 import { HagiaSophia } from './hagiaSophia.js';
+import { installTouch, IS_TOUCH } from './touch.js';
 
 // ----- content (drafted; refined in the content pass) --------------------------
 const ELDER_LINES = [
@@ -626,7 +627,7 @@ async function boot() {
       hud.hidePause();
       audio.resume();
       hud.showExplore();
-      if (message) hud.message('Mouse capture unavailable — hold mouse button & drag to look', 3600);
+      if (message) hud.message(IS_TOUCH ? 'Drag to look · hold the left side to walk · tap E when it appears' : 'Mouse capture unavailable — hold mouse button & drag to look', 3600);
     }
   };
 
@@ -844,8 +845,11 @@ async function boot() {
     hud.setMeters(branch.pride, branch.grace);
   }
 
+  const touch = installTouch({ player, camera, walking: () => state === 'explore' || state === 'sophia',
+    prompt: () => hud.el.prompt?.style.display === 'block' });
   function frame() {
     requestAnimationFrame(frame);
+    touch?.update();
     const dt = Math.min(clock.getDelta(), 0.05);
     time += dt;
     update(dt, time);

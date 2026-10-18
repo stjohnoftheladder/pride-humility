@@ -40,6 +40,24 @@
     }
     #stage > #hud { position: absolute; inset: 0; pointer-events: none; }
 
+    /* ---------------- phones and tablets (src/touch.js) ---------------- */
+    #touch-layer { display: none; position: absolute; inset: 0; z-index: 6; touch-action: none; }
+    #touch-stick { position: absolute; left: 4%; bottom: 8%; width: 92px; height: 92px; border-radius: 50%;
+      border: 2px solid var(--gold-dim); background: rgba(18,13,7,0.35); pointer-events: none; }
+    #touch-knob { position: absolute; left: 26px; top: 26px; width: 36px; height: 36px; border-radius: 50%;
+      background: var(--gold); opacity: 0.8; }
+    #touch-action { display: none; position: absolute; right: 5%; bottom: 10%; width: 64px; height: 64px; border-radius: 50%;
+      border: 2px solid var(--gold); background: rgba(18,13,7,0.85); color: var(--gold); font: 22px 'PixelEmulator', monospace; }
+    #touch-rotate { display: none; }
+    body.touch #dev-hints, body.touch #title-dev { display: none !important; }
+    body.touch #sophia-caption { font-size: 11px !important; bottom: auto !important; top: 46px; width: min(64%, 560px) !important; padding: 6px 10px !important; }
+    body.touch #sophia-caption .said { max-height: 4.7em; overflow: hidden; }
+    @media (orientation: portrait) {
+      body.touch #touch-rotate:not(.closed) { display: block; position: fixed; left: 8%; right: 8%; bottom: 12%; z-index: 50;
+        padding: 14px; text-align: center; font-size: 13px; line-height: 1.6; color: var(--gold);
+        background: rgba(18,13,7,0.92); border: 2px solid var(--gold-dim); }
+    }
+
     /* ---------------- explore HUD ---------------- */
     .panel {
       position: absolute; background: rgba(18, 13, 7, 0.78);

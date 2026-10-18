@@ -513,7 +513,14 @@ export class HagiaSophia {
       const t = this.audio.ctx.currentTime - v.start;
       if (t >= -0.5) {
         this.showCaption(v.homily);
-        for (const w of this.wordEls) w.style.color = t >= Number(w.dataset.s) ? '#f3d276' : '#8f7a55';
+        let last = null;
+        for (const w of this.wordEls) { const said = t >= Number(w.dataset.s); w.style.color = said ? '#f3d276' : '#8f7a55'; if (said) last = w; }
+        // on a small screen the caption shows a few lines: keep the spoken line in view
+        if (last && last !== this.lastWord) {
+          this.lastWord = last;
+          const box = last.parentElement;
+          box.scrollTop = Math.max(0, last.offsetTop - box.offsetTop - last.offsetHeight);
+        }
       }
     } else if (v?.ended) {
       this.endedFor = (this.endedFor ?? 0) + dt;
