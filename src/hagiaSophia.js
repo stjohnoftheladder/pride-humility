@@ -421,7 +421,7 @@ export class HagiaSophia {
   }
 
   /** Step inside: the next homily begins after a moment of quiet. */
-  async enter({ camera, player }) {
+  async enter({ camera, player, homilyId = null }) {
     this.build();
     this.prevFar = camera.far; camera.far = 140; camera.updateProjectionMatrix();
     this.prevLevel = player.level; player.level = this;
@@ -432,7 +432,8 @@ export class HagiaSophia {
     this.showCaption(null);
     const manifest = await this.loadManifest();
     if (!manifest.length || !this.inside) return null;
-    const homily = manifest[this.nextHomilyIndex(manifest.length)];
+    // a shared link can ask for one homily by name (?sophia=poverty); otherwise the next in turn
+    const homily = (homilyId && manifest.find((h) => h.id.endsWith(`_${homilyId}`) || h.id === homilyId)) || manifest[this.nextHomilyIndex(manifest.length)];
     this.startHomily(homily);
     return homily;
   }

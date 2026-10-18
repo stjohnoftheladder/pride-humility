@@ -191,7 +191,7 @@ async function boot() {
   const sophia = new HagiaSophia({ audio });
   let sophiaFrom = null, sophiaArrival = false;
   const nearChurch = () => Math.hypot(player.pos.x - CHURCH_STEPS.x, player.pos.z - CHURCH_STEPS.z) < 3;
-  async function enterSophia() {
+  async function enterSophia({ homilyId = null } = {}) {
     if (state !== 'explore') return;
     sophiaArrival = !!morning.run && !morning.run.arrived;
     if (sophiaArrival) morning.attend();
@@ -199,7 +199,7 @@ async function boot() {
     state = 'sophia';
     player.clearKeys(); hud.hidePrompt(); hud.showSiteCard(false); hud.setRoom('Hagia Sophia');
     audio.stopAmbient();
-    return sophia.enter({ camera, player });
+    return sophia.enter({ camera, player, homilyId });
   }
   function exitSophia() {
     sophia.leave({ camera, player });
@@ -632,13 +632,20 @@ async function boot() {
 
   hud.onStart = async () => {
     morning.begin();
-    if(morning.run.arrived){morning.arrive();return;}
+    if(morning.run.arrived&&new URLSearchParams(location.search).get('sophia')===null){morning.arrive();return;}
     audio.resume();
     audio.ensure();
     audio.startAmbient();
     if (startTime === 0) startTime = performance.now();
     const locked = await player.lock();
     if (!locked || !document.pointerLockElement) enterDragFallback();
+    // ?sophia or ?sophia=<homily>: a link straight into Hagia Sophia
+    const sophiaLink = new URLSearchParams(location.search).get('sophia');
+    if (sophiaLink !== null) {
+      state = 'explore'; hud.showExplore();
+      player.pos.set(CHURCH_STEPS.x, 0, CHURCH_STEPS.z);
+      enterSophia({ homilyId: sophiaLink || null });
+    }
   };
   hud.onResume = async () => {
     const locked = await player.lock();
