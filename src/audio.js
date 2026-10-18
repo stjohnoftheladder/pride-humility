@@ -348,8 +348,8 @@ export class AudioFX {
       crowdG.gain.linearRampToValueAtTime(0.002 + Math.random() * 0.003, now + 2.2 + Math.random() * 2.8);
     }, 3500, 4000, 8000);
 
-    // distant voices / merchant calls
-    every(() => this._voice(0.45 + Math.random() * 0.65, 0.045 + Math.random() * 0.035, 480 + Math.random() * 680), 1500, 2600, 6400);
+    // Keep the street bed steady: synthetic merchant calls sounded like
+    // unrelated swipes rather than voices.
 
     // a far bell marks the hours
     every(() => this._bell(), 14000, 22000, 34000);

@@ -112,6 +112,22 @@ export async function testActivities(browser, newPage, check) {
   check('forum: accusation resolves pride; replay cannot change the saved result', await page.evaluate(() => {
     const g = window.__game; return g.activities().snapshot().outcome === 'proud' && g.branch.pride === 0 && g.branch.flags['activity:forumConstantine'] === 'humble';
   }));
+  const departed = await page.evaluate(() => {
+    const g = window.__game, a = g.activities();
+    const before = { grace: g.branch.grace, pride: g.branch.pride };
+    g.player.keys.KeyW = true;
+    g.teleport(61.5, 354); a.update(0);
+    return { state: g.state(), active: a.snapshot(), walking: g.player.keys.KeyW,
+      hidden: a.el.style.display === 'none', unchanged: before.grace === g.branch.grace && before.pride === g.branch.pride };
+  });
+  check('forum: leaving for the port releases the activity without stopping walking or changing rewards',
+    departed.state === 'explore' && departed.active === null && departed.hidden && departed.walking && departed.unchanged, JSON.stringify(departed));
+  await enter('aqueduct');
+  await page.evaluate(() => { const g = window.__game; g.teleport(49.5, 120); g.activities().update(0); });
+  check('aqueduct: walking beyond its court returns to exploration', await page.evaluate(() => window.__game.state() === 'explore' && window.__game.activities().snapshot() === null));
+  await enter('forumConstantine');
+  check('forum: the activity can be entered again after walking away', await page.evaluate(() => window.__game.activities().snapshot().id === 'forumConstantine'));
+  await page.keyboard.press('q');
   await page.reload(); await page.waitForFunction(() => window.__game);
   check('activities: all first outcomes survive reload', await page.evaluate(() => ['aqueduct','harbour','forumConstantine'].every(id => window.__game.branch.flags[`activity:${id}`] === 'humble')));
   await page.evaluate(() => {

@@ -202,7 +202,10 @@ async function boot() {
       const module = await import('./activities.js');
       activities ??= new module.LocationActivities({
         level, player, hud, branch, parent: document.getElementById('hud'),
-        leave: async () => { state = 'explore'; player.clearKeys(); await player.lock(); },
+        leave: async ({ walkingAway = false } = {}) => {
+          state = 'explore'; hud.setRoom(roomLabel());
+          if (!walkingAway) { player.clearKeys(); await player.lock(); }
+        },
         onResult: () => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); morning.reward(`activity:${activities.active.id}`,6); },
       });
       state = 'activity';

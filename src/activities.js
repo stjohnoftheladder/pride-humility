@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FEATURES } from './config.js';
+import { FEATURES, SITES } from './config.js';
 import { ACTIVITY_STOPS } from './activitySites.js';
 export const ACTIVITIES = ACTIVITY_STOPS;
 
@@ -104,6 +104,17 @@ export class LocationActivities {
     if (this.site.purse) this.site.purse.visible = true;
     this.update(0);
   }
+  inArea() {
+    const area = SITES.find(site => site.id === this.active?.id)?.area;
+    if (!area) return false;
+    // Include the court and its road entrance, but release the activity once
+    // the pilgrim walks onward to another part of the city.
+    const margin = 8, cell = 3;
+    return this.player.pos.x >= area.x * cell - margin
+      && this.player.pos.x <= (area.x + area.w) * cell + margin
+      && this.player.pos.z >= area.y * cell - margin
+      && this.player.pos.z <= (area.y + area.h) * cell + margin;
+  }
   nearest() {
     return this.site.targets.reduce((best, t) => {
       const distance = Math.hypot(this.player.pos.x-t.x, this.player.pos.z-t.z);
@@ -112,7 +123,9 @@ export class LocationActivities {
   }
   key(e, down) {
     if (!this.active) return;
-    this.player.onKey(e, down); this.keys[e.code] = down;
+    this.player.onKey(e, down);
+    if (!this.inArea()) { this.close({ walkingAway: true }); return; }
+    this.keys[e.code] = down;
     if (['Space','KeyE','KeyF','KeyH','KeyQ','KeyR','Escape'].includes(e.code)) e.preventDefault();
     if (!down || e.repeat) return;
     if (e.code === 'KeyQ' || e.code === 'Escape') { this.close(); return; }
@@ -137,6 +150,7 @@ export class LocationActivities {
     if (FEATURES[this.active.id] === false) { this.close(); return; }
     if (document.hidden) { this.keys = {}; this.player.clearKeys(); return; }
     this.player.update(dt);
+    if (!this.inArea()) { this.close({ walkingAway: true }); return; }
     for (const label of this.site.group.userData.labels) {
       const distance = Math.hypot(label.position.x + this.site.group.position.x - this.player.pos.x, label.position.z - this.player.pos.z);
       const scale = THREE.MathUtils.clamp(distance / 4, 0.2, 1);
@@ -168,6 +182,12 @@ export class LocationActivities {
     const text = this.active.id==='aqueduct' ? outcome==='humble'?'Water reaches the mill, hospital and homes. Eudokia nods.':outcome==='proud'?'The patron praises his fountain. Households still wait.':'The reservoir ran short. Ask the keeper and try again.' : outcome==='humble'?'You return the purse and explain the accident. Leontios apologizes; Menas is cleared and Anna is heard.':'The crowd applauds your certainty. Menas protests the accusation.';
     this.hud.message(`${text} ${outcome==='unfinished'?'Meters unchanged.':reward?outcome==='humble'?'(+3 grace)':'(+4 pride)':'Practice: meters unchanged.'}`, 7500);
   }
-  close() { this.keys={};this.player.clearKeys();this.active=null;this.el.style.display='none';this.hud.hidePrompt();this.leave(); }
+  close({ walkingAway = false } = {}) {
+    this.keys = {};
+    if (!walkingAway) this.player.clearKeys();
+    this.active = null; this.el.style.display = 'none'; this.hud.hidePrompt();
+    if (walkingAway) this.hud.message('', 0);
+    this.leave({ walkingAway });
+  }
   snapshot() { if(!this.active)return null;const g=this.game;return {id:this.active.id,outcome:g.done,water:g.water,filled:[...g.filled],time:g.time,evidence:[...g.seen]}; }
 }
