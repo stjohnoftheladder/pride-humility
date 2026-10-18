@@ -1,0 +1,96 @@
+{
+    "_note":  "Thirteen excerpts St John Chrysostom preaches in Hagia Sophia, one per visit, in order. Texts are from the Nicene and Post-Nicene Fathers translations (1886-1889, public domain, via newadvent.org), lightly trimmed for speaking (\u0027...\u0027 marks a cut). The Paschal Homily is a fresh translation from the Greek. Sources are in sources/.",
+    "homilies":  [
+                     {
+                         "id":  "h01_poverty",
+                         "title":  "Poverty, a comely damsel",
+                         "source":  "Homily 90 on Matthew, 3-4 (NPNF 1/10)",
+                         "url":  "https://www.newadvent.org/fathers/200190.htm",
+                         "text":  "You would straightway seize upon poverty, if indeed you knew the beauty thereof. And I know that many laugh when these things are said. But to me poverty seems like some comely, fair, and well-favored damsel, but covetousness like some monster-shaped woman. Bring not forward, I pray you, them that accuse poverty, but them that have shone thereby. Nurtured in this, Elias was caught up in that blessed assumption. With this Eliseus shone; with this John; with this all the apostles."
+                     },
+                     {
+                         "id":  "h02_church",
+                         "title":  "The Church is not walls",
+                         "source":  "Second Homily on Eutropius, 6 (NPNF 1/9)",
+                         "url":  "https://www.newadvent.org/fathers/1915.htm",
+                         "text":  "When I say the Church, I mean not only a place, but also a plan of life. I mean not the walls of the Church, but the laws of the Church. When you take refuge in a Church, do not seek shelter merely in the place, but in the spirit of the place. For the Church is not wall and roof, but faith and life."
+                     },
+                     {
+                         "id":  "h03_hippodrome",
+                         "title":  "At the horse races, in the rain",
+                         "source":  "Homily 58 on John, 4 (NPNF 1/14)",
+                         "url":  "https://www.newadvent.org/fathers/240158.htm",
+                         "text":  "If a harper, or dancer, or stage player call the city, they all run eagerly, and spend the half of an entire day attending to him alone. But when God speaks to us by Prophets and Apostles, we yawn, we scratch ourselves, we are drowsy. Yet at horse races, though there is no roof over them to keep off the wet, while heavy rains are falling, and the wind is dashing the water into their faces, they stand like madmen. But here, where there are roofs overhead, and where the warmth is admirable, they hold back instead of running together."
+                     },
+                     {
+                         "id":  "h04_body",
+                         "title":  "Honor Christ\u0027s body in the poor",
+                         "source":  "Homily 50 on Matthew, 4 (NPNF 1/10)",
+                         "url":  "https://www.newadvent.org/fathers/200150.htm",
+                         "text":  "Would you do honor to Christ\u0027s body? Neglect Him not when naked. Do not, while here you honor Him with silken garments, neglect Him perishing without, of cold and nakedness. For He that said, This is my body, the same said, You saw me an hungered, and fed me not. Let us learn therefore to honor Christ as He Himself desires. For God has no need at all of golden vessels, but of golden souls."
+                     },
+                     {
+                         "id":  "h05_vanity",
+                         "title":  "Vanity of vanities",
+                         "source":  "First Homily on Eutropius, 1 (NPNF 1/9)",
+                         "url":  "https://www.newadvent.org/fathers/1914.htm",
+                         "text":  "Vanity of vanities, all is vanity. It is always seasonable to utter this, but more especially at the present time. Where is the applause which greeted you in the city? Where the acclamation in the hippodrome, and the flatteries of spectators? They are gone, all gone. A wind has blown upon the tree, shattering down all its leaves, and showing it to us quite bare, and shaken from its very root."
+                     },
+                     {
+                         "id":  "h06_fountain",
+                         "title":  "Pride, the fountain of wickedness",
+                         "source":  "Homily 15 on Matthew, 2 (NPNF 1/10)",
+                         "url":  "https://www.newadvent.org/fathers/200115.htm",
+                         "text":  "Though fasting, prayer, almsgiving, temperance, any other good thing whatever, be gathered together in you, without humility all fall away and perish. It was this very thing that took place in the instance of the Pharisee. For even after he had arrived at the very summit, he went down with the loss of all, because he had not the mother of virtues. For as pride is the fountain of all wickedness, so is humility the principle of all self-command."
+                     },
+                     {
+                         "id":  "h07_foundation",
+                         "title":  "Humility, the foundation",
+                         "source":  "Homily Concerning Lowliness of Mind, 2 (NPNF 1/9)",
+                         "url":  "https://www.newadvent.org/fathers/1907.htm",
+                         "text":  "Humbleness of mind is the foundation of the love of wisdom which pertains to us. Even if you should have built a superstructure of things innumerable, even if almsgiving, even if prayers, even if fastings, even if all virtue, unless this have first been laid as a foundation, all will be built upon it to no purpose and in vain, and it will fall down easily, like that building which had been placed on the sand."
+                     },
+                     {
+                         "id":  "h08_chariots",
+                         "title":  "Two chariots: the Pharisee and the publican",
+                         "source":  "Homily Concerning Lowliness of Mind, 1 (NPNF 1/9)",
+                         "url":  "https://www.newadvent.org/fathers/1907.htm",
+                         "text":  "We made mention of the Pharisee and the publican, and yoked two chariots, out of virtue and vice. Pride, even when joined with righteousness and fastings and tithes, fell behind. While humility, even when yoked with sin, outstripped the Pharisee\u0027s pair, although the charioteer it had was a poor one. For what was worse than the publican? But since he made his soul contrite, and called himself a sinner, he surpassed the Pharisee."
+                     },
+                     {
+                         "id":  "h09_common",
+                         "title":  "What is the Lord\u0027s is common",
+                         "source":  "Homily 12 on First Timothy (NPNF 1/13)",
+                         "url":  "https://www.newadvent.org/fathers/230612.htm",
+                         "text":  "Is not this an evil, that you alone should have the Lord\u0027s property, that you alone should enjoy what is common? Is not the earth God\u0027s, and the fullness thereof? If then our possessions belong to one common Lord, they belong also to our fellow servants. The possessions of one Lord are all common. The king\u0027s possessions are all common, as cities, market places, and public walks. We all share them equally."
+                     },
+                     {
+                         "id":  "h10_descent",
+                         "title":  "His descent became the ascent of all",
+                         "source":  "Homily 65 on Matthew, 4 (NPNF 1/10)",
+                         "url":  "https://www.newadvent.org/fathers/200165.htm",
+                         "text":  "Be not afraid, as though your honor were plucked down. For however much you humble yourself, you cannot descend so much as your Lord. And yet His descent has become the ascent of all, and has made His own glory shine forth. For before He was made man, He was known among angels only. But after He was made man and was crucified, so far from lessening that glory, He acquired other besides."
+                     },
+                     {
+                         "id":  "h11_father",
+                         "title":  "Our Father",
+                         "source":  "Homily 19 on Matthew, 6 (NPNF 1/10)",
+                         "url":  "https://www.newadvent.org/fathers/200119.htm",
+                         "text":  "Our Father, which art in heaven. See how He straightway stirred up the hearer, and reminded him of all God\u0027s bounty. For he who calls God Father, by him remission of sins, and righteousness, and adoption, and inheritance, and brotherhood with the Only Begotten, are acknowledged in this single title. And when He says, in heaven, He speaks not as shutting up God there, but as withdrawing him who is praying from earth."
+                     },
+                     {
+                         "id":  "h12_lowly",
+                         "title":  "All good things spring from lowliness",
+                         "source":  "Homily 7 on Philippians (NPNF 1/13)",
+                         "url":  "https://www.newadvent.org/fathers/230207.htm",
+                         "text":  "The soul that is puffed up has a worse disease than dropsy, while that which is under restraint is freed from all evil. How great then are the good things which lowliness of mind brings to us. What would you have? Forbearance? Freedom from anger? Love to our fellow men? Soberness? All these good things spring from lowly mindedness, and their contraries from haughtiness."
+                     },
+                     {
+                         "id":  "h13_pascha",
+                         "title":  "Christ is risen",
+                         "source":  "Paschal (Catechetical) Homily, attributed to Chrysostom; new translation from the Greek",
+                         "url":  "https://en.wikipedia.org/wiki/Paschal_Homily",
+                         "text":  "Let no one fear death, for the death of the Saviour has set us free. He destroyed it by enduring it. He descended into Hades, and took Hades captive. O Death, where is your sting? O Hades, where is your victory? Christ is risen, and you are cast down. Christ is risen, and the demons have fallen. Christ is risen, and the angels rejoice. Christ is risen, and life reigns. To Him be glory and dominion, to the ages of ages. Amen."
+                     }
+                 ]
+}

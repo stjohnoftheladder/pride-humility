@@ -62,6 +62,7 @@ export class Hud {
     this.onStart = null;
     this.onResume = null;
     this.onRestart = null;
+    this.onReturnCity = null;
     this.onMute = null;
     this.onFallContinue = null;
     this.onConfess = null;
@@ -70,6 +71,7 @@ export class Hud {
     $('start-btn')?.addEventListener('click', () => this.onStart?.());
     $('resume-btn')?.addEventListener('click', () => this.onResume?.());
     $('restart-btn')?.addEventListener('click', () => this.onRestart?.());
+    $('return-city-btn')?.addEventListener('click', () => this.onReturnCity?.());
     $('fall-btn')?.addEventListener('click', () => this.onFallContinue?.());
     $('confess-btn')?.addEventListener('click', () => this.onConfess?.());
     $('race-btn')?.addEventListener('click', () => this.onRaceContinue?.());
@@ -156,9 +158,11 @@ export class Hud {
     this.el.confessText.textContent = text || '';
   }
 
-  showEnding(title, text, verse) {
+  showEnding(title, text, verse, canReturn = false) {
     this._hideScreens();
     this.el.ending.style.display = 'flex';
+    const back = document.getElementById('return-city-btn');
+    if (back) back.style.display = canReturn ? '' : 'none';
     this.el.endingTitle.textContent = title;
     this.el.endingText.textContent = text;
     this.el.endingVerse.textContent = verse;

@@ -8,10 +8,14 @@ export async function testMorning(browser,newPage,check){
  await page.reload();await page.waitForFunction(()=>window.__game);
  check('morning: reload retains elapsed time, responsibility and purchases',await page.evaluate(()=>{const g=window.__game;g.morning.begin();g.setState('explore');return g.morning.run.elapsed>=240&&g.morning.run.boots&&g.branch.flags['errand:bread']==='carrying'&&g.player.travelBoost===1.15;}));
  await page.evaluate(()=>{const g=window.__game;const target=g.market.npcs.find(n=>n.id==='vendor-5-1');g.market.errandAction(target,'deliverQuietly',g.branch);g.teleport(52.5,310.5);g.key('KeyE');});
+ check('morning: E at the church steps enters Hagia Sophia, and the arrival is recorded on entry',await page.evaluate(()=>window.__game.state()==='sophia'&&window.__game.sophia.inside&&window.__game.morning.run.arrived==='on-time'));
+ await page.evaluate(()=>window.__game.exitSophia());
  check('morning: church arrival recalls a quiet delivery without requiring battles',await page.evaluate(()=>window.__game.state()==='ending'&&window.__game.morning.run.arrived==='on-time'&&document.getElementById('ending-text').textContent.includes('quietly')));
+ const visits=await page.evaluate(async()=>{const g=window.__game,titles=[];localStorage.removeItem('pride-humility:homily');for(let i=0;i<2;i++){g.setState('explore');g.teleport(52.5,310.5);await g.enterSophia();await new Promise(r=>setTimeout(r,1500));titles.push(g.sophia.voice?.homily.title);g.exitSophia();}return {titles,state:g.state(),people:g.sophia.people.length};});
+ check('hagia sophia: each visit Chrysostom preaches the next homily, among a full congregation',visits.titles.length===2&&visits.titles[0]&&visits.titles[1]&&visits.titles[0]!==visits.titles[1]&&visits.people>300,JSON.stringify(visits));
  check('morning: no page errors',errors.length===0,JSON.stringify(errors));await page.close();
  for(const [elapsed,expected] of [[730,'late'],[901,'missed']]){
- const fresh=await newPage(browser);await fresh.page.evaluate(({elapsed})=>{const g=window.__game;g.setState('explore');g.morning.begin();g.morning.update(elapsed,'explore');g.teleport(52.5,310.5);g.key('KeyE');},{elapsed});
+ const fresh=await newPage(browser);await fresh.page.evaluate(({elapsed})=>{const g=window.__game;g.setState('explore');g.morning.begin();g.morning.update(elapsed,'explore');g.teleport(52.5,310.5);g.key('KeyE');g.exitSophia();},{elapsed});
  check(`morning: ${expected} arrival is remembered with unfinished responsibility`,await fresh.page.evaluate(expected=>window.__game.morning.run.arrived===expected&&document.getElementById('ending-text').textContent.includes('still with you'),expected));await fresh.page.close();
  }
 }

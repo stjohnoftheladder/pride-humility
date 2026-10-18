@@ -35,6 +35,8 @@ export class Morning {
   soundBell(){const ctx=this.audio.ctx;if(!ctx||ctx.state!=='running')return;const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=440;gain.gain.setValueAtTime(0.15,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.8);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+1.8);osc.onended=()=>{osc.disconnect();gain.disconnect();};}
   reward(id,amount){const r=this.run;if(!r||r.arrived||r.rewards[id])return false;r.rewards[id]=true;r.gold+=amount;this.branch.save();this.hud.message(`${amount} gold earned. Faster shoes cost 20 gold at a market stall. There is always another opportunity—but the bells keep moving.`,5000);return true;}
   buyShoes(){const r=this.run;if(!r||r.boots||r.gold<20)return false;r.gold-=20;r.boots=true;this.player.travelBoost=1.15;this.branch.save();return true;}
+  /** Entering Hagia Sophia is the arrival: remember the time now; the card comes when the pilgrim leaves. */
+  attend(){const r=this.run;if(!r)return;r.arrived??=r.elapsed<SERVICE?'on-time':r.elapsed<CLOSE?'late':'missed';this.branch.save();}
   arrive(){const r=this.run;if(!r)return;
     r.arrived??=r.elapsed<SERVICE?'on-time':r.elapsed<CLOSE?'late':'missed';this.branch.save();
     const delivery=this.branch.flags['errand:bread'],facts=[delivery==='quiet'?'The bread reached the stable hands quietly.':delivery==='praise'?'The bread arrived, and you asked for your generosity to be announced.':'The bread you promised to deliver is still with you.'];

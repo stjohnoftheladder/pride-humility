@@ -15,6 +15,7 @@ import { RoadMarket } from './market.js';
 import { ACTIVITY_STOPS, nearbyActivity } from './activitySites.js';
 import { HarbourCart } from './harbourCart.js';
 import { Morning, CHURCH_STEPS } from './morning.js';
+import { HagiaSophia } from './hagiaSophia.js';
 
 // ----- content (drafted; refined in the content pass) --------------------------
 const ELDER_LINES = [
@@ -177,13 +178,40 @@ async function boot() {
   }
   let activities = null;
   const morning = new Morning({branch,player,hud,audio,market,onArrival:(title,text)=>{
-    state='ending';player.clearKeys();player.unlock();hud.showEnding(title,text,'“Let us attend.”');
+    state='ending';player.clearKeys();player.unlock();hud.showEnding(title,text,'“Let us attend.”',true);
   }});
   const churchCanvas=document.createElement('canvas');churchCanvas.width=512;churchCanvas.height=96;
   const churchInk=churchCanvas.getContext('2d');churchInk.fillStyle='#20180fe6';churchInk.fillRect(0,0,512,96);
   churchInk.fillStyle='#f3d276';churchInk.font='24px monospace';churchInk.textAlign='center';churchInk.fillText('HAGIA SOPHIA · FORECOURT',256,38);churchInk.fillText('E · ENTER FOR THE SERVICE',256,74);
   const churchSign = new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(churchCanvas)}));
   churchSign.position.set(CHURCH_STEPS.x,2.8,CHURCH_STEPS.z);churchSign.scale.set(4,0.75,1);level.group.add(churchSign);
+  // Hagia Sophia is a world of its own: its own scene, walked with the same
+  // pilgrim, where Chrysostom preaches the next homily on every visit. The
+  // first visit of a morning is the arrival; its card waits until you leave.
+  const sophia = new HagiaSophia({ audio });
+  let sophiaFrom = null, sophiaArrival = false;
+  const nearChurch = () => Math.hypot(player.pos.x - CHURCH_STEPS.x, player.pos.z - CHURCH_STEPS.z) < 3;
+  async function enterSophia() {
+    if (state !== 'explore') return;
+    sophiaArrival = !!morning.run && !morning.run.arrived;
+    if (sophiaArrival) morning.attend();
+    sophiaFrom = { x: player.pos.x, z: player.pos.z, yaw: camera.rotation.y };
+    state = 'sophia';
+    player.clearKeys(); hud.hidePrompt(); hud.showSiteCard(false); hud.setRoom('Hagia Sophia');
+    audio.stopAmbient();
+    return sophia.enter({ camera, player });
+  }
+  function exitSophia() {
+    sophia.leave({ camera, player });
+    player.clearKeys();
+    player.pos.set(sophiaFrom.x, 0, sophiaFrom.z); player.vel.set(0, 0, 0);
+    camera.position.set(sophiaFrom.x, camera.position.y, sophiaFrom.z);
+    camera.rotation.set(0, sophiaFrom.yaw + Math.PI, 0);   // back out the doors, facing the city
+    state = 'explore';
+    hud.setRoom(roomLabel());
+    audio.startAmbient();
+    if (sophiaArrival) { sophiaArrival = false; morning.arrive(); }
+  }
   const harbourCart = new HarbourCart({ level, player, camera, branch, hud,
     onDelivery:()=>morning.reward('harbour',10),
     leave: () => { state = 'explore'; hud.setRoom(roomLabel()); },
@@ -281,7 +309,7 @@ async function boot() {
   /** Pressing E near a figure engages it (enemy threshold, elder, altar). */
   function tryEngage() {
     if (state !== 'explore') return;
-    if(morning.near(player.pos)){morning.arrive();return;}
+    if(nearChurch()){enterSophia();return;}
     if (armed.tempter && near('K', 2.4)) { startEncounter('tempter'); return; }
     if (armed.brother && near('B', 2.4)) { startEncounter('brother'); return; }
     if (armed.pride && near('P', 2.4)) { startEncounter('pride'); return; }
@@ -500,6 +528,11 @@ async function boot() {
       else if (e.code === 'Escape') closeMarket();
       return;
     }
+    if (state === 'sophia') {
+      if (e.code === 'KeyE' && !e.repeat && sophia.nearDoor(player.pos)) exitSophia();
+      else player.onKey(e, true);
+      return;
+    }
     if (state === 'battle') {
       if (e.code === 'KeyQ' || e.code === 'Escape') { e.preventDefault(); leaveEncounter(); }
       else battle.onKey(e, true);
@@ -538,19 +571,19 @@ async function boot() {
     if (state === 'activity') { activities.key(e, false); return; }
     if (state === 'battle') { battle.onKey(e, false); return; }
     if (state === 'race') { race.onKey(e, false); return; }
-    if (state === 'explore') player.onKey(e, false);
+    if (state === 'explore' || state === 'sophia') player.onKey(e, false);
   });
 
   let dragLook = false;
   canvas.addEventListener('mousedown', async (e) => {
-    if (state === 'explore' || state === 'race' || state === 'cart' || state === 'activity') {
+    if (state === 'explore' || state === 'sophia' || state === 'race' || state === 'cart' || state === 'activity') {
       if (document.pointerLockElement !== canvas) dragLook = true;
       if (document.pointerLockElement === canvas) return;
       await player.lock();
     }
   });
   window.addEventListener('mousemove', (e) => {
-    if (state !== 'explore' && state !== 'race' && state !== 'cart' && state !== 'activity') return;
+    if (state !== 'explore' && state !== 'sophia' && state !== 'race' && state !== 'cart' && state !== 'activity') return;
     const captured = document.pointerLockElement === canvas;
     if (!captured && !dragLook) return;
     const s = 0.0026;
@@ -566,7 +599,8 @@ async function boot() {
     if (document.pointerLockElement === canvas) {
       if (state === 'menu') { state = 'explore'; hud.showExplore(); }
       else if (state === 'paused') { state = resumeTo; resumeTo = 'explore'; hud.hidePause(); audio.resume(); }
-    } else if (state === 'explore' || state === 'race' || state === 'cart' || state === 'activity') {
+    } else if (state === 'explore' || state === 'sophia' || state === 'race' || state === 'cart' || state === 'activity') {
+      if (state === 'sophia') player.clearKeys();
       if (state === 'race') race.keys = {};   // a key let go on the rest screen never reaches the race
       if (state === 'cart') harbourCart.keys = {};
       if (state === 'activity') { activities.keys = {}; player.clearKeys(); }
@@ -611,6 +645,12 @@ async function boot() {
     if (!locked || !document.pointerLockElement) enterDragFallback(false);
   };
   hud.onRestart = () => { branch.clearSave(); location.reload(); };
+  hud.onReturnCity = async () => {   // the morning is over; the city (and the church) are still open
+    state = 'explore'; hud.showExplore();
+    audio.resume(); audio.ensure(); audio.startAmbient();
+    const locked = await player.lock();
+    if (!locked || !document.pointerLockElement) enterDragFallback(false);
+  };
   hud.onMute = () => { audio.resume(); hud.message(audio.toggleMute() ? 'Sound muted' : 'Sound on', 1200); };
   hud.onFallContinue = () => {
     branch.hp = 20;
@@ -739,7 +779,7 @@ async function boot() {
     if (state === 'explore') {
       // Figures wait for a deliberate interaction; proximity only teaches E.
       let promptText = null;
-      if(morning.near(player.pos))promptText='Enter Hagia Sophia · E';
+      if(nearChurch())promptText='Enter Hagia Sophia · E';
       else if (armed.tempter && near('K', 2.6)) promptText = 'Face the Tempter — press E';
       else if (armed.brother && near('B', 2.6)) promptText = 'Face the Wounded Brother — press E';
       else if (armed.pride && near('P', 2.6)) promptText = 'Face the Demon of Pride — press E';
@@ -773,6 +813,11 @@ async function boot() {
       hud.showSiteCard(false);
     }
 
+    if (state === 'sophia') {
+      player.update(dt);
+      if (sophia.nearDoor(player.pos)) hud.showPrompt('Leave Hagia Sophia · E'); else hud.hidePrompt();
+    }
+    if (sophia.inside) sophia.update(dt, time);
     if (state === 'race') {
       const res = race.update(dt);
       if (res) finishRace(res);
@@ -797,7 +842,7 @@ async function boot() {
     const dt = Math.min(clock.getDelta(), 0.05);
     time += dt;
     update(dt, time);
-    renderer.render(scene, battle.active ? battle.camera : camera);
+    renderer.render(sophia.inside ? sophia.scene : scene, battle.active ? battle.camera : camera);
     fpsFrames++;
     fpsTime += dt;
     if (fpsTime >= 0.5) { hud.setFps(fpsFrames / fpsTime); fpsFrames = 0; fpsTime = 0; }
@@ -839,6 +884,9 @@ async function boot() {
       armed: () => ({ ...armed }),
       teleport: (x, z) => { player.pos.set(x, 0, z); player.vel.set(0, 0, 0); player.camera.position.set(x, player.camera.position.y, z); },
       startEncounter: (id) => { armed[id] = true; startEncounter(id); },
+      sophia,
+      enterSophia,
+      exitSophia,
       forceEnding: (d) => { const e = ENDINGS[d]; state = 'ending'; hud.showEnding(e.title, e.text(branch), e.verse); },
       triggers: () => ({ K: spawns.K[0], B: spawns.B[0], P: spawns.P[0], A: spawns.A[0], E: spawns.E[0], L: spawns.L[0] }),
       finish: (o) => finishEncounter(o),
