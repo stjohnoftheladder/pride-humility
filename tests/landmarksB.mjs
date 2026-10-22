@@ -42,7 +42,7 @@ export async function testLandmarksB(browser, newPage, check) {
     g.teleport(20, 281.2); a.update(1 / 60);
     const before = { ...a.snapshot().worker }; for (let i = 0; i < 30; i++) a.update(1 / 60);
     const waited = a.game.waiting && a.snapshot().worker.x === before.x;
-    g.teleport(7.5, 288); a.update(1 / 60);
+    g.teleport(7.5, 288); a.game.trail = [{ x: 7.5, z: 288 }]; a.update(1 / 60);
     let index = 0;
     for (let i = 0; i < 6000 && !a.game.done; i++) {
       const [tx, tz] = route[Math.min(index, route.length - 1)], p = g.player.pos;
