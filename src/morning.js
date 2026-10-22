@@ -48,6 +48,10 @@ export class Morning {
     if(this.branch.flags['activity:zeuxippus']==='humble')facts.push('Theodora bathed in the basin you prepared.');
     if(this.branch.flags['activity:cistern']==='proud')facts.push('You told the foreman you explored the cistern alone.');
     if(this.branch.flags['activity:zeuxippus']==='proud')facts.push('You kept the warm basin while Theodora waited.');
+    if(this.branch.flags['activity:mosaicPeristyle']==='humble')facts.push('Irene’s border and your tiles were credited as one floor.');
+    if(this.branch.flags['activity:mosaicPeristyle']==='proud')facts.push('You accepted praise for Irene’s border.');
+    if(this.branch.flags['activity:milion']==='humble')facts.push('A traveler you guided came back to thank Basil the porter.');
+    if(this.branch.flags['activity:milion']==='proud')facts.push('You sent a traveler off on a guess.');
     facts.push(`You brought ${r.gold} gold${r.boots?' and your swift shoes':''}.`);
     this.onArrival(r.arrived==='on-time'?'BEFORE THE SERVICE BELL':r.arrived==='late'?'THE SERVICE HAS BEGUN':'AFTER THE SERVICE',`${r.arrived==='on-time'?'You reach Hagia Sophia before the service begins.':r.arrived==='late'?'You enter quietly after the service has begun.':'The service has ended. You sit in the quiet forecourt; tomorrow offers another morning.'} ${facts.join(' ')}`);
   }

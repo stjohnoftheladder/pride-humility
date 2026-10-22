@@ -12,6 +12,7 @@ import { testActivities } from './activities.mjs';
 import { testMorning } from './morning.mjs';
 import { testLandmarksA } from './landmarksA.mjs';
 import { testLandmarksB } from './landmarksB.mjs';
+import { testMosaicMilion } from './mosaicMilion.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -880,6 +881,7 @@ try {
   await testMorning(browser, newPage, check);
   await testLandmarksA(browser, newPage, check);
   await testLandmarksB(browser, newPage, check);
+  await testMosaicMilion(browser, newPage, check);
 
   const crowd = await newPage(browser);
   const citizens = await crowd.page.evaluate(() => {

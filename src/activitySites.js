@@ -8,6 +8,9 @@ export const ACTIVITY_STOPS = [
   { id: 'hagiaEirene', label: 'Sing with the choir', x: 90, z: 322 },
   { id: 'cistern', label: 'Carry the lamp below', x: 44.5, z: 291 },
   { id: 'zeuxippus', label: 'Prepare the warm basin', x: 44, z: 312.2 },
+  // Landmarks with their own module load it on first entry.
+  { id: 'mosaicPeristyle', label: 'Set the mosaic floor', x: 64, z: 264, load: () => import('./activities/mosaicPeristyle.js') },
+  { id: 'milion', label: 'Guide the travelers', x: 59, z: 318, load: () => import('./activities/milion.js') },
 ];
 export function nearbyActivity(pos, features) {
   return ACTIVITY_STOPS.find(a => features[a.id] !== false && Math.hypot(pos.x - a.x, pos.z - a.z) < 3.2) ?? null;
