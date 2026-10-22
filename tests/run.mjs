@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { testActivities } from './activities.mjs';
 import { testMorning } from './morning.mjs';
+import { testLandmarksA } from './landmarksA.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -876,6 +877,7 @@ try {
   await exits.page.close();
   await testActivities(browser, newPage, check);
   await testMorning(browser, newPage, check);
+  await testLandmarksA(browser, newPage, check);
 
   const crowd = await newPage(browser);
   const citizens = await crowd.page.evaluate(() => {
