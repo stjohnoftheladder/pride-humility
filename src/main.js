@@ -11,13 +11,14 @@ import { AudioFX } from './audio.js';
 import { Hud } from './hud.js';
 import { Minimap } from './minimap.js';
 import { ChariotRace, RACE_RESULTS } from './race.js';
-import { RoadMarket } from './market.js';
+import { RoadMarket, ERRANDS } from './market.js';
 import { ACTIVITY_STOPS, nearbyActivity } from './activitySites.js';
 import { HarbourCart } from './harbourCart.js';
 import { Morning, CHURCH_STEPS } from './morning.js';
 import { HagiaSophia } from './hagiaSophia.js';
 import { installTouch, IS_TOUCH } from './touch.js';
 import { InventoryPanel } from './inventoryPanel.js';
+import { pictogram, citizenPortrait } from './pictograms.js';
 import { Fellowship } from './multiplayer/fellowship.js';
 
 // ----- content (drafted; refined in the content pass) --------------------------
@@ -193,6 +194,7 @@ async function boot() {
   let marketChoices = [];
   const marketScreen = document.createElement('div');
   marketScreen.className = 'screen';
+  marketScreen.id = 'market-screen';
   marketScreen.style.display = 'none';
   marketScreen.style.overflowY = 'auto';
   marketScreen.setAttribute('role', 'dialog');
@@ -303,21 +305,31 @@ async function boot() {
     const conversation = market.conversation(npc, branch);
     marketChoices = conversation.choices;
     text.textContent = conversation.paragraphs.join(' ') + (morning.run ? ` Your purse holds ${morning.run.gold} gold.` : '');
-    marketScreen.append(title, text);
-    const button = (label, action) => {
+    const header=document.createElement('div');header.className='conversation-heading';header.append(portraitOf(npc),title);
+    marketScreen.append(header);
+    const goods=document.createElement('div');goods.className='conversation-goods';const goodsLabel=document.createElement('span');goodsLabel.textContent=npc.trade.goods==='work'?'Work supplies':npc.trade.goods;goods.append(pictogram(npc.trade.goods),goodsLabel);marketScreen.append(goods,text);
+    const errand=market.activeErrand(branch);
+    if(errand?.from===npc.id||errand?.to===npc.id){const delivery=document.createElement('div');delivery.className='conversation-delivery';const label=document.createElement('span');const target=market.npcs.find(n=>n.id===errand.to);label.textContent=`${errand.parcel} → ${target?.name??'recipient'}`;delivery.append(pictogram(`parcel:${errand.id}`),label);marketScreen.append(delivery);}
+    const button = (label, action, icon = null) => {
       const b = document.createElement('button'); b.className = 'btn'; b.textContent = label; b.onclick = action;
+      if(icon){b.prepend(pictogram(icon));b.classList.add('illustrated-choice');}
       marketScreen.appendChild(b); return b;
     };
-    for (const [i, choice] of marketChoices.entries()) button(`${i + 1} · ${choice.label}`, () => resolveMarket(choice.action));
+    for (const [i, choice] of marketChoices.entries()) button(`${i + 1} · ${choice.label}`, () => resolveMarket(choice.action),['accept','deliverQuietly','deliverForPraise'].includes(choice.action)?`parcel:${(errand??ERRANDS.find(e=>e.from===npc.id))?.id}`:null);
     if(morning.run && !morning.run.boots) {
       const shoes=button(morning.run.gold>=20?'Buy swift shoes · 20 gold (+15% walking speed)':'Swift shoes · 20 gold required',()=>{
         if(morning.buyShoes())showMarket(npc);
-      });
+      },'swiftShoes');
       shoes.disabled=morning.run.gold<20;
     }
     button('Leave · Escape', closeMarket);
-    button('Inspect belongings', () => showInventory(npc));
+    button('Inspect belongings', () => showInventory(npc),'basket');
     marketScreen.querySelector('button').focus();
+  }
+  function portraitOf(npc){
+    const index=market.npcs.indexOf(npc),tunic=new THREE.Color(),skin=new THREE.Color();
+    market.bodies.getColorAt(index,tunic);market.heads.getColorAt(index,skin);
+    return citizenPortrait(tunic.getStyle(),skin.getStyle());
   }
   function resolveMarket(choice) {
     if (!activeVendor || !marketChoices.some(c => c.action === choice)) return;
@@ -356,7 +368,7 @@ async function boot() {
     const citizen = !near('E', 2.6) && !near('A', 2.6) && market.nearest(player.pos);
     if (citizen) {
       if (citizen.trade) showMarket(citizen);
-      else hud.message(`${citizen.name}: “${citizen.line}”`, 6500);
+      else hud.message(`${citizen.name}: “${citizen.line}”`, 6500, portraitOf(citizen));
       return;
     }
     if (near('E', 2.4) && elderCooldown <= 0) {
@@ -559,7 +571,7 @@ async function boot() {
     if(state==='journal') {if(e.code==='KeyJ'||e.code==='Escape'){morning.journal.style.display='none';state='explore';player.clearKeys();}return;}
     if(state==='explore'&&morning.run&&!e.repeat){
       if(e.code==='KeyC'){morning.clock=!morning.clock;return;}
-      if(e.code==='KeyJ'){state='journal';player.clearKeys();player.unlock();morning.journal.style.display='flex';return;}
+      if(e.code==='KeyJ'){state='journal';player.clearKeys();player.unlock();morning.refreshJournal();morning.journal.style.display='flex';return;}
     }
     if (state === 'cart') { harbourCart.key(e, true); return; }
     if (state === 'activity') { activities.key(e, true); return; }

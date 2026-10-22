@@ -1,4 +1,6 @@
-import { SITES } from './config.js';
+import { SITES, HARBOURS } from './config.js';
+import { HAGIA_NOTE } from './city.js';
+import { pictogram } from './pictograms.js';
 export const CHURCH_STEPS = { x: 52.5, z: 310.5 };
 const SERVICE = 720, CLOSE = 900;
 export class Morning {
@@ -10,9 +12,12 @@ export class Morning {
     document.getElementById('hud').appendChild(this.el);
     this.journal=document.createElement('section');this.journal.className='screen';this.journal.id='morning-journal';
     this.journal.style.cssText='display:none;overflow:auto;align-items:stretch;justify-content:flex-start;text-align:left;padding:24px;background:#120d07;z-index:40;gap:12px';
-    const title=document.createElement('h2');title.textContent='A MORNING IN CONSTANTINOPLE';this.journal.appendChild(title);
-    const note=document.createElement('p');note.textContent='Time rests while you read. Carry the bread to Theodora, the water carrier, and reach Hagia Sophia before the service bell. J / Esc returns to the street.';this.journal.appendChild(note);
-    for(const site of SITES){const section=document.createElement('details'),heading=document.createElement('summary'),text=document.createElement('p');heading.textContent=site.label;text.textContent=site.note;section.append(heading,text);this.journal.appendChild(section);}
+    const title=document.createElement('h2');title.textContent='A MORNING IN CONSTANTINOPLE';title.prepend(pictogram('books'));this.journal.appendChild(title);
+    const note=document.createElement('p');note.textContent='Time rests while you read. Your current tasks are below. Open a landmark to learn about it. J / Esc returns to the street.';this.journal.appendChild(note);
+    this.journalJourney=document.createElement('div');this.journalJourney.className='journal-journey';this.journal.appendChild(this.journalJourney);
+    const landmarks=[{label:'HAGIA SOPHIA',kind:'church',note:HAGIA_NOTE},...SITES,...HARBOURS.map(site=>({...site,kind:'ship'}))];
+    for(const site of landmarks){const section=document.createElement('details'),heading=document.createElement('summary'),text=document.createElement('p');const label=document.createElement('span');label.textContent=site.label;heading.append(pictogram(site.kind),label);text.textContent=site.note;section.append(heading,text);this.journal.appendChild(section);}
+    const back=document.createElement('button');back.className='btn journal-return';back.textContent='Return to the street · J / Esc';back.onclick=()=>window.dispatchEvent(new KeyboardEvent('keydown',{code:'Escape'}));this.journal.appendChild(back);
     document.getElementById('stage').appendChild(this.journal);
   }
   get run(){
@@ -25,6 +30,13 @@ export class Morning {
       });
     }
     return run;
+  }
+  refreshJournal(){
+    this.journalJourney.replaceChildren();
+    const errand=this.market.activeErrand(this.branch);
+    const card=(icon,text)=>{const el=document.createElement('div'),label=document.createElement('span');label.textContent=text;el.append(pictogram(icon),label);this.journalJourney.appendChild(el);};
+    if(errand){const target=this.market.npcs.find(n=>n.id===errand.to);card(`parcel:${errand.id}`,`Carry ${errand.parcel} to ${target?.name??'its recipient'}.`);}
+    card('church',this.run?.arrived?'You have reached Hagia Sophia. The church remains open.':'Reach Hagia Sophia before the service bell.');
   }
   begin(){
     if(!this.run){this.branch.flags.morning={elapsed:0,bell:0,gold:0,boots:false,rewards:{},arrived:null};

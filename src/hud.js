@@ -86,8 +86,10 @@ export class Hud {
 
   setRoom(text) { this.el.room.textContent = text; }
 
-  message(text, dur = 2400) {
+  message(text, dur = 2400, visual = null) {
     this.el.msg.textContent = text;
+    this.el.msg.classList.toggle('illustrated-message', !!visual);
+    if (visual) this.el.msg.prepend(visual);
     this.el.msg.classList.add('show');
     clearTimeout(this.msgTimer);
     this.msgTimer = setTimeout(() => this.el.msg.classList.remove('show'), dur);

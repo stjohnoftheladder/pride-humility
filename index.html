@@ -301,6 +301,37 @@
     .inventory-owner small { grid-column: 2 / -1; color: var(--gold-dim); font-size: 9px; line-height: 1.6; }
     #inventory-screen .btn { font-size: 11px; padding: 8px 14px; }
     #inventory-screen .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    #morning-journal > * { width: 100%; max-width: 760px; box-sizing: border-box; margin: 0 auto; }
+    #morning-journal h2 { display: flex; align-items: center; gap: 14px; font-size: 18px; line-height: 1.6; }
+    #morning-journal h2 .pictogram { flex: 0 0 36px; width: 36px; height: 36px; }
+    #morning-journal p { font-size: 12px; line-height: 1.8; }
+    #morning-journal details { border: 1px solid #665033; background: #20180f; }
+    #morning-journal summary { display: grid; grid-template-columns: 36px 1fr 16px; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; font-size: 12px; line-height: 1.6; color: var(--gold); list-style: none; }
+    #morning-journal summary::-webkit-details-marker { display: none; }
+    #morning-journal summary::after { content: '+'; }
+    #morning-journal details[open] summary::after { content: '−'; }
+    #morning-journal summary .pictogram { width: 36px; height: 36px; }
+    #morning-journal details p { margin: 0; padding: 0 18px 16px 62px; }
+    .journal-journey { display: flex; flex-wrap: wrap; gap: 10px; }
+    .journal-journey > div { display: flex; flex: 1 1 220px; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--gold-dim); background: #282013; font-size: 11px; line-height: 1.7; }
+    .journal-journey .pictogram { flex: 0 0 40px; width: 40px; height: 40px; }
+    #morning-journal .journal-return { font-size: 11px; margin-bottom: 10px; }
+    #market-screen { justify-content: flex-start; padding: 24px 20px; gap: 12px; }
+    #market-screen > * { max-width: 620px; box-sizing: border-box; }
+    .conversation-heading { display: flex; align-items: center; gap: 18px; text-align: left; width: 100%; }
+    .conversation-heading h2 { font-size: 17px; line-height: 1.6; margin: 0; }
+    .citizen-portrait { flex: 0 0 64px; width: 64px; height: 72px; padding: 4px; box-sizing: border-box; border: 1px solid #665033; background: #20180f; }
+    .conversation-goods, .conversation-delivery { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font-size: 11px; line-height: 1.6; color: var(--gold-dim); }
+    .conversation-goods { text-transform: capitalize; }
+    .conversation-goods .pictogram { flex: 0 0 28px; width: 28px; height: 28px; }
+    .conversation-delivery { padding: 10px 12px; border: 1px solid #665033; background: #20180f; }
+    .conversation-delivery .pictogram { flex: 0 0 36px; width: 36px; height: 36px; }
+    #market-screen p { font-size: 12px; line-height: 1.8; margin: 0; text-align: left; width: 100%; }
+    #market-screen .btn { width: 100%; font-size: 11px; line-height: 1.7; }
+    .illustrated-choice { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .illustrated-choice .pictogram { flex: 0 0 28px; width: 28px; height: 28px; }
+    #msg.illustrated-message { display: flex; align-items: center; gap: 14px; padding: 12px; background: #120d07ed; border: 1px solid var(--gold-dim); text-align: left; font-size: 13px; }
+    #msg .citizen-portrait { flex-basis: 44px; width: 44px; height: 52px; }
     .hint { font-size: 12px; color: var(--gold-dim); }
 
     #fatal { display: none; position: fixed; inset: 0; z-index: 99; align-items: center;

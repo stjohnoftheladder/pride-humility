@@ -58,6 +58,19 @@ export function pictogram(kind) {
   return svg;
 }
 
+/** The same simple head and tunic used by the street's instanced citizens. */
+export function citizenPortrait(tunic, skin) {
+  const svg = pictogram('person');
+  svg.classList.add('citizen-portrait');
+  svg.replaceChildren();
+  for (const [d, fill] of [['M4 24V18Q4 12 12 12Q20 12 20 18V24Z', tunic], ['M8 7A4 4 0 1 0 16 7A4 4 0 1 0 8 7Z', skin], ['M9 15L12 19L15 15', 'none']]) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    for (const [key, value] of Object.entries({ d, fill, stroke: '#f3d276', 'stroke-width': '.65', 'stroke-linejoin': 'round' })) path.setAttribute(key, value);
+    svg.appendChild(path);
+  }
+  return svg;
+}
+
 // Map icons are deliberately monochrome and painted only with the static plan.
 const canvasPaths = new Map();
 export function drawPictogram(ctx, kind, x, y, size = 16) {
