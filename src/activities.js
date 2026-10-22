@@ -191,3 +191,6 @@ export class LocationActivities {
   }
   snapshot() { if(!this.active)return null;const g=this.game;return {id:this.active.id,outcome:g.done,water:g.water,filled:[...g.filled],time:g.time,evidence:[...g.seen]}; }
 }
+
+const ROOMS = { aqueduct: 'The Aqueduct of Valens', forumConstantine: 'The Forum of Constantine' };
+export default class extends LocationActivities { get room() { return ROOMS[this.active?.id]; } }

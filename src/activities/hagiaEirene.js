@@ -12,6 +12,8 @@ const NOTES = [293.7, 329.6, 349.2, 392, 440, 392, 349.2, 293.7];
 const WINDOW = 0.16, YOURS = SUNG * PART.filter((p) => p === 'all').length;
 
 export class HagiaEireneActivity extends SiteActivity {
+  clock = false;
+  listPeople = true;
   title = 'THE SHARED PHRASE';
   room = 'Hagia Eirene';
   controls = 'WASD walk · E begin · Space sing on your beats (Shift sings out) · Q / Esc leave · R retry';
@@ -33,7 +35,7 @@ export class HagiaEireneActivity extends SiteActivity {
     for (const l of Object.values(this.lamps)) { l.material.opacity = 0.25; l.scale.setScalar(1); l.material.color.set(0xf3d276); }
     return { running: false, time: 0, beat: -1, hits: 0, misses: 0, strays: 0, overs: 0, listeners: 0, hit: new Set(), glow: { cantor: 0, kassia: 0, you: 0 }, drowned: 0 };
   }
-  interact(code, target, e) {
+  act(code, target, e) {
     const g = this.game;
     if (code === 'KeyE' && (target?.role === 'place' || target?.role === 'cantor') && !g.running) {
       g.running = true; g.time = -BEAT;     // a breath before the first beat

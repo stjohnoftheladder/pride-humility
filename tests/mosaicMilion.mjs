@@ -13,7 +13,7 @@ export async function testMosaicMilion(browser, newPage, check) {
 
   await enter('mosaicPeristyle');
   check('mosaic: E at the court loads the activity in the world with a docked HUD', await run(() => {
-    const g = window.__game, el = document.getElementById('mosaic-hud');
+    const g = window.__game, el = document.getElementById('site-activity-hud');
     return g.level.group.visible && el.style.display === 'block' && el.parentElement.id === 'world-play-dock';
   }));
   check('mosaic: tiles and figures stand on open floor inside the court', await run(() => {
@@ -82,13 +82,13 @@ export async function testMosaicMilion(browser, newPage, check) {
   const timeout = await run(() => { const g = window.__game, a = g.activities(); g.key('KeyR'); a.update(121); return { ...a.snapshot(), grace: g.branch.grace }; });
   check('mosaic: unfinished work is retryable without moral change', timeout.outcome === 'unfinished' && timeout.grace === 1, JSON.stringify(timeout));
   await page.keyboard.press('q');
-  check('mosaic: Q returns to the road and hides the HUD', await run(() => window.__game.state() === 'explore' && document.getElementById('mosaic-hud').style.display === 'none'));
+  check('mosaic: Q returns to the road and hides the HUD', await run(() => window.__game.state() === 'explore' && document.getElementById('site-activity-hud').style.display === 'none'));
 
   await enter('milion');
   check('milion: the route board and porter stand inside the open crossing', await run(() => {
     const g = window.__game, stop = g.activityStops.find(s => s.id === 'milion');
     return !g.level.collideCircle(stop.x, stop.z, 0.4, { x: stop.x, z: stop.z }) && !g.level.collideCircle(68, 317, 0.4, { x: 68, z: 317 })
-      && document.getElementById('milion-hud').parentElement.id === 'world-play-dock';
+      && document.getElementById('site-activity-hud').parentElement.id === 'world-play-dock';
   }));
   const settle = 'for (let i = 0; i < 600 && a.game.travelers.some(t => ["walking","astray","thanking","guessed"].includes(t.state)) && !a.game.done; i++) a.update(1 / 30);';
   const astray = await run((settle) => {

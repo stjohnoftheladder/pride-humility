@@ -171,20 +171,15 @@ async function boot() {
     const playing = ['activity', 'cart', 'race'].includes(state)
       || (state === 'paused' && ['activity', 'cart', 'race'].includes(resumeTo));
     playDock.style.display = playing ? 'flex' : 'none';
-    for (const id of ['msg', 'world-activity-hud', 'landmark-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt']) {
+    for (const id of ['msg', 'world-activity-hud', 'site-activity-hud', 'palace-activity-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt']) {
       const el = document.getElementById(id); if (!el) continue;
       const parent = playing ? playDock : document.getElementById(id === 'engage-prompt' ? 'explore-info' : 'hud');
       if (el.parentElement !== parent) parent.appendChild(el);
     }
   }
-  let activities = null, locationActivities = null;
-  // Landmark activities in their own modules, each lazy-loaded on first entry.
-  const SITE_ACTIVITIES = {
-    pantokrator: () => import('./activities/pantokrator.js'),
-    stoudios: () => import('./activities/stoudios.js'),
-    hagiaEirene: () => import('./activities/hagiaEirene.js'),
-  };
-  const siteActivities = {};
+  // One coordinator per activity module, built on first entry and kept.
+  let activities = null;
+  const coordinators = new Map();
   const morning = new Morning({branch,player,hud,audio,market,onArrival:(title,text)=>{
     state='ending';player.clearKeys();player.unlock();hud.showEnding(title,text,'“Let us attend.”',true);
   }});
@@ -235,33 +230,22 @@ async function boot() {
     hud.showExplore();
     player.clearKeys(); hud.hidePrompt();
     try {
-      if (SITE_ACTIVITIES[stop.id]) {
-        const module = await SITE_ACTIVITIES[stop.id]();
-        activities = siteActivities[stop.id] ??= new module.default({
-          level, player, hud, branch, audio, parent: document.getElementById('hud'),
-          leave: async ({ walkingAway = false } = {}) => {
-            state = 'explore'; hud.setRoom(roomLabel());
-            if (!walkingAway) { player.clearKeys(); await player.lock(); }
-          },
-          onResult: (id) => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); morning.reward(`activity:${id}`, 6); },
-        });
-        state = 'activity';
-        hud.setRoom(activities.room);
-        activities.start(stop);
-        return;
-      }
-      const module = await import('./activities.js');
-      activities = locationActivities ??= new module.LocationActivities({
-        level, player, hud, branch, parent: document.getElementById('hud'),
+      // Each stop names its module; a module's default export coordinates
+      // every stop that loads it, and `room` names the place being played.
+      const module = await stop.load();
+      const Coordinator = module.default;
+      activities = coordinators.get(Coordinator) ?? new Coordinator({
+        level, player, hud, branch, audio, parent: document.getElementById('hud'),
         leave: async ({ walkingAway = false } = {}) => {
           state = 'explore'; hud.setRoom(roomLabel());
           if (!walkingAway) { player.clearKeys(); await player.lock(); }
         },
-        onResult: () => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); morning.reward(`activity:${activities.active.id}`,6); },
+        onResult: () => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); morning.reward(`activity:${activities.active.id}`, 6); },
       });
+      coordinators.set(Coordinator, activities);
       state = 'activity';
-      hud.setRoom(stop.id === 'aqueduct' ? 'The Aqueduct of Valens' : 'The Forum of Constantine');
-      activities.start(module.ACTIVITIES.find(a => a.id === stop.id));
+      activities.start(stop);
+      hud.setRoom(activities.room ?? module.ROOM);
     } catch (error) {
       state = 'explore';
       hud.message('This activity could not load. Press E to try again.', 3500);
@@ -896,6 +880,7 @@ async function boot() {
       market,
       activityStops: ACTIVITY_STOPS,
       activities: () => activities,
+      siteActivity: () => (activities?.active ? activities : null),
       harbourCart,
       morning,
       hud,

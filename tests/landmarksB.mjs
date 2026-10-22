@@ -7,7 +7,7 @@ export async function testLandmarksB(browser, newPage, check) {
       if (g.state() === 'activity') g.key('KeyQ');
       g.setState('explore'); g.teleport(stop.x, stop.z); g.key('KeyE');
     }, id);
-    await page.waitForFunction(id => window.__game.state() === 'activity' && window.__game.siteActivity()?.active?.id === id, id);
+    await page.waitForFunction(id => window.__game.state() === 'activity' && window.__game.activities()?.active?.id === id, id);
   }
 
   // ----- Basilica Cistern ---------------------------------------------------------
@@ -137,7 +137,7 @@ export async function testLandmarksB(browser, newPage, check) {
     const g = window.__game, s = g.activityStops.find(a => a.id === 'zeuxippus');
     g.setState('explore'); g.teleport(s.x, s.z); g.key('KeyE');
   });
-  await fresh.page.waitForFunction(() => window.__game.siteActivity()?.active);
+  await fresh.page.waitForFunction(() => window.__game.activities()?.active);
   await fresh.page.evaluate(() => {
     const g = window.__game, a = g.siteActivity(); g.teleport(19.3, 309.6);
     for (let i = 0; i < 600 && a.game.warmth < 0.55; i++) { a.keys.Space = true; a.update(1 / 60); }

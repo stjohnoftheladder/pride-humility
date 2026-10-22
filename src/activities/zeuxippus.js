@@ -13,10 +13,11 @@ const COLD = new THREE.Color(0x3f7fb0), HOT = new THREE.Color(0xd0704a);
 
 export default class ZeuxippusActivity extends SiteActivity {
   constructor(options) {
-    super({ ...options, id: 'zeuxippus', room: 'The Baths of Zeuxippus', title: 'THE WARM BASIN' });
+    super(options, { room: 'The Baths of Zeuxippus', title: 'THE WARM BASIN',
+      controls: 'WASD walk · hold Space at a tap · E mats / tiles / Theodora · F take the basin · Q / Esc leave · R retry' });
   }
-  build(site) {
-    const { group, targets } = site, stone = this.level.mat.get('stone_floor'), wood = this.level.mat.get('wood_floor');
+  build(group, site) {
+    const { targets } = site, stone = this.level.mat.get('stone_floor'), wood = this.level.mat.get('wood_floor');
     const tileGeometry = new THREE.BoxGeometry(1.4, 0.04, 1.4);
     const dry = new THREE.MeshLambertMaterial({ color: 0xcfc6b4 });
     const wet = new THREE.MeshStandardMaterial({ color: 0x8fb6c8, roughness: 0.08, metalness: 0.3 });
@@ -124,6 +125,6 @@ export default class ZeuxippusActivity extends SiteActivity {
   }
   snapshot() {
     if (!this.active) return null; const g = this.game;
-    return { id: this.id, outcome: g.done, warmth: g.warmth, covered: [...g.covered], carrying: g.carrying, walking: g.walking, visitor: { x: this.site.visitor.x, z: this.site.visitor.z }, guest: g.guest };
+    return { id: this.active.id, outcome: g.done, warmth: g.warmth, covered: [...g.covered], carrying: g.carrying, walking: g.walking, visitor: { x: this.site.visitor.x, z: this.site.visitor.z }, guest: g.guest };
   }
 }

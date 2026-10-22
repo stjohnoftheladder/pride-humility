@@ -18,6 +18,8 @@ export function strokePhase(time) { return (time % BEAT) / BEAT; }
 export function onStroke(time) { const p = strokePhase(time); return p >= 0.86 || p <= 0.06; }
 
 export class StoudiosActivity extends SiteActivity {
+  clock = false;
+  listPeople = true;
   title = 'THE SCRIPTORIUM';
   room = 'Saint John of Stoudios';
   controls = 'WASD walk · Space lay a stroke as the ring closes · E ask / present · F gild over · Q / Esc leave · R retry';
@@ -46,7 +48,7 @@ export class StoudiosActivity extends SiteActivity {
     this.site.targets.push({ ...this.person(this.site.group, 'Brother Ioannikios · Elder scribe', 'elder', 69.5, 192, 0x3f3a33), role: 'elder' });
   }
   reset() { return { time: 0, stroke: 0, laid: [], wobbles: 0, blot: null, revealed: false, repaired: false, hidden: false, page: [] }; }
-  interact(code, target) {
+  act(code, target) {
     const g = this.game;
     if (target?.role === 'desk' && code === 'Space') this.layStroke();
     else if (target?.role === 'desk' && code === 'KeyF' && g.blot?.wet && !g.revealed) {

@@ -269,3 +269,6 @@ export class PalaceActivities {
       lead: s.walkers?.[0].x, rear: s.walkers ? Math.min(...s.walkers.map(w => w.x)) : null };
   }
 }
+
+const ROOMS = { augustaion: 'The Augustaion', chalke: 'The Chalke' };
+export default class extends PalaceActivities { get room() { return ROOMS[this.active?.id]; } }

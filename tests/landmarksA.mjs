@@ -13,8 +13,8 @@ export async function testLandmarksA(browser, newPage, check) {
 
   // ---- Pantokrator ----------------------------------------------------------
   await enter('pantokrator');
-  check('pantokrator: E at the road sign starts the hospital tray', await page.locator('#landmark-hud').isVisible());
-  await page.waitForFunction(() => document.getElementById('landmark-hud').parentElement.id === 'world-play-dock');
+  check('pantokrator: E at the road sign starts the hospital tray', await page.locator('#site-activity-hud').isVisible());
+  await page.waitForFunction(() => document.getElementById('site-activity-hud').parentElement.id === 'world-play-dock');
   check('pantokrator: the activity panel joins the bottom dock', true);
   const remote = await page.evaluate(() => {
     const g = window.__game, a = g.activities(); g.teleport(60, 112); g.key('KeyE'); a.update(0);
@@ -65,7 +65,7 @@ export async function testLandmarksA(browser, newPage, check) {
   });
   check('pantokrator: credit cannot be settled before the patients are served', early === null);
   await page.keyboard.press('q');
-  check('pantokrator: Q returns to the road and hides the panel', await page.evaluate(() => window.__game.state() === 'explore') && await page.locator('#landmark-hud').isHidden());
+  check('pantokrator: Q returns to the road and hides the panel', await page.evaluate(() => window.__game.state() === 'explore') && await page.locator('#site-activity-hud').isHidden());
 
   // ---- Stoudios -------------------------------------------------------------
   await enter('stoudios');
@@ -108,7 +108,7 @@ export async function testLandmarksA(browser, newPage, check) {
 
   // ---- Hagia Eirene ---------------------------------------------------------
   await enter('hagiaEirene');
-  check('hagiaEirene: E at the road sign starts the shared phrase', await page.locator('#landmark-hud').isVisible());
+  check('hagiaEirene: E at the road sign starts the shared phrase', await page.locator('#site-activity-hud').isVisible());
   // sing: press Space close to each of your beats (and Kassia's, when proud)
   const sing = (mode) => page.evaluate((mode) => {
     const g = window.__game, a = g.activities(); g.key('KeyR'); g.teleport(90, 317.6); a.update(1 / 60); g.key('KeyE');

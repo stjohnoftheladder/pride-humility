@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { WorldActivity, makeLabel, makePerson } from './worldKit.js';
+import { SiteActivity, makeLabel, makePerson } from './siteKit.js';
 
 export const ROOM = 'The Milion';
 const BOARD = { x: 63, z: 318 };
@@ -18,14 +18,13 @@ const TRAVELERS = [
 ];
 const SPEED = 2.6;
 
-export default class Milion extends WorldActivity {
+export default class Milion extends SiteActivity {
   constructor(options) {
-    super(options, { hudId: 'milion-hud', title: 'MILE ZERO', center: BOARD, radius: 13,
+    super(options, { room: ROOM, title: 'MILE ZERO', center: BOARD, radius: 13, timeLimit: 120,
       controls: 'WASD walk · E turn the board / ask · F point the way · Q / Esc leave · R retry' });
   }
-  build() {
-    const group = this.group = new THREE.Group(); group.name = 'world-activity-milion';
-    this.level.featureGroups.milion.add(group);
+  build(group) {
+    this.group = group;
     const stone = this.level.mat.get('stone_wall'), gold = this.level.mat.get('gold');
     const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 0.85, 10), stone);
     pedestal.position.set(BOARD.x, 0.425, BOARD.z);
@@ -45,7 +44,7 @@ export default class Milion extends WorldActivity {
     this.level.npcs.push({ id: this.porter.id, name: this.porter.name, role: 'worker', ...PORTER });
     this.walkers = TRAVELERS.map((t, i) => makePerson(this.level, group, { id: `milion-traveler-${i}`, name: `Seeks ${t.seeks}`, x: 0, z: 0, color: t.color }));
   }
-  newGame() {
+  reset() {
     const travelers = TRAVELERS.map((t, i) => ({ ...t, state: 'waiting', x: 61.6 - i * 1.1, z: 319.4 + i * 0.7, path: null, asked: false, pause: 0 }));
     return { pointer: 0, shown: 0, current: 0, travelers, thanks: null };
   }
@@ -53,7 +52,7 @@ export default class Milion extends WorldActivity {
   timeoutText() { return 'The square empties before every traveler finds the way. Try again.'; }
   traveler() { return this.game.travelers[this.game.current] ?? null; }
   arrived() { return this.game.travelers.filter(t => t.state === 'arrived').length; }
-  near() { return this.nearest([{ role: 'board', ...BOARD }, { role: 'porter', ...PORTER }], 1.9); }
+  near() { return this.nearest(1.9, [{ role: 'board', ...BOARD }, { role: 'porter', ...PORTER }]); }
   act(code) {
     const g = this.game, t = this.near(), traveler = this.traveler(); if (!t) return;
     if (t.role === 'porter' && code === 'KeyE') {

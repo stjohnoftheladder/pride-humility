@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { WorldActivity, makeLabel, makePerson } from './worldKit.js';
+import { SiteActivity, makeLabel, makePerson } from './siteKit.js';
 
 export const ROOM = 'The Mosaic Peristyle';
 const CENTER = { x: 76, z: 264 };
@@ -37,14 +37,13 @@ function tileGeometry(size) {
   return g;
 }
 
-export default class MosaicPeristyle extends WorldActivity {
+export default class MosaicPeristyle extends SiteActivity {
   constructor(options) {
-    super(options, { hudId: 'mosaic-hud', title: 'THE SHARED FLOOR', center: CENTER, radius: 15,
+    super(options, { room: ROOM, title: 'THE SHARED FLOOR', center: CENTER, radius: 15, timeLimit: 120,
       controls: 'WASD walk · E turn tile / speak · Space press tile · F / H at the master · Q / Esc leave · R retry' });
   }
-  build() {
-    const group = this.group = new THREE.Group(); group.name = 'world-activity-mosaicPeristyle';
-    this.level.featureGroups.mosaicPeristyle.add(group);
+  build(group) {
+    this.group = group;
     const material = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
     const geometry = tileGeometry(1.1);
     this.dummy = new THREE.Object3D();
@@ -70,7 +69,7 @@ export default class MosaicPeristyle extends WorldActivity {
     this.shared = makeLabel(group, 'One floor, two hands', CENTER.x, 2.6, CENTER.z); this.shared.visible = false;
     for (const t of [this.master, this.novice]) this.level.npcs.push({ id: t.id, name: t.name, role: 'witness', x: t.x, z: t.z });
   }
-  newGame() {
+  reset() {
     return { rotation: PIECES.map((p, i) => (p.target + START_OFFSETS[i]) % 4), shown: PIECES.map((p, i) => (p.target + START_OFFSETS[i]) % 4),
       border: 0, loose: -1, press: 0, repaired: false, last: -1 };
   }
@@ -81,7 +80,7 @@ export default class MosaicPeristyle extends WorldActivity {
   targets() {
     return [...PIECES.map((p, i) => ({ ...p, role: 'tile', index: i })), { ...this.master, role: 'master' }, { ...this.novice, role: 'novice', x: this.novice.figure.position.x, z: this.novice.figure.position.z }];
   }
-  near() { return this.nearest(this.targets(), 0.8) ?? this.nearest(this.targets().filter(t => t.role !== 'tile'), 1.8); }
+  near() { return this.nearest(0.8, this.targets()) ?? this.nearest(1.8, this.targets().filter(t => t.role !== 'tile')); }
   act(code) {
     const g = this.game, t = this.near(); if (!t) return;
     if (t.role === 'tile' && code === 'KeyE') {

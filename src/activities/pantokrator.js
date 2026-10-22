@@ -21,6 +21,8 @@ const PATIENTS = [
 const TABLE = { x: 64.2, z: 112.5 }, BED_X = 70.8;
 
 export class PantokratorActivity extends SiteActivity {
+  clock = false;
+  listPeople = true;
   title = 'THE HOSPITAL TRAY';
   room = 'The Pantokrator Monastery';
   controls = 'WASD walk (walk, do not run, with liquids) · E pick up / serve / ask · Q / Esc leave · R retry';
@@ -73,7 +75,7 @@ export class PantokratorActivity extends SiteActivity {
     this.lastVel.set(this.player.vel.x, this.player.vel.z);
     return { tray: [], known: new Set(), served: [], slosh: 0, spills: 0, asked: false, credit: null };
   }
-  interact(code, target) {
+  act(code, target) {
     const g = this.game;
     if (!target || code !== 'KeyE' && code !== 'KeyF' && code !== 'KeyH') return;
     if (target.role === 'item' && code === 'KeyE') {

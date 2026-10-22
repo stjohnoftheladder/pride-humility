@@ -12,11 +12,12 @@ const LANES = [[14, 280], [20, 281], [26, 280], [32, 281], [14, 296], [20, 295],
 
 export default class CisternActivity extends SiteActivity {
   constructor(options) {
-    super({ ...options, id: 'cistern', room: 'The Basilica Cistern', title: 'THE LAMP IN THE CISTERN' });
+    super(options, { room: 'The Basilica Cistern', title: 'THE LAMP IN THE CISTERN',
+      controls: 'WASD walk · E call / share the lamp · F claim at the exit · Q / Esc leave · R retry' });
     this.scene = this.level.scene;
   }
-  build(site) {
-    const { group, targets } = site, stone = this.level.mat.get('stone_wall');
+  build(group, site) {
+    const { targets } = site, stone = this.level.mat.get('stone_wall');
     // A low vault closes out the sky while the lamp is lit.
     site.vault = new THREE.Mesh(new THREE.BoxGeometry(37, 0.3, 19), new THREE.MeshLambertMaterial({ color: 0x1b1612 }));
     site.vault.position.set(24, 3.15, 288); site.vault.visible = false; group.add(site.vault);
@@ -135,6 +136,6 @@ export default class CisternActivity extends SiteActivity {
   }
   snapshot() {
     if (!this.active) return null; const g = this.game, w = this.site.worker;
-    return { id: this.id, outcome: g.done, found: g.found, sharing: g.sharing, waiting: g.waiting, oil: g.oil, worker: { x: w.x, z: w.z }, bearer: { x: this.site.bearer.x, z: this.site.bearer.z } };
+    return { id: this.active.id, outcome: g.done, found: g.found, sharing: g.sharing, waiting: g.waiting, oil: g.oil, worker: { x: w.x, z: w.z }, bearer: { x: this.site.bearer.x, z: this.site.bearer.z } };
   }
 }
