@@ -1,0 +1,13 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "pride-humility-multiplayer",
+  "main": "index.js",
+  "compatibility_date": "2026-10-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": {
+    "bindings": [{ "name": "GATHERINGS", "class_name": "Gathering" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Gathering"] }],
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "vars": { "ALLOWED_ORIGINS": "https://pride-humility.pages.dev,http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:5310" }
+}

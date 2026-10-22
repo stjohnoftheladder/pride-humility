@@ -148,6 +148,19 @@ export class RoadMarket {
     return best;
   }
 
+  bindInventories(branch) {
+    this.branch = branch;
+    for (const npc of this.npcs) {
+      const initial = npc.trade ? { [npc.trade.goods]: 6, gold: 12 } : { provision: 1, gold: 2 };
+      for (const errand of ERRANDS) {
+        const outcome = branch.flags[`errand:${errand.id}`];
+        if ((!outcome && errand.from === npc.id)
+          || (['quiet', 'praise'].includes(outcome) && errand.to === npc.id)) initial[`parcel:${errand.id}`] = 1;
+      }
+      npc.inventory = branch.inventories.get(`npc:${npc.id}`, initial);
+    }
+  }
+
   update(dt, time, player) {
     for (let i = 0; i < this.npcs.length; i++) {
       const npc = this.npcs[i];
@@ -204,9 +217,11 @@ export class RoadMarket {
     const key = `errand:${errand.id}`;
     if (action === 'accept') {
       if (branch.flags[key] || this.activeErrand(branch)) return false;
+      if (!npc.inventory?.transferTo(branch.inventory, `parcel:${errand.id}`)) return false;
       branch.setFlag(key, 'carrying');
     } else if (['deliverQuietly', 'deliverForPraise'].includes(action)) {
       if (branch.flags[key] !== 'carrying') return false;
+      if (!branch.inventory.transferTo(npc.inventory, `parcel:${errand.id}`)) return false;
       const quiet = action === 'deliverQuietly';
       branch.setFlag(key, quiet ? 'quiet' : 'praise');
       if (quiet) branch.addGrace(2); else branch.addPride(3);

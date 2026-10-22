@@ -15,9 +15,21 @@ export class Morning {
     for(const site of SITES){const section=document.createElement('details'),heading=document.createElement('summary'),text=document.createElement('p');heading.textContent=site.label;text.textContent=site.note;section.append(heading,text);this.journal.appendChild(section);}
     document.getElementById('stage').appendChild(this.journal);
   }
-  get run(){return this.branch.flags.morning;}
+  get run(){
+    const run=this.branch.flags.morning;
+    if(run&&!Object.getOwnPropertyDescriptor(run,'gold')?.get){
+      const inventory=this.branch.inventory;
+      Object.defineProperties(run,{
+        gold:{enumerable:true,configurable:true,get:()=>inventory.count('gold'),set:value=>inventory.set('gold',value)},
+        boots:{enumerable:true,configurable:true,get:()=>inventory.count('swiftShoes')>0,set:value=>inventory.set('swiftShoes',value?1:0)},
+      });
+    }
+    return run;
+  }
   begin(){
-    if(!this.run){this.branch.flags.morning={elapsed:0,bell:0,gold:0,boots:false,rewards:{},arrived:null};this.branch.setFlag('errand:bread','carrying');this.branch.save();}
+    if(!this.run){this.branch.flags.morning={elapsed:0,bell:0,gold:0,boots:false,rewards:{},arrived:null};
+      const sender=this.market.npcs.find(n=>n.id==='vendor-4--1');
+      this.market.errandAction(sender,'accept',this.branch);this.branch.save();}
     this.player.travelBoost=this.run.boots?1.15:1;
     if(this.run.arrived)return;
     this.hud.message('The service begins after the final bell. Carry the bread to Theodora quietly, then reach Hagia Sophia. J opens the city journal; C shows the clock.',8000);

@@ -11,7 +11,15 @@ export async function testMorning(browser,newPage,check){
  check('morning: E at the church steps enters Hagia Sophia, and the arrival is recorded on entry',await page.evaluate(()=>window.__game.state()==='sophia'&&window.__game.sophia.inside&&window.__game.morning.run.arrived==='on-time'));
  await page.evaluate(()=>window.__game.exitSophia());
  check('morning: church arrival recalls a quiet delivery without requiring battles',await page.evaluate(()=>window.__game.state()==='ending'&&window.__game.morning.run.arrived==='on-time'&&document.getElementById('ending-text').textContent.includes('quietly')));
- const visits=await page.evaluate(async()=>{const g=window.__game,titles=[];localStorage.removeItem('pride-humility:homily');for(let i=0;i<2;i++){g.setState('explore');g.teleport(52.5,310.5);await g.enterSophia();await new Promise(r=>setTimeout(r,1500));titles.push(g.sophia.voice?.homily.title);g.exitSophia();}return {titles,state:g.state(),people:g.sophia.people.length};});
+ await page.evaluate(()=>localStorage.removeItem('pride-humility:homily'));
+ const titles=[];
+ for(let i=0;i<2;i++){
+   await page.evaluate(async()=>{const g=window.__game;g.setState('explore');g.teleport(52.5,310.5);await g.enterSophia();});
+   await page.waitForFunction(()=>!!window.__game.sophia.voice?.homily.title,{},{timeout:15000});
+   titles.push(await page.evaluate(()=>window.__game.sophia.voice.homily.title));
+   await page.evaluate(()=>window.__game.exitSophia());
+ }
+ const visits=await page.evaluate(titles=>({titles,state:window.__game.state(),people:window.__game.sophia.people.length}),titles);
  check('hagia sophia: each visit Chrysostom preaches the next homily, among a full congregation',visits.titles.length===2&&visits.titles[0]&&visits.titles[1]&&visits.titles[0]!==visits.titles[1]&&visits.people>300,JSON.stringify(visits));
  check('morning: no page errors',errors.length===0,JSON.stringify(errors));await page.close();
  for(const [elapsed,expected] of [[730,'late'],[901,'missed']]){

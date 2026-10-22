@@ -3,3 +3,8 @@ dist/
 *.log
 .spritecheck*
 .wrangler/
+.dev.vars*
+!.dev.vars.example
+.env.local
+.env.*.local
+/multiplayer-worker/worker-configuration.d.ts

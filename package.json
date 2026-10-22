@@ -9,9 +9,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/run.mjs"
+    "test": "node tests/run.mjs",
+    "multiplayer:dev": "wrangler dev --config multiplayer-worker/wrangler.jsonc --ip 127.0.0.1 --port 8787",
+    "multiplayer:check": "wrangler deploy --config multiplayer-worker/wrangler.jsonc --dry-run",
+    "test:multiplayer": "node tests/multiplayer.mjs",
+    "test:multiplayer:live": "node tests/live-multiplayer.mjs"
   },
   "dependencies": {
+    "@daily-co/daily-js": "^0.94.0",
     "three": "^0.160.0"
   },
   "devDependencies": {

@@ -284,6 +284,19 @@
       background: var(--surface); box-shadow: 0 0 16px #f3d27633, inset 0 0 10px #f3d2761a;
     }
     .btn:hover { background: #2a2012; box-shadow: 0 0 26px #f3d27677; }
+    #inventory-screen { z-index: 45; overflow-y: auto; justify-content: flex-start; background: #120d07; padding: 22px 28px; gap: 12px; }
+    #inventory-screen[hidden] { display: none; }
+    #inventory-screen h2 { font-size: 18px; margin: 0; }
+    #inventory-screen .inventory-note { font-size: 10px; line-height: 1.6; margin: 0; color: var(--gold-dim); }
+    .inventory-columns { display: flex; gap: 16px; width: 100%; max-width: 720px; flex-wrap: wrap; text-align: left; }
+    .inventory-owner { flex: 1 1 200px; border-top: 2px solid var(--gold-dim); min-width: 0; }
+    .inventory-owner h3 { font-size: 12px; color: var(--gold); line-height: 1.6; }
+    .inventory-owner ul { list-style: none; padding: 0; margin: 0; }
+    .inventory-owner li { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 10px; border-bottom: 1px solid #665033; background: #20180f; font-size: 11px; }
+    .inventory-count { color: var(--gold); }
+    .inventory-owner small { grid-column: 1 / -1; color: var(--gold-dim); font-size: 9px; line-height: 1.6; }
+    #inventory-screen .btn { font-size: 11px; padding: 8px 14px; }
+    #inventory-screen .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
     .hint { font-size: 12px; color: var(--gold-dim); }
 
     #fatal { display: none; position: fixed; inset: 0; z-index: 99; align-items: center;
@@ -368,7 +381,7 @@
     <h1>PRIDE &amp; HUMILITY</h1>
     <p class="verse">"Lord Jesus Christ, Son of God, have mercy on me, a sinner."</p>
     <p>Reach Hagia Sophia before the service bell.<br>Carry the bread quietly. The city has other plans for your morning.</p>
-    <p class="hint">WASD · move &nbsp;·&nbsp; MOUSE · look &nbsp;·&nbsp; E · interact &nbsp;·&nbsp; SHIFT · run &nbsp;·&nbsp; M · map</p>
+    <p class="hint">WASD · move &nbsp;·&nbsp; MOUSE · look &nbsp;·&nbsp; E · interact &nbsp;·&nbsp; SHIFT · run &nbsp;·&nbsp; M · map &nbsp;·&nbsp; I · inventory</p>
     <button class="btn" id="start-btn">BEGIN THE MORNING</button>
     <div class="hint">Esc releases the mouse.</div>
     <p class="hint" id="title-dev" style="display:none">DEV · <b>PageDown</b>/<b>PageUp</b> travel the walk · <b>1</b>–<b>9</b> / <b>Shift+1</b>–<b>Shift+4</b> toggle additions · walk up to a landmark for its card</p>
