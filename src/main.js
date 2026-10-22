@@ -177,16 +177,17 @@ async function boot() {
   document.getElementById('stage').appendChild(leaveEncounterButton);
   let activeVendor = null;
   let inventoryReturn = 'explore';
-  const inventoryPanel = new InventoryPanel(document.getElementById('stage'), () => {
-    inventoryPanel.hide();
+  const inventoryPanel = new InventoryPanel(document.getElementById('confess-screen').parentElement, () => {
     state = inventoryReturn;
+    if (state === 'market') marketScreen.style.display = 'flex';
+    inventoryPanel.hide();
     player.clearKeys();
-    if (state === 'market') marketScreen.querySelector('button')?.focus();
-    else player.lock();
+    if (state !== 'market') player.lock();
   });
   function showInventory(npc = null) {
     if (!['explore', 'market'].includes(state)) return;
     inventoryReturn = state;
+    if (state === 'market') marketScreen.style.display = 'none';
     state = 'inventory';
     player.clearKeys(); player.unlock(); hud.hidePrompt();
     inventoryPanel.show(player.inventory, npc);

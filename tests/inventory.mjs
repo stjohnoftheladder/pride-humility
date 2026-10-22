@@ -51,6 +51,21 @@ export async function testInventory(browser, newPage, check) {
   check('inventory: focus stays in dialog', await page.evaluate(() => document.activeElement === document.querySelector('#inventory-screen button')));
   await page.keyboard.press('Escape');
   check('inventory: Escape closes dialog', await page.evaluate(() => document.getElementById('inventory-screen').hidden));
+  await page.evaluate(() => window.__game.key('KeyE'));
+  const inspect = page.getByRole('button', { name: 'Inspect belongings', exact: true });
+  await inspect.click();
+  check('inventory: vendor inspection hides the conversation and sits above the game', await page.evaluate(() => {
+    const inventory = document.getElementById('inventory-screen'), vendor = document.getElementById('market-screen');
+    const button = inventory.querySelector('button'), box = button.getBoundingClientRect();
+    return window.__game.state() === 'inventory' && vendor.style.display === 'none'
+      && inventory.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2));
+  }));
+  await page.getByRole('button', { name: 'Return · I / Escape', exact: true }).click();
+  check('inventory: Return restores the same vendor and focuses Inspect belongings', await page.evaluate(() => {
+    return window.__game.state() === 'market' && document.getElementById('market-screen').style.display === 'flex'
+      && document.activeElement.textContent === 'Inspect belongings';
+  }));
+  await page.keyboard.press('Escape');
   check('inventory: parcel transfers to recipient once', await page.evaluate(() => {
     const g = window.__game, target = g.market.npcs.find(n => n.id === 'vendor-5-1');
     return g.market.errandAction(target, 'deliverQuietly', g.branch)
