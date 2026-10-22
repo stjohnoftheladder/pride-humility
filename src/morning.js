@@ -52,6 +52,8 @@ export class Morning {
     if(this.branch.flags['activity:mosaicPeristyle']==='proud')facts.push('You accepted praise for Irene’s border.');
     if(this.branch.flags['activity:milion']==='humble')facts.push('A traveler you guided came back to thank Basil the porter.');
     if(this.branch.flags['activity:milion']==='proud')facts.push('You sent a traveler off on a guess.');
+    if(this.branch.flags['activity:augustaion']==='proud')facts.push('You pushed to the front of the procession and left the elder behind.');
+    if(this.branch.flags['activity:chalke']==='humble')facts.push('Eirene’s request reached the palace with your petition.');
     facts.push(`You brought ${r.gold} gold${r.boots?' and your swift shoes':''}.`);
     this.onArrival(r.arrived==='on-time'?'BEFORE THE SERVICE BELL':r.arrived==='late'?'THE SERVICE HAS BEGUN':'AFTER THE SERVICE',`${r.arrived==='on-time'?'You reach Hagia Sophia before the service begins.':r.arrived==='late'?'You enter quietly after the service has begun.':'The service has ended. You sit in the quiet forecourt; tomorrow offers another morning.'} ${facts.join(' ')}`);
   }

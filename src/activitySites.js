@@ -11,6 +11,8 @@ export const ACTIVITY_STOPS = [
   // Landmarks with their own module load it on first entry.
   { id: 'mosaicPeristyle', label: 'Set the mosaic floor', x: 64, z: 264, load: () => import('./activities/mosaicPeristyle.js') },
   { id: 'milion', label: 'Guide the travelers', x: 59, z: 318, load: () => import('./activities/milion.js') },
+  { id: 'augustaion', label: 'Join the procession', x: 66, z: 322.5 },
+  { id: 'chalke', label: 'Carry a sealed petition', x: 73.5, z: 322.8 },
 ];
 export function nearbyActivity(pos, features) {
   return ACTIVITY_STOPS.find(a => features[a.id] !== false && Math.hypot(pos.x - a.x, pos.z - a.z) < 3.2) ?? null;
