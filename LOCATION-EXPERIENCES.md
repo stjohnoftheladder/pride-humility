@@ -1,6 +1,6 @@
 # A lived-in pilgrimage
 
-The Aqueduct, Harbour, and Forum activities are now playable; the other activities
+The Aqueduct, Harbour, Forum, Basilica Cistern, and Baths of Zeuxippus activities are now playable; the other activities
 below remain design proposals. Harbour now plays directly in the 3D quay, with
 a physical handcart, cargo obstacles, a porter, and a loading destination.
 Aqueduct and Forum also play in the city: approach physical gate handles and
@@ -24,8 +24,8 @@ doing excellent work; it does not always mean deliberately losing.
 | Forum of Constantine (playable) | Hear witnesses and inspect a purse behind a stall | Accuse the porter to satisfy the crowd | Hear the porter and sweeper; inspect the purse and return it quietly | Evidence board, witness testimony, and a remembered result |
 | Pantokrator Monastery | Prepare a tray, remember bedside needs, and carry it without spilling | Serve the influential patient first; claim another attendant's work | Follow need, share credit, ask when uncertain | Patients receive different care; an attendant offers guidance |
 | Saint John of Stoudios | Copy a short pattern with timed strokes; correct a mistake before the ink dries | Hide an error to claim a flawless manuscript | Reveal the mistake and accept instruction | The corrected page keeps its visible repair |
-| Basilica Cistern | Navigate dark column lanes carrying a lamp and follow echoes to a missing worker | Race for the exit and claim you explored alone | Share the lamp and slow down to guide the worker | Two people emerge together; the lamp is passed onward |
-| Baths of Zeuxippus | Adjust warm/cool water and arrange safe passage across wet tiles | Reserve the comfortable basin for yourself | Make it safe for an older visitor, even if your own bath waits | Visitors use the space you prepared |
+| Basilica Cistern (playable) | Navigate dark column lanes carrying a lamp and follow echoes to a missing worker | Race for the exit and claim you explored alone | Share the lamp and slow down to guide the worker | Two people emerge together; the lamp is passed onward |
+| Baths of Zeuxippus (playable) | Adjust warm/cool water and arrange safe passage across wet tiles | Reserve the comfortable basin for yourself | Make it safe for an older visitor, even if your own bath waits | Visitors use the space you prepared |
 | Mosaic Peristyle | Fit a small mosaic from rotated pieces, with a novice working on the border | Take the novice's finished section as your own | Credit the novice and repair your own misplaced tile | A shared finished pattern and a remembered collaborator |
 | Augustaion | Guide a procession through a small crowd by opening paths and matching its pace | Push people aside to put yourself at the front | Make room for the slower participants and keep the group together | The procession arrives together or leaves people behind |
 | Milion | Rotate a route board and use local clues to guide three travelers | Guess confidently rather than admit you do not know | Ask a local porter and correct your directions | Travelers reach their destinations; someone returns to thank the porter |
@@ -91,6 +91,31 @@ and the existing full-journey ending tests remain part of verification.
   them. Reuse visits must not allow farming or trivialize the three thresholds.
 - Start with authored scenarios, shared geometry, and a few reusable sounds.
   No dialogue service, procedural quest engine, or independent AI per citizen.
+
+## Basilica Cistern and Baths of Zeuxippus
+
+Both live in their own modules, `src/activities/cistern.js` and
+`src/activities/zeuxippus.js`, sharing `src/activities/siteKit.js`, and load on
+first entry. They reuse the existing `cistern` and `zeuxippus` courts.
+
+- **Cistern:** a vault closes over the court and the day dims; the lamp is the
+  only light, with ninety seconds of oil. Column lanes on the dry rim make the
+  walk weave. Ripples spread on the water by the far wall, and the HUD says
+  whether each echo grew louder. E calls to Theodoros, then E again shares the
+  lamp. He follows your footsteps at half a walking pace and stops when he
+  loses the light. Reaching the road exit with him resolves humility, and
+  Pelagia carries the lamp down for the next shift. At the exit without him,
+  F tells the foreman you explored alone (pride). Empty oil is unfinished.
+- **Baths:** stand at the warm or cool tap and hold Space; the basin water
+  shifts from blue to orange and steams above comfortable. E takes a mat from
+  the stack and lays it on a shining wet tile. E offers Theodora the basin:
+  she sways and sits back down on wet tiles, and names cold or scalding water.
+  When both are right she crosses on the mats and bathes (humility), and
+  another bather follows the same path. F at a comfortable basin takes it for
+  yourself (pride). The basin drains after 150 seconds (unfinished).
+
+Each grants a placeholder +1 grace or +1 pride once (marked `TODO balance`)
+and 6 gold in morning mode, and the arrival card remembers the outcome.
 
 ## Crowd identity policy (implemented)
 

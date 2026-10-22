@@ -171,13 +171,17 @@ async function boot() {
     const playing = ['activity', 'cart', 'race'].includes(state)
       || (state === 'paused' && ['activity', 'cart', 'race'].includes(resumeTo));
     playDock.style.display = playing ? 'flex' : 'none';
-    for (const id of ['msg', 'world-activity-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt']) {
+    for (const id of ['msg', 'world-activity-hud', 'site-activity-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt']) {
       const el = document.getElementById(id); if (!el) continue;
       const parent = playing ? playDock : document.getElementById(id === 'engage-prompt' ? 'explore-info' : 'hud');
       if (el.parentElement !== parent) parent.appendChild(el);
     }
   }
   let activities = null;
+  // Landmark activities in their own modules, loaded on first entry.
+  const SITE_ACTIVITIES = { cistern: () => import('./activities/cistern.js'), zeuxippus: () => import('./activities/zeuxippus.js') };
+  const siteActivities = {};
+  let siteActivity = null;
   const morning = new Morning({branch,player,hud,audio,market,onArrival:(title,text)=>{
     state='ending';player.clearKeys();player.unlock();hud.showEnding(title,text,'“Let us attend.”',true);
   }});
@@ -224,6 +228,7 @@ async function boot() {
   async function startActivity(stop) {
     if (state !== 'explore' || FEATURES[stop.id] === false) return;
     if (stop.id === 'harbour') { startCart(); return; }
+    if (SITE_ACTIVITIES[stop.id]) { startSiteActivity(stop); return; }
     state = 'activityLoading';
     hud.showExplore();
     player.clearKeys(); hud.hidePrompt();
@@ -240,6 +245,27 @@ async function boot() {
       state = 'activity';
       hud.setRoom(stop.id === 'aqueduct' ? 'The Aqueduct of Valens' : 'The Forum of Constantine');
       activities.start(module.ACTIVITIES.find(a => a.id === stop.id));
+    } catch (error) {
+      state = 'explore';
+      hud.message('This activity could not load. Press E to try again.', 3500);
+      console.error(error);
+    }
+  }
+  async function startSiteActivity(stop) {
+    state = 'activityLoading';
+    hud.showExplore(); player.clearKeys(); hud.hidePrompt();
+    try {
+      const { default: Activity } = await SITE_ACTIVITIES[stop.id]();
+      siteActivities[stop.id] ??= new Activity({
+        level, player, hud, branch, parent: document.getElementById('hud'),
+        leave: async ({ walkingAway = false } = {}) => {
+          siteActivity = null; state = 'explore'; hud.setRoom(roomLabel());
+          if (!walkingAway) { player.clearKeys(); await player.lock(); }
+        },
+        onResult: () => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); morning.reward(`activity:${stop.id}`, 6); },
+      });
+      siteActivity = siteActivities[stop.id]; state = 'activity';
+      hud.setRoom(siteActivity.room); siteActivity.start();
     } catch (error) {
       state = 'explore';
       hud.message('This activity could not load. Press E to try again.', 3500);
@@ -518,7 +544,7 @@ async function boot() {
       if(e.code==='KeyJ'){state='journal';player.clearKeys();player.unlock();morning.journal.style.display='flex';return;}
     }
     if (state === 'cart') { harbourCart.key(e, true); return; }
-    if (state === 'activity') { activities.key(e, true); return; }
+    if (state === 'activity') { (siteActivity ?? activities).key(e, true); return; }
     if (state === 'activityLoading') return;
     if (state === 'market') {
       if (e.repeat) return;
@@ -569,7 +595,7 @@ async function boot() {
   });
   window.addEventListener('keyup', (e) => {
     if (state === 'cart') { harbourCart.key(e, false); return; }
-    if (state === 'activity') { activities.key(e, false); return; }
+    if (state === 'activity') { (siteActivity ?? activities).key(e, false); return; }
     if (state === 'battle') { battle.onKey(e, false); return; }
     if (state === 'race') { race.onKey(e, false); return; }
     if (state === 'explore' || state === 'sophia') player.onKey(e, false);
@@ -604,7 +630,7 @@ async function boot() {
       if (state === 'sophia') player.clearKeys();
       if (state === 'race') race.keys = {};   // a key let go on the rest screen never reaches the race
       if (state === 'cart') harbourCart.keys = {};
-      if (state === 'activity') { activities.keys = {}; player.clearKeys(); }
+      if (state === 'activity') { (siteActivity ?? activities).keys = {}; player.clearKeys(); }
       resumeTo = state;
       state = 'paused';
       hud.hidePrompt();
@@ -767,7 +793,7 @@ async function boot() {
     if (debugMode) document.getElementById('dev-hints').style.display = ['cart', 'activity'].includes(state) ? 'none' : 'block';
     if (state === 'cart') harbourCart.update(dt);
     leaveEncounterButton.style.display = state === 'battle' && !battle.done ? 'block' : 'none';
-    if (state === 'activity') activities.update(dt);
+    if (state === 'activity') (siteActivity ?? activities).update(dt);
     const objective = state === 'explore' ? market.objective(branch, player.pos) : null;
     errandHud.textContent = objective ?? '';
     errandHud.style.display = objective ? 'block' : 'none';
@@ -874,6 +900,7 @@ async function boot() {
       market,
       activityStops: ACTIVITY_STOPS,
       activities: () => activities,
+      siteActivity: () => siteActivity,
       harbourCart,
       morning,
       hud,
