@@ -1,7 +1,7 @@
 # A lived-in pilgrimage
 
-The Aqueduct, Harbour, and Forum activities are now playable; the other activities
-below remain design proposals. Harbour now plays directly in the 3D quay, with
+The Aqueduct, Harbour, Forum, Pantokrator, Stoudios, and Hagia Eirene activities
+are now playable; the other activities below remain design proposals. Harbour now plays directly in the 3D quay, with
 a physical handcart, cargo obstacles, a porter, and a loading destination.
 Aqueduct and Forum also play in the city: approach physical gate handles and
 watch basins fill, or walk to named witnesses and inspect behind a cloth stall. The Hippodrome is
@@ -22,20 +22,45 @@ doing excellent work; it does not always mean deliberately losing.
 | Aqueduct of Valens (playable) | Time gates to fill three neighborhood channels before the reservoir empties | Fill a patron's fountain while households wait | Distribute water fairly; ask the keeper for advice | Filled channels and a remembered result |
 | Port of Theodosius (playable) | Balance a handcart and steer between cargo stacks before the departure bell | Rush past a struggling porter for the foreman's praise | Brake, draw alongside, and help; he steadies your load afterward | Cart arrival, remaining grain, and a remembered result |
 | Forum of Constantine (playable) | Hear witnesses and inspect a purse behind a stall | Accuse the porter to satisfy the crowd | Hear the porter and sweeper; inspect the purse and return it quietly | Evidence board, witness testimony, and a remembered result |
-| Pantokrator Monastery | Prepare a tray, remember bedside needs, and carry it without spilling | Serve the influential patient first; claim another attendant's work | Follow need, share credit, ask when uncertain | Patients receive different care; an attendant offers guidance |
-| Saint John of Stoudios | Copy a short pattern with timed strokes; correct a mistake before the ink dries | Hide an error to claim a flawless manuscript | Reveal the mistake and accept instruction | The corrected page keeps its visible repair |
+| Pantokrator Monastery (playable) | Prepare a tray, remember bedside needs, and carry it without spilling | Serve the influential patient first; claim another attendant's work | Follow need, share credit, ask when uncertain | Patients receive different care; an attendant offers guidance |
+| Saint John of Stoudios (playable) | Copy a short pattern with timed strokes; correct a mistake before the ink dries | Hide an error to claim a flawless manuscript | Reveal the mistake and accept instruction | The corrected page keeps its visible repair |
 | Basilica Cistern | Navigate dark column lanes carrying a lamp and follow echoes to a missing worker | Race for the exit and claim you explored alone | Share the lamp and slow down to guide the worker | Two people emerge together; the lamp is passed onward |
 | Baths of Zeuxippus | Adjust warm/cool water and arrange safe passage across wet tiles | Reserve the comfortable basin for yourself | Make it safe for an older visitor, even if your own bath waits | Visitors use the space you prepared |
 | Mosaic Peristyle | Fit a small mosaic from rotated pieces, with a novice working on the border | Take the novice's finished section as your own | Credit the novice and repair your own misplaced tile | A shared finished pattern and a remembered collaborator |
 | Augustaion | Guide a procession through a small crowd by opening paths and matching its pace | Push people aside to put yourself at the front | Make room for the slower participants and keep the group together | The procession arrives together or leaves people behind |
 | Milion | Rotate a route board and use local clues to guide three travelers | Guess confidently rather than admit you do not know | Ask a local porter and correct your directions | Travelers reach their destinations; someone returns to thank the porter |
 | Chalke | Carry a sealed petition through a queue, listening to people whose turn is ahead of yours | Use a supposed connection to jump the queue | Keep your place and help someone state a neglected request | The petition includes another person's need |
-| Hagia Eirene | Match a simple shared musical phrase by listening and entering on time | Play over the quieter singer to be noticed | Leave space, recover from mistakes, and support the ensemble | Voices resolve together or fall apart |
+| Hagia Eirene (playable) | Match a simple shared musical phrase by listening and entering on time | Play over the quieter singer to be noticed | Leave space, recover from mistakes, and support the ensemble | Voices resolve together or fall apart |
 | Hagia Sophia / chapel | Attend to a sequence of voices and quiet tasks; choose what burden to acknowledge | Perform devotion for watching visitors | Acknowledge a specific wrong and make room for another person | Link to the existing elder/confession flow; do not invent a second sacrament reward loop |
 
 These are fictional game situations, not historical reconstructions. Water,
 music, light, cargo, and mosaic activities need clearly readable physical feedback
 before dialogue explains their meaning.
+
+## Pantokrator, Stoudios and Hagia Eirene
+
+Each plays in its own module under `src/activities/`, lazy-loaded on first
+entry, and shares the bottom dock, WASD + mouse look, E, Q / Esc and R.
+
+- **Pantokrator:** walk to the beds (or ask Theophano) to learn each need, set
+  two items on the tray at the table, and walk them over. Running with water
+  or wine tilts the tray and spills it onto the floor. Physician Nikolaos asks
+  who made the poultice once all three are cared for: F claims it, H credits
+  Theophano. Serving the patron first or claiming her work resolves pride.
+- **Stoudios:** press Space at the page as the ring closes on each stroke's
+  start; a mistimed stroke wavers and you try it again. On the fifth stroke
+  the quill catches and blots, and the ink stays wet for ten seconds. F gilds
+  over it (pride). E shows Brother Ioannikios, then Space lifts the ink and
+  the stroke is laid again (humility); the pale scraped patch stays on the
+  finished page. If the ink dries first, the page is spoiled and retryable.
+- **Hagia Eirene:** stand in your place, press E, and listen to one phrase
+  while the lamps pulse. Then sing Romanos's beats with Space for three
+  phrases and leave Kassia's two answering beats to her. Singing over her
+  dims her lamp and turns listeners toward you; two such entries resolve
+  pride. Entering on time for most of your beats resolves humility.
+
+Rewards are placeholders (+1 grace or +1 pride, first outcome only), marked
+`TODO balance` in `src/activities/siteKit.js`.
 
 ## Build order
 
