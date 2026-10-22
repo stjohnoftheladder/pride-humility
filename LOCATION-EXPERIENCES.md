@@ -1,6 +1,6 @@
 # A lived-in pilgrimage
 
-The Aqueduct, Harbour, and Forum activities are now playable; the other activities
+The Aqueduct, Harbour, Forum, Augustaion, and Chalke activities are now playable; the other activities
 below remain design proposals. Harbour now plays directly in the 3D quay, with
 a physical handcart, cargo obstacles, a porter, and a loading destination.
 Aqueduct and Forum also play in the city: approach physical gate handles and
@@ -27,9 +27,9 @@ doing excellent work; it does not always mean deliberately losing.
 | Basilica Cistern | Navigate dark column lanes carrying a lamp and follow echoes to a missing worker | Race for the exit and claim you explored alone | Share the lamp and slow down to guide the worker | Two people emerge together; the lamp is passed onward |
 | Baths of Zeuxippus | Adjust warm/cool water and arrange safe passage across wet tiles | Reserve the comfortable basin for yourself | Make it safe for an older visitor, even if your own bath waits | Visitors use the space you prepared |
 | Mosaic Peristyle | Fit a small mosaic from rotated pieces, with a novice working on the border | Take the novice's finished section as your own | Credit the novice and repair your own misplaced tile | A shared finished pattern and a remembered collaborator |
-| Augustaion | Guide a procession through a small crowd by opening paths and matching its pace | Push people aside to put yourself at the front | Make room for the slower participants and keep the group together | The procession arrives together or leaves people behind |
+| Augustaion (playable) | Guide a procession through a small crowd by opening paths and matching its pace | Push people aside to put yourself at the front | Make room for the slower participants and keep the group together | The procession arrives together or leaves people behind |
 | Milion | Rotate a route board and use local clues to guide three travelers | Guess confidently rather than admit you do not know | Ask a local porter and correct your directions | Travelers reach their destinations; someone returns to thank the porter |
-| Chalke | Carry a sealed petition through a queue, listening to people whose turn is ahead of yours | Use a supposed connection to jump the queue | Keep your place and help someone state a neglected request | The petition includes another person's need |
+| Chalke (playable) | Carry a sealed petition through a queue, listening to people whose turn is ahead of yours | Use a supposed connection to jump the queue | Keep your place and help someone state a neglected request | The petition includes another person's need |
 | Hagia Eirene | Match a simple shared musical phrase by listening and entering on time | Play over the quieter singer to be noticed | Leave space, recover from mistakes, and support the ensemble | Voices resolve together or fall apart |
 | Hagia Sophia / chapel | Attend to a sequence of voices and quiet tasks; choose what burden to acknowledge | Perform devotion for watching visitors | Acknowledge a specific wrong and make room for another person | Link to the existing elder/confession flow; do not invent a second sacrament reward loop |
 
@@ -105,3 +105,28 @@ Body proportions and clothing/skin variations are assigned deterministically.
 People still share two instanced body/head meshes, and the complete market uses
 six instanced meshes. Fixed conservative crowd bounds avoid per-frame bounds
 recomputation. Standing figures do not rewrite their transforms each frame.
+
+## Augustaion and Chalke
+
+Both share `src/activities/palace.js`, imported only on first entry. Each site
+builds one instanced body and head mesh for its people, as the road market
+does, and updates only while active.
+
+- **Augustaion** (sign south of the Milion): a six-person procession walks the
+  north lane toward a gold ring at the palace end. Four bystanders block the
+  lane. E beside a bystander asks them to make room; they step aside. E beside
+  Sergios, the cross bearer, sets the pace of the slowest walkers, Gerontios and
+  Maria. The procession arriving together resolves humbly. F beside a bystander
+  shoves the whole lane aside and puts you at the front; the cross hurries and
+  the slow walkers are left behind (proud). Arriving with people strung out, or
+  running out of time, is unfinished and changes no meters.
+- **Chalke** (sign before the bronze doors): a sealed petition and a gold ring
+  marking your place behind five petitioners. The clerk calls one name every
+  six seconds and the line shuffles forward. E hears each petitioner. The clerk
+  passes over Eirene, who cannot write; after hearing her, H adds her request
+  to your petition. At the front, E presents it: with her need included it
+  resolves humbly, without it the result is unfinished. F beside the clerk
+  claims a connection with the Magistros and jumps the queue (proud).
+
+First outcomes grant a placeholder +1 grace or +1 pride (marked for the later
+balance pass) and morning gold, like the other sites.
