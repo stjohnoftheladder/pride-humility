@@ -121,7 +121,7 @@
        proportions when the window changes. */
     #minimap {
       right: 10px; top: 50%; transform: translateY(-50%);
-      height: 42%; aspect-ratio: 34 / 128;
+      height: 50%; aspect-ratio: 34 / 128;
       padding: 3px; border-color: var(--accent);
     }
     #minimap canvas {
@@ -292,9 +292,13 @@
     .inventory-owner { flex: 1 1 200px; border-top: 2px solid var(--gold-dim); min-width: 0; }
     .inventory-owner h3 { font-size: 12px; color: var(--gold); line-height: 1.6; }
     .inventory-owner ul { list-style: none; padding: 0; margin: 0; }
-    .inventory-owner li { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; padding: 10px; border-bottom: 1px solid #665033; background: #20180f; font-size: 11px; }
+    .inventory-owner li { display: grid; grid-template-columns: 44px 1fr auto; gap: 4px 12px; padding: 10px; border-bottom: 1px solid #665033; background: #20180f; font-size: 11px; align-items: center; }
+    .pictogram { display: block; width: 100%; height: 100%; }
+    .inventory-icon { grid-row: span 2; width: 44px; height: 44px; padding: 5px; box-sizing: border-box; background: #120d07; border: 1px solid #665033; }
+    .inventory-owner .inventory-empty { display: flex; gap: 12px; color: var(--gold-dim); }
+    .inventory-empty .pictogram { width: 36px; height: 36px; opacity: .6; }
     .inventory-count { color: var(--gold); }
-    .inventory-owner small { grid-column: 1 / -1; color: var(--gold-dim); font-size: 9px; line-height: 1.6; }
+    .inventory-owner small { grid-column: 2 / -1; color: var(--gold-dim); font-size: 9px; line-height: 1.6; }
     #inventory-screen .btn { font-size: 11px; padding: 8px 14px; }
     #inventory-screen .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
     .hint { font-size: 12px; color: var(--gold-dim); }
@@ -324,7 +328,7 @@
          strip down the side rather than a corner square: the shape of the city
          (court, the road, the port) is what carries the information. -->
     <div class="panel" id="minimap" style="display:none">
-      <canvas id="minimap-canvas"></canvas>
+      <canvas id="minimap-canvas" role="img" aria-label="City map: domes mark churches, arches mark the aqueduct, an oval marks the Hippodrome, ships mark ports, and a ladder marks the destination. The bright arrow shows your position and direction."></canvas>
     </div>
 
     <!-- The dev keys, for a ?debug build. Bottom right: the map is centred on

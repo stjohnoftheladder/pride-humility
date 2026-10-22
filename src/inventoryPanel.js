@@ -1,3 +1,5 @@
+import { pictogram } from './pictograms.js';
+
 export class InventoryPanel {
   constructor(parent, close) {
     this.close = close;
@@ -36,12 +38,13 @@ export class InventoryPanel {
     const list = document.createElement('ul');
     for (const item of entries) {
       const row = document.createElement('li');
+      const icon = document.createElement('span'); icon.className = 'inventory-icon'; icon.appendChild(pictogram(item.id));
       const label = document.createElement('strong'); label.textContent = item.name;
       const count = document.createElement('span'); count.className = 'inventory-count'; count.textContent = `×${item.quantity}`;
       const description = document.createElement('small'); description.textContent = item.description;
-      row.append(label, count, description); list.appendChild(row);
+      row.append(icon, label, count, description); list.appendChild(row);
     }
-    if (!entries.length) { const empty = document.createElement('li'); empty.textContent = 'Nothing carried.'; list.appendChild(empty); }
+    if (!entries.length) { const empty = document.createElement('li'); empty.className = 'inventory-empty'; empty.append(pictogram('basket'), document.createTextNode('Nothing carried.')); list.appendChild(empty); }
     section.appendChild(list); parent.appendChild(section);
   }
   hide() { this.el.hidden = true; this.previousFocus?.focus(); }

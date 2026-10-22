@@ -17,6 +17,7 @@
 // when the set of live features changes; each frame is a blit plus the arrow.
 import { LEVEL, CELL, MAP_W, MAP_H, HARBOURS, SITES, FEATURES } from './config.js';
 import { HAGIA } from './city.js';
+import { drawPictogram } from './pictograms.js';
 
 const SCALE = 3;                 // canvas px per grid cell -> 102 x 384
 
@@ -34,16 +35,15 @@ const COLOURS = {
   monument: '#a8883f',     // the ring marking a monument of the quarter
 };
 
-// Drawn as dots, brightest first: where the pilgrimage starts and ends, the
-// elder and the altar, then the three thresholds.
+// Small silhouettes mark the start, Ladder, elder, altar and three thresholds.
 const MARKS = [
-  { tile: 'S', r: 3.6 },
-  { tile: 'L', r: 3.6 },
-  { tile: 'E', r: 2.5 },
-  { tile: 'A', r: 2.5 },
-  { tile: 'K', r: 2.5 },
-  { tile: 'B', r: 2.5 },
-  { tile: 'P', r: 2.5 },
+  { tile: 'S', icon: 'flag', size: 13 },
+  { tile: 'L', icon: 'ladder', size: 17 },
+  { tile: 'E', icon: 'person', size: 12 },
+  { tile: 'A', icon: 'church', size: 13 },
+  { tile: 'K', icon: 'gold', size: 11 },
+  { tile: 'B', icon: 'heart', size: 11 },
+  { tile: 'P', icon: 'eye', size: 11 },
 ];
 
 export class Minimap {
@@ -94,6 +94,13 @@ export class Minimap {
     return [...HARBOURS.map((w) => `${w.id}:${flag(w.id)}`), ...SITES.map((s) => `${s.id}:${flag(s.id)}`)].join(',');
   }
 
+  symbol(kind, x, y, size) {
+    const ctx = this.planCtx;
+    ctx.fillStyle = '#17130ee8';
+    ctx.fillRect(x - size / 2 - 2, y - size / 2 - 2, size + 4, size + 4);
+    drawPictogram(ctx, kind, x, y, size);
+  }
+
   paintPlan() {
     const ctx = this.planCtx;
     ctx.clearRect(0, 0, this.plan.width, this.plan.height);
@@ -122,16 +129,15 @@ export class Minimap {
       const { quay } = wing;
       const cx = this.cellX(quay.x + quay.w / 2);
       const cy = this.cellY(quay.y + quay.h / 2);
+      this.symbol('ship', cx, cy - 5, 18);
       ctx.fillStyle = COLOURS.labelShadow;
-      ctx.fillText(wing.label, cx + 1, cy + 1);
+      ctx.fillText(wing.short || wing.label, cx + 1, cy + 12);
       ctx.fillStyle = COLOURS.label;
-      ctx.fillText(wing.short || wing.label, cx, cy);
+      ctx.fillText(wing.short || wing.label, cx, cy + 11);
     }
 
-    // The monuments of the quarter, as a ring apiece: six of them stand within
-    // twenty rows of each other, and the strip is 34 cells wide, so their names
-    // would collide here — the signs in the world and the index (I) carry the
-    // names, and the map carries where.
+    // Recognizable silhouettes carry the site type without a wall of names.
+    // The palace quarter is dense, so its smaller monuments use compact marks.
     ctx.strokeStyle = COLOURS.monument;
     ctx.lineWidth = 1.7;
     for (const site of SITES) {
@@ -139,38 +145,26 @@ export class Minimap {
       const box = site.area || site.band
         || { x: site.at.x, y: site.at.y, w: site.at.w || 1, h: site.at.h || 1 };
       const cx = this.cellX(box.x + box.w / 2), cy = this.cellY(box.y + box.h / 2);
-      ctx.beginPath();
-      ctx.arc(cx, cy, SCALE * 1.7, 0, Math.PI * 2);
-      ctx.stroke();
+      this.symbol(site.kind, cx, cy, site.approach ? 18 : 10);
     }
 
     // Hagia Sophia is named on the map as well as signed in the world — it is
     // the landmark the whole road climbs toward, and the one a player asks for.
     const hx = this.cellX(HAGIA.x + HAGIA.w / 2), hy = this.cellY(HAGIA.y + 0.5);
-    ctx.fillStyle = COLOURS.label;
-    ctx.beginPath();
-    ctx.arc(hx, hy - SCALE * 3.2, SCALE * 2.1, Math.PI, 0);   // a dome above the name
-    ctx.fill();
+    this.symbol('church', hx, hy - 10, 21);
     ctx.font = `bold ${SCALE * 3}px ui-monospace, "DejaVu Sans Mono", monospace`;
     ctx.fillStyle = COLOURS.labelShadow;
-    ctx.fillText('HAGIA SOPHIA', hx + 1, hy + 1);
+    ctx.fillText('HAGIA SOPHIA', hx + 1, hy + 8);
     ctx.fillStyle = COLOURS.label;
-    ctx.fillText('HAGIA SOPHIA', hx, hy);
+    ctx.fillText('HAGIA SOPHIA', hx, hy + 7);
 
     // Thresholds and landmarks last, so decor can't cover them.
-    for (const { tile, r } of MARKS) {
+    for (const { tile, icon, size } of MARKS) {
       for (const [key, t] of cells) {
         if (t !== tile) continue;
         const [x, y] = key.split(',').map(Number);
         const cx = this.cellX(x + 0.5), cy = this.cellY(y + 0.5);
-        ctx.fillStyle = COLOURS.shadow;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r + 1.4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = COLOURS.marker;
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fill();
+        this.symbol(icon, cx, cy, size);
       }
     }
     this.paintedFor = this.liveSignature();
