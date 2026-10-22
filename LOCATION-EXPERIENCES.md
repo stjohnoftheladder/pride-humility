@@ -1,10 +1,14 @@
 # A lived-in pilgrimage
 
-The Aqueduct, Harbour, and Forum activities are now playable; the other activities
+The Aqueduct, Harbour, Forum, Mosaic Peristyle, and Milion activities are now playable; the other activities
 below remain design proposals. Harbour now plays directly in the 3D quay, with
 a physical handcart, cargo obstacles, a porter, and a loading destination.
 Aqueduct and Forum also play in the city: approach physical gate handles and
-watch basins fill, or walk to named witnesses and inspect behind a cloth stall. The Hippodrome is
+watch basins fill, or walk to named witnesses and inspect behind a cloth stall.
+The Mosaic Peristyle and Milion are also playable in the city: turn floor tiles
+until each gold quarter meets its red sinopia line while Irene sets the border,
+or turn the route board under the Milion dome and watch travelers walk the way
+you point. The Hippodrome is
 the reference for depth: enter a recognizable place, learn a physical activity,
 feel its pressures, make a consequential choice, and return to the road.
 
@@ -26,9 +30,9 @@ doing excellent work; it does not always mean deliberately losing.
 | Saint John of Stoudios | Copy a short pattern with timed strokes; correct a mistake before the ink dries | Hide an error to claim a flawless manuscript | Reveal the mistake and accept instruction | The corrected page keeps its visible repair |
 | Basilica Cistern | Navigate dark column lanes carrying a lamp and follow echoes to a missing worker | Race for the exit and claim you explored alone | Share the lamp and slow down to guide the worker | Two people emerge together; the lamp is passed onward |
 | Baths of Zeuxippus | Adjust warm/cool water and arrange safe passage across wet tiles | Reserve the comfortable basin for yourself | Make it safe for an older visitor, even if your own bath waits | Visitors use the space you prepared |
-| Mosaic Peristyle | Fit a small mosaic from rotated pieces, with a novice working on the border | Take the novice's finished section as your own | Credit the novice and repair your own misplaced tile | A shared finished pattern and a remembered collaborator |
+| Mosaic Peristyle (playable) | Fit a small mosaic from rotated pieces, with a novice working on the border | Take the novice's finished section as your own | Credit the novice and repair your own misplaced tile | A shared finished pattern and a remembered collaborator |
 | Augustaion | Guide a procession through a small crowd by opening paths and matching its pace | Push people aside to put yourself at the front | Make room for the slower participants and keep the group together | The procession arrives together or leaves people behind |
-| Milion | Rotate a route board and use local clues to guide three travelers | Guess confidently rather than admit you do not know | Ask a local porter and correct your directions | Travelers reach their destinations; someone returns to thank the porter |
+| Milion (playable) | Rotate a route board and use local clues to guide three travelers | Guess confidently rather than admit you do not know | Ask a local porter and correct your directions | Travelers reach their destinations; someone returns to thank the porter |
 | Chalke | Carry a sealed petition through a queue, listening to people whose turn is ahead of yours | Use a supposed connection to jump the queue | Keep your place and help someone state a neglected request | The petition includes another person's need |
 | Hagia Eirene | Match a simple shared musical phrase by listening and entering on time | Play over the quieter singer to be noticed | Leave space, recover from mistakes, and support the ensemble | Voices resolve together or fall apart |
 | Hagia Sophia / chapel | Attend to a sequence of voices and quiet tasks; choose what burden to acknowledge | Perform devotion for watching visitors | Acknowledge a specific wrong and make room for another person | Link to the existing elder/confession flow; do not invent a second sacrament reward loop |

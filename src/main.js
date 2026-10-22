@@ -171,13 +171,14 @@ async function boot() {
     const playing = ['activity', 'cart', 'race'].includes(state)
       || (state === 'paused' && ['activity', 'cart', 'race'].includes(resumeTo));
     playDock.style.display = playing ? 'flex' : 'none';
-    for (const id of ['msg', 'world-activity-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt']) {
+    for (const id of ['msg', 'world-activity-hud', 'mosaic-hud', 'milion-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt']) {
       const el = document.getElementById(id); if (!el) continue;
       const parent = playing ? playDock : document.getElementById(id === 'engage-prompt' ? 'explore-info' : 'hud');
       if (el.parentElement !== parent) parent.appendChild(el);
     }
   }
-  let activities = null;
+  let activities = null, locationActivities = null;
+  const landmarkActivities = {};
   const morning = new Morning({branch,player,hud,audio,market,onArrival:(title,text)=>{
     state='ending';player.clearKeys();player.unlock();hud.showEnding(title,text,'“Let us attend.”',true);
   }});
@@ -228,15 +229,23 @@ async function boot() {
     hud.showExplore();
     player.clearKeys(); hud.hidePrompt();
     try {
-      const module = await import('./activities.js');
-      activities ??= new module.LocationActivities({
+      const options = {
         level, player, hud, branch, parent: document.getElementById('hud'),
         leave: async ({ walkingAway = false } = {}) => {
           state = 'explore'; hud.setRoom(roomLabel());
           if (!walkingAway) { player.clearKeys(); await player.lock(); }
         },
         onResult: () => { hud.setMeters(branch.pride, branch.grace); hud.revealMeters(); morning.reward(`activity:${activities.active.id}`,6); },
-      });
+      };
+      if (stop.load) {
+        const module = await stop.load();
+        activities = landmarkActivities[stop.id] ??= new module.default(options);
+        state = 'activity'; hud.setRoom(module.ROOM);
+        activities.start(stop);
+        return;
+      }
+      const module = await import('./activities.js');
+      activities = locationActivities ??= new module.LocationActivities(options);
       state = 'activity';
       hud.setRoom(stop.id === 'aqueduct' ? 'The Aqueduct of Valens' : 'The Forum of Constantine');
       activities.start(module.ACTIVITIES.find(a => a.id === stop.id));
