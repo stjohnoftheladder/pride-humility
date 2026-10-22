@@ -8,3 +8,5 @@ dist/
 .env.local
 .env.*.local
 /multiplayer-worker/worker-configuration.d.ts
+.stfolder/
+.stversions/
