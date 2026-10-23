@@ -71,3 +71,10 @@ because sparing requires humility.**
 - The Holy Gospels: Luke 18:9–14; James 4:6; 1 Peter 5:5; Philippians 2:5–11; Isaiah 14:12
 - The Jesus Prayer (Philokalic tradition)
 - St. Isaac of Nineveh on humility and mercy
+
+## A timeless meeting
+
+Saint John Chrysostom preaches live inside Justinian's Hagia Sophia (537), in a
+city drawn from about 1200, though he was archbishop from 398 to 404 in the
+earlier church on the site. This is deliberate: the pilgrim meets the saint as
+the Church does, present in every age. The Hagia Sophia card on the road says so.

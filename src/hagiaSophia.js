@@ -10,8 +10,9 @@
 // Drama 3 and sent through a long synthetic reverb so the voice fills the room.
 //
 // Note: Chrysostom was archbishop here 398-404, in the earlier Great Church;
-// Justinian's domed church is from 537. The game places him in the church the
-// player knows.
+// Justinian's domed church is from 537, and the city outside is drawn from
+// about 1200. His preaching here is a deliberate, timeless fiction, and the
+// Hagia Sophia card on the road says so (HAGIA_NOTE in city.js).
 import * as THREE from 'three';
 
 const R = 12;            // dome radius = half the central square
