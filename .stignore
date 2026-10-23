@@ -17,3 +17,6 @@ __pycache__
 .env.*
 .claude
 .codex
+
+// private backup database for adaptation/ (see SYNC.md)
+.adaptation-git
