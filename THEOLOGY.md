@@ -77,4 +77,4 @@ because sparing requires humility.**
 Saint John Chrysostom preaches live inside Justinian's Hagia Sophia (537), in a
 city drawn from about 1200, though he was archbishop from 398 to 404 in the
 earlier church on the site. This is deliberate: the pilgrim meets the saint as
-the Church does, present in every age. The Hagia Sophia card on the road says so.
+the Church does, present in every age. The whole city works the same way, gathering landmarks from Constantine to the Komnenoi into one morning; the title screen tells players so, and the Hagia Sophia card on the road names Chrysostom's place in it.
