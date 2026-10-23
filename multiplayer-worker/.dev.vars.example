@@ -1,0 +1,3 @@
+# Use a Daily API key from the same account as the Phaser edition if desired.
+# Copy to .dev.vars for local calls. For production use wrangler secret put.
+DAILY_API_KEY=replace-with-your-daily-api-key

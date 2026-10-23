@@ -11,12 +11,15 @@ import { AudioFX } from './audio.js';
 import { Hud } from './hud.js';
 import { Minimap } from './minimap.js';
 import { ChariotRace, RACE_RESULTS } from './race.js';
-import { RoadMarket } from './market.js';
+import { RoadMarket, ERRANDS } from './market.js';
 import { ACTIVITY_STOPS, nearbyActivity } from './activitySites.js';
 import { HarbourCart } from './harbourCart.js';
 import { Morning, CHURCH_STEPS } from './morning.js';
 import { HagiaSophia } from './hagiaSophia.js';
 import { installTouch, IS_TOUCH } from './touch.js';
+import { InventoryPanel } from './inventoryPanel.js';
+import { pictogram, citizenPortrait } from './pictograms.js';
+import { Fellowship } from './multiplayer/fellowship.js';
 
 // ----- content (drafted; refined in the content pass) --------------------------
 const ELDER_LINES = [
@@ -115,6 +118,9 @@ async function boot() {
   scene.add(camera);
 
   const branch = Branch.load();
+  player.id = 'player:local';
+  player.inventory = branch.inventory;
+  market.bindInventories(branch);
   // Small, feature-owned entry signs make the new activities discoverable.
   for (const stop of ACTIVITY_STOPS) {
     const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 96;
@@ -140,6 +146,21 @@ async function boot() {
   // ----- state -------------------------------------------------------------------
   let state = 'menu';            // menu | explore | battle | race | raceResult | fall | confess | ending | paused
   let resumeTo = 'explore';      // where CONTINUE on the rest screen goes back to
+  let fellowshipReturn = 'explore';
+  const fellowship = new Fellowship({
+    parent: document.body, level, player,
+    endpoint: import.meta.env.VITE_MULTIPLAYER_URL || (import.meta.env.DEV ? 'ws://127.0.0.1:8787/ws' : ''),
+    open: () => {
+      if (!['menu', 'explore', 'paused'].includes(state)) return false;
+      fellowshipReturn = state; state = 'fellowship';
+      player.clearKeys(); player.unlock(); hud.hidePrompt(); return true;
+    },
+    close: () => {
+      state = fellowshipReturn; player.clearKeys();
+      if (state === 'explore') player.lock();
+    },
+    notify: message => hud.message(message, 4000),
+  });
   let startTime = 0;
   let elderIdx = 0;
   let elderCooldown = 0;
@@ -155,9 +176,26 @@ async function boot() {
   leaveEncounterButton.onclick = leaveEncounter;
   document.getElementById('stage').appendChild(leaveEncounterButton);
   let activeVendor = null;
+  let inventoryReturn = 'explore';
+  const inventoryPanel = new InventoryPanel(document.getElementById('confess-screen').parentElement, () => {
+    state = inventoryReturn;
+    if (state === 'market') marketScreen.style.display = 'flex';
+    inventoryPanel.hide();
+    player.clearKeys();
+    if (state !== 'market') player.lock();
+  });
+  function showInventory(npc = null) {
+    if (!['explore', 'market'].includes(state)) return;
+    inventoryReturn = state;
+    if (state === 'market') marketScreen.style.display = 'none';
+    state = 'inventory';
+    player.clearKeys(); player.unlock(); hud.hidePrompt();
+    inventoryPanel.show(player.inventory, npc);
+  }
   let marketChoices = [];
   const marketScreen = document.createElement('div');
   marketScreen.className = 'screen';
+  marketScreen.id = 'market-screen';
   marketScreen.style.display = 'none';
   marketScreen.style.overflowY = 'auto';
   marketScreen.setAttribute('role', 'dialog');
@@ -274,20 +312,31 @@ async function boot() {
     const conversation = market.conversation(npc, branch);
     marketChoices = conversation.choices;
     text.textContent = conversation.paragraphs.join(' ') + (morning.run ? ` Your purse holds ${morning.run.gold} gold.` : '');
-    marketScreen.append(title, text);
-    const button = (label, action) => {
+    const header=document.createElement('div');header.className='conversation-heading';header.append(portraitOf(npc),title);
+    marketScreen.append(header);
+    const goods=document.createElement('div');goods.className='conversation-goods';const goodsLabel=document.createElement('span');goodsLabel.textContent=npc.trade.goods==='work'?'Work supplies':npc.trade.goods;goods.append(pictogram(npc.trade.goods),goodsLabel);marketScreen.append(goods,text);
+    const errand=market.activeErrand(branch);
+    if(errand?.from===npc.id||errand?.to===npc.id){const delivery=document.createElement('div');delivery.className='conversation-delivery';const label=document.createElement('span');const target=market.npcs.find(n=>n.id===errand.to);label.textContent=`${errand.parcel} → ${target?.name??'recipient'}`;delivery.append(pictogram(`parcel:${errand.id}`),label);marketScreen.append(delivery);}
+    const button = (label, action, icon = null) => {
       const b = document.createElement('button'); b.className = 'btn'; b.textContent = label; b.onclick = action;
+      if(icon){b.prepend(pictogram(icon));b.classList.add('illustrated-choice');}
       marketScreen.appendChild(b); return b;
     };
-    for (const [i, choice] of marketChoices.entries()) button(`${i + 1} · ${choice.label}`, () => resolveMarket(choice.action));
+    for (const [i, choice] of marketChoices.entries()) button(`${i + 1} · ${choice.label}`, () => resolveMarket(choice.action),['accept','deliverQuietly','deliverForPraise'].includes(choice.action)?`parcel:${(errand??ERRANDS.find(e=>e.from===npc.id))?.id}`:null);
     if(morning.run && !morning.run.boots) {
       const shoes=button(morning.run.gold>=20?'Buy swift shoes · 20 gold (+15% walking speed)':'Swift shoes · 20 gold required',()=>{
         if(morning.buyShoes())showMarket(npc);
-      });
+      },'swiftShoes');
       shoes.disabled=morning.run.gold<20;
     }
     button('Leave · Escape', closeMarket);
+    button('Inspect belongings', () => showInventory(npc),'basket');
     marketScreen.querySelector('button').focus();
+  }
+  function portraitOf(npc){
+    const index=market.npcs.indexOf(npc),tunic=new THREE.Color(),skin=new THREE.Color();
+    market.bodies.getColorAt(index,tunic);market.heads.getColorAt(index,skin);
+    return citizenPortrait(tunic.getStyle(),skin.getStyle());
   }
   function resolveMarket(choice) {
     if (!activeVendor || !marketChoices.some(c => c.action === choice)) return;
@@ -326,7 +375,7 @@ async function boot() {
     const citizen = !near('E', 2.6) && !near('A', 2.6) && market.nearest(player.pos);
     if (citizen) {
       if (citizen.trade) showMarket(citizen);
-      else hud.message(`${citizen.name}: “${citizen.line}”`, 6500);
+      else hud.message(`${citizen.name}: “${citizen.line}”`, 6500, portraitOf(citizen));
       return;
     }
     if (near('E', 2.4) && elderCooldown <= 0) {
@@ -518,10 +567,18 @@ async function boot() {
 
   // ----- input ------------------------------------------------------------------------
   window.addEventListener('keydown', (e) => {
+    if (state === 'fellowship') { fellowship.key(e); return; }
+    if (['menu', 'explore', 'paused'].includes(state) && e.code === 'KeyF' && !e.repeat) {
+      e.preventDefault(); fellowship.show(); return;
+    }
+    if (state === 'inventory') { inventoryPanel.key(e); return; }
+    if (state === 'explore' && e.code === 'KeyI' && !e.repeat) {
+      e.preventDefault(); showInventory(market.nearest(player.pos)); return;
+    }
     if(state==='journal') {if(e.code==='KeyJ'||e.code==='Escape'){morning.journal.style.display='none';state='explore';player.clearKeys();}return;}
     if(state==='explore'&&morning.run&&!e.repeat){
       if(e.code==='KeyC'){morning.clock=!morning.clock;return;}
-      if(e.code==='KeyJ'){state='journal';player.clearKeys();player.unlock();morning.journal.style.display='flex';return;}
+      if(e.code==='KeyJ'){state='journal';player.clearKeys();player.unlock();morning.refreshJournal();morning.journal.style.display='flex';return;}
     }
     if (state === 'cart') { harbourCart.key(e, true); return; }
     if (state === 'activity') { activities.key(e, true); return; }
@@ -768,6 +825,7 @@ async function boot() {
   }
 
   function update(dt, time) {
+    fellowship.update(dt, time, state);
     morning.update(dt,state==='battle'&&!['fight','enemy'].includes(battle.phase)?'reading':state);
     arrangePlayHud();
     if (debugMode) document.getElementById('dev-hints').style.display = ['cart', 'activity'].includes(state) ? 'none' : 'block';
@@ -878,6 +936,8 @@ async function boot() {
       branch,
       level,
       market,
+      fellowship,
+      showInventory,
       activityStops: ACTIVITY_STOPS,
       activities: () => activities,
       siteActivity: () => (activities?.active ? activities : null),

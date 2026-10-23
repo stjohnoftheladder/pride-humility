@@ -79,7 +79,7 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 
 | Context | Input |
 |---|---|
-| Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact · `M` map |
+| Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact · `M` map · `I` inventory · `F` fellowship |
 | Dev (`?debug`) | `1`–`9`, `Shift+1`–`Shift+4` toggle additions · `PageDown`/`PageUp` travel to the next/previous stop |
 | Chariot race | `W` drive on · `S` rein in · `A`/`D` steer · `Shift` lash · `E` help the fallen driver · `Q` step down |
 | Battle dodge | `WASD` move the heart · hold `Space` to pray |
@@ -87,6 +87,38 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 | Global | `Esc` pause · `♪ sound` mute (top right) |
 
 ## Features a dev can switch off
+
+Press `I` to view your satchel, or press it near a citizen to inspect their
+belongings alongside yours. Market conversations also offer **Inspect belongings**.
+`I` or `Escape` returns to play. Reading inventories pauses the morning clock.
+Provisions, gold, swift shoes, and delivery parcels persist in the shared owner
+inventory registry. Parcels move from the sender to you and then the recipient.
+NPC goods are inspectable; this does not add purchases or taking items.
+
+`src/inventory.js` provides validated quantities, transfers, and JSON saves for
+stable owner IDs (`player:local`, `npc:<id>`). Multiplayer shares presence only;
+inventories and story progress remain local. Player-to-player item trading is
+not enabled.
+
+## Multiplayer and Daily conversations
+
+Press `F` or **Fellowship**, enter your display name and a gathering name, and
+choose **Join gathering**. Players in the same gathering appear as named 3D
+pilgrims. **Copy gathering link** lets a friend open the same gathering; they
+still choose to join. The default is `pilgrim-way`. Gathering names group players,
+but are not passwords or authenticated private rooms.
+
+When you are within eight paces, wave or invite a player to audio/video. They can
+accept or decline; after acceptance, both people choose **Join conversation** to
+open Daily's setup with camera and microphone off. The server starts a 90-second
+timer once both have joined. Either player can end the call. The morning clock
+rests while the fellowship panel is open. A block lasts for the current
+connection; reconnecting creates a new guest identity. There are no accounts,
+shared quests, shared race physics, or inventory trades in this first version.
+
+The invitation/consent flow follows the local Phaser 4/Fellowship Go edition.
+This version has its own Worker and gathering namespace, keeping the two games
+separate. See [MULTIPLAYER.md](MULTIPLAYER.md) for setup, tests, and deployment.
 
 Work-in-progress additions are listed behind flags in `src/config.js`:
 

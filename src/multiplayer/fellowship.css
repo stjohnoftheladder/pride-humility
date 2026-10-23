@@ -1,0 +1,22 @@
+.fellowship-screen[hidden], .fellowship-screen [hidden], #fellowship-dock[hidden] { display: none !important; }
+.fellowship-screen { z-index: 50; overflow-y: auto; justify-content: flex-start; background: #120d07; gap: 14px; padding: 24px max(20px, calc((100vw - 780px) / 2)); }
+.fellowship-screen h2 { font-size: 19px; }
+.fellowship-screen .fellowship-intro, .fellowship-screen p { font-size: 11px; line-height: 1.7; }
+.fellowship-screen .fellowship-intro { color: var(--gold-dim); }
+.fellowship-screen .btn { font-size: 10px; letter-spacing: 0; padding: 8px 12px; border-width: 2px; }
+.fellowship-screen .btn:disabled { opacity: .45; cursor: default; box-shadow: none; }
+.fellowship-screen :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.gathering-form { display: flex; align-items: end; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; }
+.gathering-form label { display: grid; gap: 8px; text-align: left; font-size: 10px; color: var(--gold-dim); }
+.gathering-form input { max-width: 210px; width: 100%; padding: 9px; background: #20180f; border: 1px solid #c4a46c; color: #e8dcc8; font: inherit; font-size: 12px; }
+.fellowship-status { color: var(--gold); }
+.fellowship-message:empty { display: none; }
+.fellowship-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.fellowship-peers { width: 100%; display: grid; gap: 10px; }
+.fellowship-peer { background: #20180f; border-top: 1px solid var(--gold-dim); padding: 12px; display: grid; grid-template-columns: 1fr auto; gap: 10px; text-align: left; font-size: 11px; }
+.fellowship-peer span { font-size: 10px; color: var(--gold-dim); }
+.fellowship-peer .fellowship-actions { grid-column: 1 / -1; justify-content: flex-start; }
+.conversation { width: 100%; padding: 14px; border: 2px solid var(--gold); display: grid; gap: 12px; }
+.daily-stage { width: 100%; height: clamp(250px, 48vh, 480px); background: #20180f; }
+#fellowship-dock { position: fixed; right: 12px; top: 78px; z-index: 15; font-size: 10px; letter-spacing: 0; padding: 7px 10px; }
+@media (max-width: 520px) { .fellowship-screen { padding: 18px; } .fellowship-peer { grid-template-columns: 1fr; } .fellowship-screen h2 { font-size: 16px; } }

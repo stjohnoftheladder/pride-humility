@@ -1,6 +1,7 @@
 // Branch state: the pride / grace meters and journey flags that persist across
 // encounters and decide the ending. Persisted to localStorage.
 import { PRIDE_MAX, GRACE_MAX, PLAYER_HP_MAX } from './config.js';
+import { InventoryRegistry } from './inventory.js';
 
 const SAVE_KEY = 'pride-humility-save-v1';
 
@@ -10,6 +11,7 @@ export class Branch {
     this.grace = 0;
     this.hp = PLAYER_HP_MAX;
     this.flags = {};          // 'tookGold', 'forgave', 'struck', 'prayed3x'...
+    this.inventories = new InventoryRegistry();
     this.provisions = 3;
     this.defeats = 0;         // times the pilgrim fell
     this.confessions = 0;
@@ -22,7 +24,21 @@ export class Branch {
     const b = new Branch();
     try {
       const raw = localStorage.getItem(SAVE_KEY);
-      if (raw) Object.assign(b, JSON.parse(raw));
+      if (raw) {
+        const data = JSON.parse(raw);
+        const { inventories, provisions, ...rest } = data;
+        Object.assign(b, rest);
+        b.inventories = new InventoryRegistry(inventories);
+        if (!inventories) {
+          b.provisions = Number.isSafeInteger(provisions) ? provisions
+            : Math.min(3, (data.items?.bread ?? 0) + (data.items?.water ?? 0));
+          b.inventory.set('gold', b.flags.morning?.gold ?? 0);
+          b.inventory.set('swiftShoes', b.flags.morning?.boots ? 1 : 0);
+          for (const id of ['bread', 'cups', 'fruit']) {
+            if (b.flags[`errand:${id}`] === 'carrying') b.inventory.set(`parcel:${id}`, 1);
+          }
+        }
+      }
     } catch { /* fresh start */ }
     // Migrate v1 saves that stored separate bread and water inventories.
     if (!Number.isFinite(b.provisions)) {
@@ -36,12 +52,16 @@ export class Branch {
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         pride: this.pride, grace: this.grace, hp: this.hp, flags: this.flags,
-        provisions: this.provisions, defeats: this.defeats, confessions: this.confessions,
+        inventories: this.inventories, provisions: this.provisions, defeats: this.defeats, confessions: this.confessions,
         confessionGraceReceived: this.confessionGraceReceived,
         encountersDone: this.encountersDone, prayerUses: this.prayerUses,
       }));
     } catch { /* private mode */ }
   }
+
+  get inventory() { return this.inventories.get('player:local'); }
+  get provisions() { return this.inventory.count('provision'); }
+  set provisions(value) { this.inventory.set('provision', value); }
 
   clearSave() {
     try { localStorage.removeItem(SAVE_KEY); } catch { /* ignore */ }

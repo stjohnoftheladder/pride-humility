@@ -121,7 +121,7 @@
        proportions when the window changes. */
     #minimap {
       right: 10px; top: 50%; transform: translateY(-50%);
-      height: 42%; aspect-ratio: 34 / 128;
+      height: 50%; aspect-ratio: 34 / 128;
       padding: 3px; border-color: var(--accent);
     }
     #minimap canvas {
@@ -284,6 +284,54 @@
       background: var(--surface); box-shadow: 0 0 16px #f3d27633, inset 0 0 10px #f3d2761a;
     }
     .btn:hover { background: #2a2012; box-shadow: 0 0 26px #f3d27677; }
+    #inventory-screen { z-index: 45; overflow-y: auto; justify-content: flex-start; background: #120d07; padding: 22px 28px; gap: 12px; }
+    #inventory-screen[hidden] { display: none; }
+    #inventory-screen h2 { font-size: 18px; margin: 0; }
+    #inventory-screen .inventory-note { font-size: 10px; line-height: 1.6; margin: 0; color: var(--gold-dim); }
+    .inventory-columns { display: flex; gap: 16px; width: 100%; max-width: 720px; flex-wrap: wrap; text-align: left; }
+    .inventory-owner { flex: 1 1 200px; border-top: 2px solid var(--gold-dim); min-width: 0; }
+    .inventory-owner h3 { font-size: 12px; color: var(--gold); line-height: 1.6; }
+    .inventory-owner ul { list-style: none; padding: 0; margin: 0; }
+    .inventory-owner li { display: grid; grid-template-columns: 44px 1fr auto; gap: 4px 12px; padding: 10px; border-bottom: 1px solid #665033; background: #20180f; font-size: 11px; align-items: center; }
+    .pictogram { display: block; width: 100%; height: 100%; }
+    .inventory-icon { grid-row: span 2; width: 44px; height: 44px; padding: 5px; box-sizing: border-box; background: #120d07; border: 1px solid #665033; }
+    .inventory-owner .inventory-empty { display: flex; gap: 12px; color: var(--gold-dim); }
+    .inventory-empty .pictogram { width: 36px; height: 36px; opacity: .6; }
+    .inventory-count { color: var(--gold); }
+    .inventory-owner small { grid-column: 2 / -1; color: var(--gold-dim); font-size: 9px; line-height: 1.6; }
+    #inventory-screen .btn { font-size: 11px; padding: 8px 14px; }
+    #inventory-screen .btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    #morning-journal > * { width: 100%; max-width: 760px; box-sizing: border-box; margin: 0 auto; }
+    #morning-journal h2 { display: flex; align-items: center; gap: 14px; font-size: 18px; line-height: 1.6; }
+    #morning-journal h2 .pictogram { flex: 0 0 36px; width: 36px; height: 36px; }
+    #morning-journal p { font-size: 12px; line-height: 1.8; }
+    #morning-journal details { border: 1px solid #665033; background: #20180f; }
+    #morning-journal summary { display: grid; grid-template-columns: 36px 1fr 16px; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; font-size: 12px; line-height: 1.6; color: var(--gold); list-style: none; }
+    #morning-journal summary::-webkit-details-marker { display: none; }
+    #morning-journal summary::after { content: '+'; }
+    #morning-journal details[open] summary::after { content: '−'; }
+    #morning-journal summary .pictogram { width: 36px; height: 36px; }
+    #morning-journal details p { margin: 0; padding: 0 18px 16px 62px; }
+    .journal-journey { display: flex; flex-wrap: wrap; gap: 10px; }
+    .journal-journey > div { display: flex; flex: 1 1 220px; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--gold-dim); background: #282013; font-size: 11px; line-height: 1.7; }
+    .journal-journey .pictogram { flex: 0 0 40px; width: 40px; height: 40px; }
+    #morning-journal .journal-return { font-size: 11px; margin-bottom: 10px; }
+    #market-screen { justify-content: flex-start; padding: 24px 20px; gap: 12px; }
+    #market-screen > * { max-width: 620px; box-sizing: border-box; }
+    .conversation-heading { display: flex; align-items: center; gap: 18px; text-align: left; width: 100%; }
+    .conversation-heading h2 { font-size: 17px; line-height: 1.6; margin: 0; }
+    .citizen-portrait { flex: 0 0 64px; width: 64px; height: 72px; padding: 4px; box-sizing: border-box; border: 1px solid #665033; background: #20180f; }
+    .conversation-goods, .conversation-delivery { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font-size: 11px; line-height: 1.6; color: var(--gold-dim); }
+    .conversation-goods { text-transform: capitalize; }
+    .conversation-goods .pictogram { flex: 0 0 28px; width: 28px; height: 28px; }
+    .conversation-delivery { padding: 10px 12px; border: 1px solid #665033; background: #20180f; }
+    .conversation-delivery .pictogram { flex: 0 0 36px; width: 36px; height: 36px; }
+    #market-screen p { font-size: 12px; line-height: 1.8; margin: 0; text-align: left; width: 100%; }
+    #market-screen .btn { width: 100%; font-size: 11px; line-height: 1.7; }
+    .illustrated-choice { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .illustrated-choice .pictogram { flex: 0 0 28px; width: 28px; height: 28px; }
+    #msg.illustrated-message { display: flex; align-items: center; gap: 14px; padding: 12px; background: #120d07ed; border: 1px solid var(--gold-dim); text-align: left; font-size: 13px; }
+    #msg .citizen-portrait { flex-basis: 44px; width: 44px; height: 52px; }
     .hint { font-size: 12px; color: var(--gold-dim); }
 
     #fatal { display: none; position: fixed; inset: 0; z-index: 99; align-items: center;
@@ -311,7 +359,7 @@
          strip down the side rather than a corner square: the shape of the city
          (court, the road, the port) is what carries the information. -->
     <div class="panel" id="minimap" style="display:none">
-      <canvas id="minimap-canvas"></canvas>
+      <canvas id="minimap-canvas" role="img" aria-label="City map: domes mark churches, arches mark the aqueduct, an oval marks the Hippodrome, ships mark ports, and a ladder marks the destination. The bright arrow shows your position and direction."></canvas>
     </div>
 
     <!-- The dev keys, for a ?debug build. Bottom right: the map is centred on
@@ -369,7 +417,7 @@
     <p class="verse">"Lord Jesus Christ, Son of God, have mercy on me, a sinner."</p>
     <p>Reach Hagia Sophia before the service bell.<br>Carry the bread quietly. The city has other plans for your morning.</p>
     <p class="hint" id="title-timeless">This Constantinople gathers a thousand years into one morning: Constantine’s forum, Justinian’s Great Church, the monasteries of the Komnenoi, and saints who never walked the same street. Each landmark’s card tells you when it stood.</p>
-    <p class="hint">WASD · move &nbsp;·&nbsp; MOUSE · look &nbsp;·&nbsp; E · interact &nbsp;·&nbsp; SHIFT · run &nbsp;·&nbsp; M · map</p>
+    <p class="hint">WASD · move &nbsp;·&nbsp; MOUSE · look &nbsp;·&nbsp; E · interact &nbsp;·&nbsp; SHIFT · run &nbsp;·&nbsp; M · map &nbsp;·&nbsp; I · inventory</p>
     <button class="btn" id="start-btn">BEGIN THE MORNING</button>
     <div class="hint">Esc releases the mouse.</div>
     <p class="hint" id="title-dev" style="display:none">DEV · <b>PageDown</b>/<b>PageUp</b> travel the walk · <b>1</b>–<b>9</b> / <b>Shift+1</b>–<b>Shift+4</b> toggle additions · walk up to a landmark for its card</p>

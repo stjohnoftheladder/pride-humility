@@ -37,6 +37,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run the Playwright suite (both journeys, endings, input, bullets)
         run: npm test
+      - name: Test multiplayer Worker, two players, and simulated Daily calls
+        run: npm run test:multiplayer
 
   deploy:
     name: Deploy to Cloudflare Pages
@@ -59,6 +61,7 @@ jobs:
         run: npm run build
         env:
           VITE_DEBUG_DEFAULT: '1'
+          VITE_MULTIPLAYER_URL: ${{ vars.VITE_MULTIPLAYER_URL || 'wss://pride-humility-multiplayer.mark-abella.workers.dev/ws' }}
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

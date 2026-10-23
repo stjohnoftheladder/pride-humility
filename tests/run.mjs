@@ -14,6 +14,7 @@ import { testLandmarksA } from './landmarksA.mjs';
 import { testLandmarksB } from './landmarksB.mjs';
 import { testMosaicMilion } from './mosaicMilion.mjs';
 import { testPalace } from './palace.mjs';
+import { testInventory } from './inventory.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -21,7 +22,7 @@ const PORT = 5310;
 
 function startServer() {
   execSync('npx vite build', { cwd: ROOT, stdio: 'inherit' });
-  const proc = spawn(process.execPath, [path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js'), 'preview', '--port', String(PORT), '--strictPort'], {
+  const proc = spawn(process.execPath, [path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js'), 'preview', '--host', '127.0.0.1', '--port', String(PORT), '--strictPort'], {
     cwd: ROOT,
     stdio: 'ignore',
   });
@@ -62,7 +63,7 @@ async function newPage(browser) {
     errors.push(text);
   });
   page.on('pageerror', (err) => errors.push('PAGEERROR: ' + err.message));
-  await page.goto(`http://localhost:${PORT}/?debug`);
+  await page.goto(`http://127.0.0.1:${PORT}/?debug`);
   await page.waitForFunction(() => window.__game);
   return { page, errors };
 }
@@ -843,7 +844,7 @@ const server = startServer();
 let exit = 1;
 let aborted = null;
 try {
-  await waitForServer(`http://localhost:${PORT}/`);
+  await waitForServer(`http://127.0.0.1:${PORT}/`);
   const browser = await chromium.launch();
   const exits = await newPage(browser);
   // World sprite sheets load asynchronously after the debug hook is installed.
@@ -879,6 +880,7 @@ try {
   check('escape: no page errors', exits.errors.length === 0, JSON.stringify(exits.errors));
   await exits.page.close();
   await testActivities(browser, newPage, check);
+  await testInventory(browser, newPage, check);
   await testMorning(browser, newPage, check);
   await testLandmarksA(browser, newPage, check);
   await testLandmarksB(browser, newPage, check);

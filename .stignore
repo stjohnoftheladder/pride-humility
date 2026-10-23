@@ -1,0 +1,19 @@
+// Game source, authored assets and adaptation work are shared.
+// Each computer keeps its own Git database, dependencies and credentials.
+.git
+node_modules
+dist
+.wrangler
+.vite
+__pycache__
+*.pyc
+*.log
+!.dev.vars.example
+.dev.vars
+.dev.vars.*
+!.env.example
+!.env.production
+.env
+.env.*
+.claude
+.codex
