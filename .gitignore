@@ -10,3 +10,9 @@ dist/
 /multiplayer-worker/worker-configuration.d.ts
 .stfolder/
 .stversions/
+
+# adaptation/ is private: files already tracked here stay, new ones are backed
+# up to a private repo by tools/backup-adaptation.sh instead (see SYNC.md).
+# Add a file the game needs with `git add -f`.
+adaptation/
+.adaptation-git/
