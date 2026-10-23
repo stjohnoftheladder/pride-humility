@@ -35,11 +35,10 @@ continuing work on the affected files.
 
 ## adaptation/ backup
 
-`adaptation/` holds research, scripts, previews and media that stay out of this
+`adaptation/` holds research, scripts, plans and media that stay out of this
 public repo. On Desktop-48 a separate Git database, `.adaptation-git` (ignored
-here and by Syncthing), tracks the whole folder and pushes it to a private
-repository, with media and run logs in Git LFS. Run `bash tools/backup-adaptation.sh`
-after adaptation work; it commits whatever changed and pushes. The free LFS
-allowance is 1 GB of storage and 1 GB of download a month, and the first backup
-used about 780 MB, so large new media may need a paid LFS data pack.
-
+here and by Syncthing), backs up its text files to a private repository. Media
+(video, images, audio, archives) is deliberately not backed up; the only media
+worth keeping, the Chrysostom homily recordings, lives in this repo under
+`public/assets/audio/chrysostom/`. Run `bash tools/backup-adaptation.sh` after
+adaptation work; it commits whatever changed and pushes.

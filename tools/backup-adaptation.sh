@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Back up adaptation/ to the private repo whose git database is .adaptation-git
-# (Desktop-48 only). Media and logs go through Git LFS. Safe to run any time.
+# (Desktop-48 only). Media is excluded in .adaptation-git/info/exclude. Safe to
+# run any time.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 G=(git --git-dir="$ROOT/.adaptation-git" --work-tree="$ROOT/adaptation")
