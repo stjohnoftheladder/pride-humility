@@ -16,12 +16,18 @@ The public Worker URL in `.env.production` is shared; local secret files are not
 Syncthing keeps five older versions of files changed or deleted by the other
 computer, available through its Restore Versions interface.
 
-GitHub remains the version-history backup. The combined game started on branch
-`codex/rainbow-desktop-sync`, commit `81c0bb7`. Git commits, branches, and chat
-history do not synchronize through this folder. A commit made on one computer
-can therefore appear as uncommitted file changes on the other.
+GitHub holds the version history, and `dev` is the one working branch: CI
+tests every push to it and deploys it to https://pride-humility.pages.dev. Git
+commits, branches, and chat history do not synchronize through this folder. A
+commit made on one computer can therefore appear as uncommitted file changes on
+the other.
 
-Commit and push from Desktop-48 for a single place to maintain game history.
+Commit and push only from Desktop-48, in this folder, on `dev`. Rainbow edits
+files and lets Syncthing carry them over; its own Git database is not used for
+commits. Work done anywhere else, such as a cloud session or a temporary clone,
+reaches this folder by being pushed to `dev` and then pulled here with
+`git pull` (pause the folder first, as below). Before starting work, check that
+`git status` here shows `dev` and that `git log origin/dev..` is empty.
 Pause this Syncthing folder on both computers before independently changing
 branches or restoring older versions of the project, since those operations
 also change the shared files. Resolve any `.sync-conflict-*` copies before
