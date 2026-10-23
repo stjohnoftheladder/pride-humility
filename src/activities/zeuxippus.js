@@ -14,7 +14,7 @@ const COLD = new THREE.Color(0x3f7fb0), HOT = new THREE.Color(0xd0704a);
 export default class ZeuxippusActivity extends SiteActivity {
   constructor(options) {
     super(options, { room: 'The Baths of Zeuxippus', title: 'THE WARM BASIN',
-      controls: 'WASD walk · hold Space at a tap · E mats / tiles / Theodora · F take the basin · Q / Esc leave · R retry' });
+      controls: 'WASD walk · hold Space at a tap · E mats / tiles / Anastasia · F take the basin · Q / Esc leave · R retry' });
   }
   build(group, site) {
     const { targets } = site, stone = this.level.mat.get('stone_floor'), wood = this.level.mat.get('wood_floor');
@@ -48,7 +48,7 @@ export default class ZeuxippusActivity extends SiteActivity {
     targets.push({ name: 'Bath mats', role: 'stack', x: 37.5, z: 308.5 });
     this.label(group, 'Bath mats', 37.5, 1.2, 308.5);
     site.carried = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.05, 0.6), wood); group.add(site.carried);
-    site.visitor = this.person(group, 'Theodora · Older bather', 'visitor', BENCH.x, BENCH.z, 0x8a6f8e);
+    site.visitor = this.person(group, 'Anastasia · Older bather', 'visitor', BENCH.x, BENCH.z, 0x8a6f8e);
     site.guest = this.person(group, 'Bather', 'guest', 44, Z, 0x6f8a6a, false);
     targets.push(site.visitor);
   }
@@ -59,7 +59,7 @@ export default class ZeuxippusActivity extends SiteActivity {
     for (const t of s.targets) if (t.role === 'tile') t.hidden = false;
     this.place(s.visitor, BENCH.x, BENCH.z); s.visitor.figure.position.y = 0;
     s.guest.figure.visible = false; this.place(s.guest, 44, Z); s.guest.figure.position.y = 0;
-    this.hud.message('The basin is cold and the walk from the bench is wet. Theodora waits on the bench with her cane.', 7000);
+    this.hud.message('The basin is cold and the walk from the bench is wet. Anastasia waits on the bench with her cane.', 7000);
   }
   safe() { return this.game.covered.every(Boolean); }
   comfortable() { const w = this.game.warmth; return w >= BAND[0] && w <= BAND[1]; }
@@ -70,11 +70,11 @@ export default class ZeuxippusActivity extends SiteActivity {
     else if (code === 'KeyE' && target.role === 'tile' && g.carrying) {
       g.carrying = false; g.covered[target.index] = true; s.mats[target.index].visible = true; target.ref.hidden = true;
     } else if (code === 'KeyE' && target.role === 'visitor' && !g.walking) {
-      if (!this.safe()) { g.wobble = 1; this.hud.message('Theodora steps toward the shining tiles, sways, and sits back down. “One fall at my age ends my bathing.”', 6500); }
-      else if (!this.comfortable()) this.hud.message(`Theodora watches the basin. “${g.warmth > BAND[1] ? 'That steam would scald me.' : 'That water is too cold for my joints.'}”`, 6000);
-      else { g.walking = true; this.hud.message('Theodora rises and crosses on the mats, one careful step at a time.', 6000); }
+      if (!this.safe()) { g.wobble = 1; this.hud.message('Anastasia steps toward the shining tiles, sways, and sits back down. “One fall at my age ends my bathing.”', 6500); }
+      else if (!this.comfortable()) this.hud.message(`Anastasia watches the basin. “${g.warmth > BAND[1] ? 'That steam would scald me.' : 'That water is too cold for my joints.'}”`, 6000);
+      else { g.walking = true; this.hud.message('Anastasia rises and crosses on the mats, one careful step at a time.', 6000); }
     } else if (code === 'KeyF' && target.role === 'basin' && !g.walking) {
-      if (this.comfortable()) this.finish('proud', 'You settle into the warm basin and tell the attendant it is taken. Theodora waits on the bench.');
+      if (this.comfortable()) this.finish('proud', 'You settle into the warm basin and tell the attendant it is taken. Anastasia waits on the bench.');
       else this.hud.message(g.warmth > BAND[1] ? 'Steam rises off the water. It is too hot to sit in.' : 'The water is cold. Warm it first.', 4000);
     }
   }
@@ -88,11 +88,11 @@ export default class ZeuxippusActivity extends SiteActivity {
       if (g.walking) {
         g.along = Math.min(1, g.along + dt * 1.4 / (BENCH.x - BASIN.x - 1.6));
         this.place(s.visitor, BENCH.x - g.along * (BENCH.x - BASIN.x - 1.6), Z);
-        if (g.along >= 1) this.finish('humble', 'Theodora lowers herself into the warm water and closes her eyes. Your own bath can wait.');
-      } else if (g.time >= CLOSING) this.finish('unfinished', 'The attendant drains the basin for the evening. Try again tomorrow.');
+        if (g.along >= 1) this.finish('humble', 'Anastasia lowers herself into the warm water and closes her eyes. Your own bath can wait.');
+      } else if (g.time >= CLOSING) this.finish('unfinished', 'The attendant drains the basin before the bathers come in. Try again.');
     }
     if (g.done === 'humble') {
-      // Others use the space you prepared: Theodora sits in, and another bather follows the mats.
+      // Others use the space you prepared: Anastasia sits in, and another bather follows the mats.
       s.visitor.figure.position.y = -0.25;
       s.guest.figure.visible = true; g.guest = Math.min(1, g.guest + dt * 0.12);
       this.place(s.guest, 44 - g.guest * (44 - BASIN.x - 1.8), Z + (g.guest > 0.85 ? 1.2 * (g.guest - 0.85) / 0.15 : 0));
@@ -115,12 +115,12 @@ export default class ZeuxippusActivity extends SiteActivity {
   }
   prompt(target) {
     const g = this.game;
-    if (!target) return g.carrying ? 'Carry the mat to a shining wet tile' : 'Warm the basin, cover the wet tiles, and see to Theodora · Q / Esc leave';
+    if (!target) return g.carrying ? 'Carry the mat to a shining wet tile' : 'Warm the basin, cover the wet tiles, and see to Anastasia · Q / Esc leave';
     if (target.role === 'warm' || target.role === 'cool') return `${target.name} · Hold Space to run it`;
     if (target.role === 'stack') return g.carrying ? 'You are carrying a mat' : 'E · Take a bath mat';
     if (target.role === 'tile') return g.carrying ? 'E · Lay the mat on the wet tile' : 'Wet tile · fetch a mat from the stack';
-    if (target.role === 'visitor') return g.walking ? 'Theodora is crossing' : 'E · Offer Theodora the basin';
-    if (target.role === 'basin') return g.walking ? 'The basin is ready for Theodora' : 'F · Take the basin for yourself';
+    if (target.role === 'visitor') return g.walking ? 'Anastasia is crossing' : 'E · Offer Anastasia the basin';
+    if (target.role === 'basin') return g.walking ? 'The basin is ready for Anastasia' : 'F · Take the basin for yourself';
     return '';
   }
   snapshot() {

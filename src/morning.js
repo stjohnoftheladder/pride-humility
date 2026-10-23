@@ -1,6 +1,21 @@
 import { SITES } from './config.js';
 export const CHURCH_STEPS = { x: 52.5, z: 310.5 };
 const SERVICE = 720, CLOSE = 900;
+// What the arrival card remembers of each landmark, in road order: [humble, proud].
+const ARRIVAL_FACTS={
+  aqueduct:['Water reached the mill, the hospital and the homes in fair measure.','The patron’s fountain received water while households waited.'],
+  pantokrator:['Gennadios and Maria were cared for first, and Theophano was thanked for her poultice.','At the Pantokrator, the patron came first or the credit went to you.'],
+  forumConstantine:['You heard Menas out and returned the purse quietly.','You accused Menas before hearing the evidence.'],
+  stoudios:['Your page at Stoudios keeps its honest repair.','Gold covers the blot on your Stoudios page.'],
+  mosaicPeristyle:['Melania’s border and your tiles were credited as one floor.','You accepted praise for Melania’s border.'],
+  cistern:['You and Theodoros came up from the cistern together, and Pelagia carried the lamp down.','You told the foreman you explored the cistern alone.'],
+  zeuxippus:['Anastasia bathed in the basin you prepared.','You kept the warm basin while Anastasia waited.'],
+  milion:['A traveler you guided came back to thank Zosimos the porter.','You sent a traveler off on a guess.'],
+  augustaion:['The procession reached the palace together, at the pace of its slowest walkers.','You pushed to the front of the procession and left the elder behind.'],
+  chalke:['Photeine’s request reached the palace with your petition.','You claimed a connection and left Photeine in the queue.'],
+  hagiaEirene:['Kassia’s answer carried through Hagia Eirene.','You sang over Kassia in Hagia Eirene.'],
+  harbour:['You and Gregorios brought the grain aboard together.','You took the foreman’s praise while Gregorios struggled on the quay.'],
+};
 export class Morning {
   constructor({branch,player,hud,audio,market,onArrival}) {
     Object.assign(this,{branch,player,hud,audio,market,onArrival});
@@ -41,25 +56,7 @@ export class Morning {
     r.arrived??=r.elapsed<SERVICE?'on-time':r.elapsed<CLOSE?'late':'missed';this.branch.save();
     const delivery=this.branch.flags['errand:bread'],facts=[delivery==='quiet'?'The bread reached the stable hands quietly.':delivery==='praise'?'The bread arrived, and you asked for your generosity to be announced.':'The bread you promised to deliver is still with you.'];
     if(this.branch.flags.helpedCharioteer)facts.push('You stopped for the injured charioteer.');
-    if(this.branch.flags['activity:harbour']==='humble')facts.push('You and Gregorios brought the grain aboard together.');
-    if(this.branch.flags['activity:aqueduct']==='proud')facts.push('The patron’s fountain received water while households waited.');
-    if(this.branch.flags['activity:forumConstantine']==='proud')facts.push('You accused Menas before hearing the evidence.');
-    if(this.branch.flags['activity:pantokrator']==='humble')facts.push('Basil and Maria were cared for first, and Theophano was thanked for her poultice.');
-    if(this.branch.flags['activity:pantokrator']==='proud')facts.push('At the Pantokrator, the patron came first or the credit went to you.');
-    if(this.branch.flags['activity:stoudios']==='humble')facts.push('Your page at Stoudios keeps its honest repair.');
-    if(this.branch.flags['activity:stoudios']==='proud')facts.push('Gold covers the blot on your Stoudios page.');
-    if(this.branch.flags['activity:hagiaEirene']==='humble')facts.push('Kassia’s answer carried through Hagia Eirene.');
-    if(this.branch.flags['activity:hagiaEirene']==='proud')facts.push('You sang over Kassia in Hagia Eirene.');
-    if(this.branch.flags['activity:cistern']==='humble')facts.push('You and Theodoros came up from the cistern together, and Pelagia carried the lamp down.');
-    if(this.branch.flags['activity:zeuxippus']==='humble')facts.push('Theodora bathed in the basin you prepared.');
-    if(this.branch.flags['activity:cistern']==='proud')facts.push('You told the foreman you explored the cistern alone.');
-    if(this.branch.flags['activity:zeuxippus']==='proud')facts.push('You kept the warm basin while Theodora waited.');
-    if(this.branch.flags['activity:mosaicPeristyle']==='humble')facts.push('Irene’s border and your tiles were credited as one floor.');
-    if(this.branch.flags['activity:mosaicPeristyle']==='proud')facts.push('You accepted praise for Irene’s border.');
-    if(this.branch.flags['activity:milion']==='humble')facts.push('A traveler you guided came back to thank Basil the porter.');
-    if(this.branch.flags['activity:milion']==='proud')facts.push('You sent a traveler off on a guess.');
-    if(this.branch.flags['activity:augustaion']==='proud')facts.push('You pushed to the front of the procession and left the elder behind.');
-    if(this.branch.flags['activity:chalke']==='humble')facts.push('Eirene’s request reached the palace with your petition.');
+    for(const [id,[humble,proud]] of Object.entries(ARRIVAL_FACTS)){const o=this.branch.flags[`activity:${id}`];if(o==='humble')facts.push(humble);else if(o==='proud')facts.push(proud);}
     facts.push(`You brought ${r.gold} gold${r.boots?' and your swift shoes':''}.`);
     this.onArrival(r.arrived==='on-time'?'BEFORE THE SERVICE BELL':r.arrived==='late'?'THE SERVICE HAS BEGUN':'AFTER THE SERVICE',`${r.arrived==='on-time'?'You reach Hagia Sophia before the service begins.':r.arrived==='late'?'You enter quietly after the service has begun.':'The service has ended. You sit in the quiet forecourt; tomorrow offers another morning.'} ${facts.join(' ')}`);
   }

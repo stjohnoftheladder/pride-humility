@@ -65,7 +65,7 @@ export default class MosaicPeristyle extends SiteActivity {
     });
     marks.boundingSphere = new THREE.Sphere(new THREE.Vector3(CENTER.x, 0.1, CENTER.z), 4); group.add(marks);
     this.master = makePerson(this.level, group, { id: 'mosaic-master', name: 'Kosmas · Master', x: 71.5, z: 262, color: 0x5d4a7a });
-    this.novice = makePerson(this.level, group, { id: 'mosaic-novice', name: 'Irene · Novice', x: 79.6, z: 264, color: 0x6c7d5a });
+    this.novice = makePerson(this.level, group, { id: 'mosaic-novice', name: 'Melania · Novice', x: 79.6, z: 264, color: 0x6c7d5a });
     this.shared = makeLabel(group, 'One floor, two hands', CENTER.x, 2.6, CENTER.z); this.shared.visible = false;
     for (const t of [this.master, this.novice]) this.level.npcs.push({ id: t.id, name: t.name, role: 'witness', x: t.x, z: t.z });
   }
@@ -73,7 +73,7 @@ export default class MosaicPeristyle extends SiteActivity {
     return { rotation: PIECES.map((p, i) => (p.target + START_OFFSETS[i]) % 4), shown: PIECES.map((p, i) => (p.target + START_OFFSETS[i]) % 4),
       border: 0, loose: -1, press: 0, repaired: false, last: -1 };
   }
-  intro() { return 'Kosmas: “Set the eight tiles around the medallion. Irene sets the border.” Match each gold quarter to the red line on the bed.'; }
+  intro() { return 'Kosmas: “Set the eight tiles around the medallion. Melania sets the border.” Match each gold quarter to the red line on the bed.'; }
   timeoutText() { return 'The mortar sets before the floor is finished. Try again.'; }
   aligned() { return this.game.rotation.filter((r, i) => r === PIECES[i].target).length; }
   complete() { return this.game.loose >= 0; }
@@ -88,16 +88,16 @@ export default class MosaicPeristyle extends SiteActivity {
       g.rotation[t.index] = (g.rotation[t.index] + 1) % 4; g.last = t.index;
       if (this.aligned() === PIECES.length) g.loose = g.last;
     } else if (t.role === 'novice' && code === 'KeyE') {
-      this.hud.message(g.border < BORDER.length ? 'Irene: “I am setting the border, one stone at a time.”' : 'Irene: “The border is done. I hope the master likes it.”', 4500);
+      this.hud.message(g.border < BORDER.length ? 'Melania: “I am setting the border, one stone at a time.”' : 'Melania: “The border is done. I hope the master likes it.”', 4500);
     } else if (t.role === 'master') {
       const ready = this.complete() && g.border >= BORDER.length;
       if (code === 'KeyE' || ((code === 'KeyF' || code === 'KeyH') && !ready)) {
-        this.hud.message(!this.complete() ? 'Kosmas: “Finish the eight tiles around the medallion first.”' : g.border < BORDER.length ? 'Kosmas: “Wait for Irene to finish the border, then we will look at the whole floor.”' : 'Kosmas: “The floor is finished. Whose hands made it?” F take the credit · H name Irene', 5000);
+        this.hud.message(!this.complete() ? 'Kosmas: “Finish the eight tiles around the medallion first.”' : g.border < BORDER.length ? 'Kosmas: “Wait for Melania to finish the border, then we will look at the whole floor.”' : 'Kosmas: “The floor is finished. Whose hands made it?” F take the credit · H name Melania', 5000);
       } else if (code === 'KeyF') {
-        this.finish('proud', `Kosmas praises the whole floor as your work. Irene stands back in silence.${g.repaired ? '' : ' Your loose tile still rocks underfoot.'}`);
+        this.finish('proud', `Kosmas praises the whole floor as your work. Melania stands back in silence.${g.repaired ? '' : ' Your loose tile still rocks underfoot.'}`);
       } else if (code === 'KeyH') {
         if (!g.repaired) this.hud.message('Kosmas: “Before we speak of her border, look again at your own tiles.”', 5000);
-        else { this.finish('humble', 'You name Irene’s border and point to the tile you reset. Kosmas: “One floor, two hands.” Irene will remember who worked beside her.'); }
+        else { this.finish('humble', 'You name Melania’s border and point to the tile you reset. Kosmas: “One floor, two hands.” Melania will remember who worked beside her.'); }
       }
     }
   }
@@ -136,19 +136,19 @@ export default class MosaicPeristyle extends SiteActivity {
     else if (g.done === 'humble') this.novice.figure.position.set(CENTER.x + 1.2, 0, CENTER.z - 4.4);
     else if (g.done === 'proud') this.novice.figure.position.set(CENTER.x + 6, 0, CENTER.z + 6);
     else this.novice.figure.position.set(CENTER.x + 4.4, 0, CENTER.z + 1.5);
-    this.novice.label.userData.setText(g.done === 'humble' ? 'Irene · Your collaborator' : 'Irene · Novice');
+    this.novice.label.userData.setText(g.done === 'humble' ? 'Melania · Your collaborator' : 'Melania · Novice');
     this.shared.visible = g.done === 'humble';
   }
   status() {
     const g = this.game;
-    return `Your tiles aligned ${this.aligned()}/${PIECES.length} · Irene’s border ${Math.floor(g.border)}/${BORDER.length}${this.complete() && !g.repaired ? ' · one of your tiles sits proud of the bed' : ''} · mortar ${Math.max(0, Math.ceil(120 - g.time))}s`;
+    return `Your tiles aligned ${this.aligned()}/${PIECES.length} · Melania’s border ${Math.floor(g.border)}/${BORDER.length}${this.complete() && !g.repaired ? ' · one of your tiles sits proud of the bed' : ''} · mortar ${Math.max(0, Math.ceil(120 - g.time))}s`;
   }
   prompt() {
     const g = this.game, t = this.near();
     if (!t) return 'Walk onto a tile to turn it · Kosmas waits at the west colonnade';
     if (t.role === 'tile') return this.complete() ? t.index === g.loose && !g.repaired ? 'Hold Space · press the rocking tile into the bed' : 'This tile is set' : 'E · turn the tile until gold meets the red line';
-    if (t.role === 'novice') return 'E · speak with Irene';
-    return this.complete() && g.border >= BORDER.length ? 'F · present the floor as yours     H · name Irene’s border' : 'E · speak with Kosmas';
+    if (t.role === 'novice') return 'E · speak with Melania';
+    return this.complete() && g.border >= BORDER.length ? 'F · present the floor as yours     H · name Melania’s border' : 'E · speak with Kosmas';
   }
   snapshot() {
     if (!this.active) return null; const g = this.game;

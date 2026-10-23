@@ -67,9 +67,9 @@ export async function testMosaicMilion(browser, newPage, check) {
     return { ...a.snapshot(), grace: g.branch.grace, pride: g.branch.pride, flag: g.branch.flags['activity:mosaicPeristyle'],
       label: a.novice.label.userData.text, shared: a.shared.visible };
   });
-  check('mosaic: repairing your tile and naming Irene resolves humbly with a shared pattern',
+  check('mosaic: repairing your tile and naming Melania resolves humbly with a shared pattern',
     humble.outcome === 'humble' && humble.repaired && humble.grace === 2 && humble.pride === 0 && humble.flag === 'humble'
-    && humble.label === 'Irene · Your collaborator' && humble.shared, JSON.stringify(humble));
+    && humble.label === 'Melania · Your collaborator' && humble.shared, JSON.stringify(humble));
   const proud = await run(() => {
     const g = window.__game, a = g.activities(); g.key('KeyR');
     a.game.rotation = a.targets().slice(0, 8).map(p => p.target); a.game.loose = 0;
@@ -93,7 +93,7 @@ export async function testMosaicMilion(browser, newPage, check) {
   const settle = 'for (let i = 0; i < 600 && a.game.travelers.some(t => ["walking","astray","thanking","guessed"].includes(t.state)) && !a.game.done; i++) a.update(1 / 30);';
   const astray = await run((settle) => {
     const g = window.__game, a = g.activities();
-    g.teleport(64.2, 318); g.key('KeyF');   // pointer north; the first traveler seeks the dome
+    g.teleport(64.2, 318); g.key('Space');   // pointer north; the first traveler seeks the dome
     a.update(0.5);
     const out = { ...a.game.travelers[0] };
     eval(settle);
@@ -103,7 +103,7 @@ export async function testMosaicMilion(browser, newPage, check) {
     astray.out.state === 'astray' && astray.out.x < 61 && astray.back.travelers[0].state === 'waiting' && astray.back.current === 0, JSON.stringify(astray));
   const guided = await run((settle) => {
     const g = window.__game, a = g.activities();
-    const send = (arm) => { g.teleport(64.2, 318); while (a.game.pointer !== arm) g.key('KeyE'); g.key('KeyF'); eval(settle); };
+    const send = (arm) => { g.teleport(64.2, 318); while (a.game.pointer !== arm) g.key('KeyE'); g.key('Space'); eval(settle); };
     send(1); send(0);
     return a.snapshot();
   }, settle);
@@ -111,16 +111,16 @@ export async function testMosaicMilion(browser, newPage, check) {
   const thanked = await run((settle) => {
     const g = window.__game, a = g.activities();
     g.teleport(68, 318.2); g.key('KeyE');
-    g.teleport(64.2, 318); while (a.game.pointer !== 2) g.key('KeyE'); g.key('KeyF');
+    g.teleport(64.2, 318); while (a.game.pointer !== 2) g.key('KeyE'); g.key('Space');
     for (let i = 0; i < 900 && !a.game.done; i++) a.update(1 / 30);
     return { ...a.snapshot(), grace: g.branch.grace, pride: g.branch.pride, flag: g.branch.flags['activity:milion'] };
   }, settle);
-  check('milion: asking Basil about the worn arm guides all three; one returns to thank him',
+  check('milion: asking Zosimos about the worn arm guides all three; one returns to thank him',
     thanked.outcome === "humble" && thanked.travelers[2].asked && thanked.travelers[0].state === "thanked" && thanked.grace === 4 && thanked.flag === "humble", JSON.stringify(thanked));
   const guess = await run((settle) => {
     const g = window.__game, a = g.activities(); g.key('KeyR');
     a.game.current = 2; a.game.travelers.forEach((t, i) => { if (i < 2) t.state = 'arrived'; });
-    g.teleport(64.2, 318); while (a.game.pointer !== 2) g.key('KeyE'); g.key('KeyF');
+    g.teleport(64.2, 318); while (a.game.pointer !== 2) g.key('KeyE'); g.key('Space');
     a.update(0.2); const walking = a.game.travelers[2].state;
     for (let i = 0; i < 900 && !a.game.done; i++) a.update(1 / 30);
     return { walking, ...a.snapshot(), grace: g.branch.grace, pride: g.branch.pride, flag: g.branch.flags['activity:milion'] };
@@ -143,7 +143,7 @@ export async function testMosaicMilion(browser, newPage, check) {
   const first = await fresh.page.evaluate(() => {
     const g = window.__game, a = g.activities();
     a.game.current = 2; a.game.travelers.forEach((t, i) => { if (i < 2) t.state = 'arrived'; });
-    g.teleport(64.2, 318); g.key('KeyF');
+    g.teleport(64.2, 318); g.key('Space');
     for (let i = 0; i < 900 && !a.game.done; i++) a.update(1 / 30);
     return { pride: g.branch.pride, flag: g.branch.flags['activity:milion'] };
   });

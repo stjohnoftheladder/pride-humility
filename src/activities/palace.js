@@ -11,8 +11,8 @@ const WALKERS = [
   { name: 'Sergios · Cross bearer', speed: 1.15, color: 0x7a2f2a },
   { name: 'Agathe', speed: 1.05, color: 0x52746e },
   { name: 'Gerontios · Elder', speed: 0.55, color: 0x6d6488, slow: true },
-  { name: 'Ioannes', speed: 1.05, color: 0x948366 },
-  { name: 'Maria · Carrying a child', speed: 0.65, color: 0x58769c, slow: true },
+  { name: 'Kyrillos', speed: 1.05, color: 0x948366 },
+  { name: 'Sophronia · Carrying a child', speed: 0.65, color: 0x58769c, slow: true },
   { name: 'Petros', speed: 1.05, color: 0xa65c43 },
 ];
 const BYSTANDERS = [74, 79, 84, 89].map((x, i) => ({ x, name: ['A water seller', 'Two gossiping clerks', 'A boy with a hoop', 'A guard at ease'][i] }));
@@ -20,7 +20,7 @@ const GATE_X = 73.5, QUEUE_Z = 321.6, FRONT_X = 75.6, STEP = 1.6;
 const PETITIONERS = [
   { name: 'Nikolaos · Baker', color: 0xa65c43, line: '“A licence to bake for the night market. The seal is ready.”' },
   { name: 'Stephanos · Mason', color: 0x948366, line: '“Wages owed for the cistern repairs. I have the foreman’s tally.”' },
-  { name: 'Eirene · Widow', color: 0x6d6488, neglected: true, line: '“My husband’s pension stopped in spring. I cannot write, and each time the clerk calls the next name.”' },
+  { name: 'Photeine · Widow', color: 0x6d6488, neglected: true, line: '“My husband’s pension stopped in spring. I cannot write, and each time the clerk calls the next name.”' },
   { name: 'Kosmas · Ferryman', color: 0x52746e, line: '“The harbour toll was charged twice. I only ask for the second coin.”' },
   { name: 'Thekla · Weaver', color: 0x58769c, line: '“Permission to sell at the Forum on feast days.”' },
 ];
@@ -150,7 +150,7 @@ export class PalaceActivities {
         for (const b of this.site.bystanders) Object.assign(b, { aside: true, target: LANE_Z - 2, tilt: 0.45 });
         this.hud.message('You shove through and stride ahead of the cross. People stumble out of your way.', 4500);
       } else if (t.role === 'walker' && e.code === 'KeyE') {
-        g.paced = true; this.hud.message('Sergios: “Yes. We walk at Gerontios’s pace, and Maria’s.” He slows the cross.', 5000);
+        g.paced = true; this.hud.message('Sergios: “Yes. We walk at Gerontios’s pace, and Sophronia’s.” He slows the cross.', 5000);
       }
     } else if (t.role === 'clerk') {
       if (e.code === 'KeyF' && g.served < PETITIONERS.length) {
@@ -166,7 +166,7 @@ export class PalaceActivities {
       g.heard.add(t.name); this.hud.message(`${t.name}: ${t.line}`, 6500);
     } else if (e.code === 'KeyH' && t.neglected) {
       if (!g.heard.has(t.name)) this.hud.message('Hear her first: E.', 3000);
-      else { g.helped = true; this.hud.message('You write Eirene’s request beneath your own and press her mark beside the seal.', 5000); }
+      else { g.helped = true; this.hud.message('You write Photeine’s request beneath your own and press her mark beside the seal.', 5000); }
     }
   }
   update(dt) {
@@ -221,8 +221,8 @@ export class PalaceActivities {
       if (g.timer >= 6) {
         g.timer = 0;
         const front = s.petitioners.find(p => !p.hidden && !p.aside);
-        // The clerk passes over Eirene unless someone speaks for her.
-        if (front.neglected && !g.helped) { front.aside = true; this.hud.message('The clerk calls past Eirene. She steps out of line, still holding her request.', 4500); }
+        // The clerk passes over Photeine unless someone speaks for her.
+        if (front.neglected && !g.helped) { front.aside = true; this.hud.message('The clerk calls past Photeine. She steps out of line, still holding her request.', 4500); }
         else front.hidden = true;
         g.served++;
       }
@@ -234,13 +234,13 @@ export class PalaceActivities {
       if (!p.aside) place++;
       p.x += (tx - p.x) * Math.min(1, dt * 2.5); p.z += (tz - p.z) * Math.min(1, dt * 2.5);
     }
-    // Eirene stays beside the gate until her request is carried with yours.
+    // Photeine stays beside the gate until her request is carried with yours.
     if (g.helped) for (const p of s.petitioners) if (p.aside) p.hidden = true;
     const sx = FRONT_X + place * STEP;
     s.slot.position.set(sx, 0.16, QUEUE_Z);
     s.scroll.position.set(this.player.pos.x, 1.0, this.player.pos.z);
     const waiting = PETITIONERS.length - g.served;
-    this.statusEl.textContent = `${waiting ? `${waiting} ahead of you` : 'Your turn'} · ${g.heard.size}/${PETITIONERS.length} heard · ${g.helped ? 'Eirene’s need is in your petition' : 'Your petition carries only your request'}`;
+    this.statusEl.textContent = `${waiting ? `${waiting} ahead of you` : 'Your turn'} · ${g.heard.size}/${PETITIONERS.length} heard · ${g.helped ? 'Photeine’s need is in your petition' : 'Your petition carries only your request'}`;
   }
   finish(outcome) {
     if (this.game.done) return;
@@ -249,11 +249,11 @@ export class PalaceActivities {
     if (reward) { this.branch.setFlag(key, outcome); if (outcome === 'humble') this.branch.addGrace(SITE_GRACE); else this.branch.addPride(SITE_PRIDE); this.branch.save(); this.onResult(); }
     const text = this.active.id === 'augustaion'
       ? outcome === 'humble' ? 'The procession reaches the palace together. Gerontios takes your arm for the last step.'
-        : outcome === 'proud' ? 'You arrive first, at the front. Gerontios and Maria are still far behind in the square.'
+        : outcome === 'proud' ? 'You arrive first, at the front. Gerontios and Sophronia are still far behind in the square.'
         : 'The cross arrives, but some of the group were left behind. Try again.'
-      : outcome === 'humble' ? 'The clerk breaks your seal and reads both requests. He calls Eirene back to the gate.'
-        : outcome === 'proud' ? 'Your petition is taken first. Behind you, Eirene folds her request away.'
-        : 'Your petition is received. Eirene’s request is still unheard.';
+      : outcome === 'humble' ? 'The clerk breaks your seal and reads both requests. He calls Photeine back to the gate.'
+        : outcome === 'proud' ? 'Your petition is taken first. Behind you, Photeine folds her request away.'
+        : 'Your petition is received. Photeine’s request is still unheard.';
     this.hud.message(`${text} ${outcome === 'unfinished' ? 'Meters unchanged.' : reward ? outcome === 'humble' ? `(+${SITE_GRACE} grace)` : `(+${SITE_PRIDE} pride)` : 'Practice: meters unchanged.'}`, 7500);
   }
   close({ walkingAway = false } = {}) {

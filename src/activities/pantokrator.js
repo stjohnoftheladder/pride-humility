@@ -13,8 +13,8 @@ const ITEMS = [
 const PATIENTS = [
   { id: 'patron', name: 'Lord Andronikos · Patron', need: 'wine', z: 117, color: 0x6b3f8f, sitting: true,
     ask: 'Andronikos: “Honeyed wine, and quickly. My family endowed these beds.” He looks comfortable.' },
-  { id: 'fever', name: 'Basil · Fever', need: 'water', z: 121.5, color: 0x8b8b7a,
-    ask: 'Basil shivers under his blanket: “Water… I am burning.”' },
+  { id: 'fever', name: 'Gennadios · Fever', need: 'water', z: 121.5, color: 0x8b8b7a,
+    ask: 'Gennadios shivers under his blanket: “Water… I am burning.”' },
   { id: 'wound', name: 'Maria · Wounded hand', need: 'poultice', z: 126, color: 0x7a6a8e,
     ask: 'Maria holds out a bound hand, stained through: “The dressing needs changing.”' },
 ];
@@ -89,10 +89,10 @@ export class PantokratorActivity extends SiteActivity {
       const at = g.tray.indexOf(target.need);
       if (at < 0) { this.hud.message(target.ask, 6000); return; }
       g.tray.splice(at, 1); g.served.push(target.id); this.audio?._t(660, 0.12, 'sine', 0.08);
-      this.hud.message(target.id === 'patron' ? 'Andronikos drinks and waves you on.' : target.id === 'fever' ? 'Basil drinks and his shivering eases.' : 'The fresh poultice settles; Maria’s hand stills.', 4500);
+      this.hud.message(target.id === 'patron' ? 'Andronikos drinks and waves you on.' : target.id === 'fever' ? 'Gennadios drinks and his shivering eases.' : 'The fresh poultice settles; Maria’s hand stills.', 4500);
     } else if (target.role === 'attendant' && code === 'KeyE') {
       g.asked = true; for (const p of this.patients) g.known.add(p.id);
-      this.hud.message('Theophano: “Basil’s fever comes first, then Maria’s hand; the patron can wait. I made the poultice this morning. Walk with liquids: running spills them.”', 8000);
+      this.hud.message('Theophano: “Gennadios’s fever comes first, then Maria’s hand; the patron can wait. I made the poultice this morning. Walk with liquids: running spills them.”', 8000);
     } else if (target.role === 'physician') {
       if (g.served.length < 3) { if (code === 'KeyE') this.hud.message('Nikolaos: “See to all three first. Then tell me how it went.”', 4000); return; }
       if (code === 'KeyF') { g.credit = 'claimed'; this.finish('proud'); }
@@ -141,9 +141,9 @@ export class PantokratorActivity extends SiteActivity {
   }
   resultText(outcome) {
     const g = this.game;
-    if (outcome === 'humble') return 'Basil and Maria were cared for first. Nikolaos thanks Theophano too, and she shows you how to fold a dressing.';
+    if (outcome === 'humble') return 'Gennadios and Maria were cared for first. Nikolaos thanks Theophano too, and she shows you how to fold a dressing.';
     if (g.credit === 'claimed') return 'Nikolaos praises you. Theophano says nothing and gathers her bowls.';
-    return 'Andronikos was served first while Basil shivered. Nikolaos frowns at the order.';
+    return 'Andronikos was served first while Gennadios shivered. Nikolaos frowns at the order.';
   }
   details() { const g = this.game; return { tray: [...g.tray], known: [...g.known], served: [...g.served], spills: g.spills, slosh: g.slosh, asked: g.asked, credit: g.credit }; }
 }

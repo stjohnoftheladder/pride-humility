@@ -83,7 +83,7 @@ export async function testLandmarksB(browser, newPage, check) {
     g.teleport(36.8, 312.2); g.key('KeyE');
     return { outcome: a.snapshot().outcome, walking: a.game.walking, wobble: a.game.wobble > 0 };
   });
-  check('baths: a cold basin cannot be taken and Theodora will not cross wet tiles', unsafe.outcome === null && !unsafe.walking && unsafe.wobble, JSON.stringify(unsafe));
+  check('baths: a cold basin cannot be taken and Anastasia will not cross wet tiles', unsafe.outcome === null && !unsafe.walking && unsafe.wobble, JSON.stringify(unsafe));
   const remote = await page.evaluate(() => {
     const g = window.__game, a = g.siteActivity(); g.teleport(30, 308); a.keys.Space = true; a.update(1); a.keys.Space = false;
     return a.game.warmth <= 0.15;
@@ -102,7 +102,7 @@ export async function testLandmarksB(browser, newPage, check) {
     for (let i = 0; i < 600; i++) a.update(1 / 60);
     return { ...a.snapshot(), changed: cold !== warm, grace: g.branch.grace, pride: g.branch.pride, mats: a.site.mats.every(m => m.visible) };
   });
-  check('baths: warm water and covered tiles let Theodora bathe, with grace', prepared.outcome === 'humble' && prepared.mats && prepared.changed && prepared.grace === 4 && prepared.pride === 0, JSON.stringify(prepared));
+  check('baths: warm water and covered tiles let Anastasia bathe, with grace', prepared.outcome === 'humble' && prepared.mats && prepared.changed && prepared.grace === 4 && prepared.pride === 0, JSON.stringify(prepared));
   check('baths: another visitor uses the space you prepared', prepared.guest > 0.5 && prepared.visitor.x < 23, JSON.stringify(prepared));
   await page.keyboard.press('r');
   await page.evaluate(() => {

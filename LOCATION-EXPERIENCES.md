@@ -78,7 +78,7 @@ first entry. They reuse the existing `cistern` and `zeuxippus` courts.
   F tells the foreman you explored alone (pride). Empty oil is unfinished.
 - **Baths:** stand at the warm or cool tap and hold Space; the basin water
   shifts from blue to orange and steams above comfortable. E takes a mat from
-  the stack and lays it on a shining wet tile. E offers Theodora the basin:
+  the stack and lays it on a shining wet tile. E offers Anastasia the basin:
   she sways and sits back down on wet tiles, and names cold or scalding water.
   When both are right she crosses on the mats and bathes (humility), and
   another bather follows the same path. F at a comfortable basin takes it for
@@ -90,16 +90,16 @@ Both live in their own modules, `src/activities/mosaicPeristyle.js` and
 `src/activities/milion.js`, and load on first entry.
 
 - **Mosaic Peristyle:** turn the eight floor tiles around the gold medallion
-  until each gold quarter meets its red sinopia line, while Irene, the novice,
+  until each gold quarter meets its red sinopia line, while Melania, the novice,
   visibly sets the sixteen border tiles. The last tile you set lifts and rocks;
   hold Space on it to press it flush. At Kosmas, the master, F claims the whole
-  floor (pride) and H names Irene's border as hers (humility, once your loose
-  tile is repaired). On humility Irene becomes "Your collaborator" and a "One
+  floor (pride) and H names Melania's border as hers (humility, once your loose
+  tile is repaired). On humility Melania becomes "Your collaborator" and a "One
   floor, two hands" sign stands over the pattern.
-- **Milion:** E turns the route board's pointer and F sends the current
+- **Milion:** E turns the route board's pointer and Space sends the current
   traveler that way. A wrong direction walks out, stops, and comes back to be
   corrected. The third traveler seeks the grain ships, on the arm worn smooth:
-  pointing without asking Basil the porter is a guess and resolves pride even
+  pointing without asking Zosimos the porter is a guess and resolves pride even
   when it is right. Asking him is humility; once all three arrive, the first
   traveler walks back to thank him.
 
@@ -115,14 +115,14 @@ does, and updates only while active.
   north lane toward a gold ring at the palace end. Four bystanders block the
   lane. E beside a bystander asks them to make room; they step aside. E beside
   Sergios, the cross bearer, sets the pace of the slowest walkers, Gerontios and
-  Maria. The procession arriving together resolves humbly. F beside a bystander
+  Sophronia. The procession arriving together resolves humbly. F beside a bystander
   shoves the whole lane aside and puts you at the front; the cross hurries and
   the slow walkers are left behind (proud). Arriving with people strung out, or
   running out of time, is unfinished and changes no meters.
 - **Chalke** (sign before the bronze doors): a sealed petition and a gold ring
   marking your place behind five petitioners. The clerk calls one name every
   six seconds and the line shuffles forward. E hears each petitioner. The clerk
-  passes over Eirene, who cannot write; after hearing her, H adds her request
+  passes over Photeine, who cannot write; after hearing her, H adds her request
   to your petition. At the front, E presents it: with her need included it
   resolves humbly, without it the result is unfinished. F beside the clerk
   claims a connection with the Magistros and jumps the queue (proud).

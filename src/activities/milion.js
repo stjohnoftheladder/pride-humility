@@ -21,7 +21,7 @@ const SPEED = 2.6;
 export default class Milion extends SiteActivity {
   constructor(options) {
     super(options, { room: ROOM, title: 'MILE ZERO', center: BOARD, radius: 13, timeLimit: 120,
-      controls: 'WASD walk · E turn the board / ask · F point the way · Q / Esc leave · R retry' });
+      controls: 'WASD walk · E turn the board / ask · Space point the way · Q / Esc leave · R retry' });
   }
   build(group) {
     this.group = group;
@@ -40,7 +40,7 @@ export default class Milion extends SiteActivity {
     });
     group.add(pedestal, this.board);
     this.level.addCollider(BOARD.x, BOARD.z, 0.9, 0.9, 1, 'milion');
-    this.porter = makePerson(this.level, group, { id: 'milion-porter', name: 'Basil · Local porter', ...PORTER, color: 0x537887 });
+    this.porter = makePerson(this.level, group, { id: 'milion-porter', name: 'Zosimos · Local porter', ...PORTER, color: 0x537887 });
     this.level.npcs.push({ id: this.porter.id, name: this.porter.name, role: 'worker', ...PORTER });
     this.walkers = TRAVELERS.map((t, i) => makePerson(this.level, group, { id: `milion-traveler-${i}`, name: `Seeks ${t.seeks}`, x: 0, z: 0, color: t.color }));
   }
@@ -56,12 +56,12 @@ export default class Milion extends SiteActivity {
   act(code) {
     const g = this.game, t = this.near(), traveler = this.traveler(); if (!t) return;
     if (t.role === 'porter' && code === 'KeyE') {
-      if (!traveler || traveler.state !== 'waiting') { this.hud.message('Basil: “Wait for the next traveler to step up.”', 3500); return; }
+      if (!traveler || traveler.state !== 'waiting') { this.hud.message('Zosimos: “Wait for the next traveler to step up.”', 3500); return; }
       traveler.asked = true;
-      this.hud.message(`Basil: “${traveler.seeks[0].toUpperCase()}${traveler.seeks.slice(1)}? Turn the pointer ${ARMS[traveler.arm].name}${traveler.arm === 2 ? ', down the road to the sea walls. That arm wore smooth years ago' : ''}.”`, 6500);
+      this.hud.message(`Zosimos: “${traveler.seeks[0].toUpperCase()}${traveler.seeks.slice(1)}? Turn the pointer ${ARMS[traveler.arm].name}${traveler.arm === 2 ? ', down the road to the sea walls. That arm wore smooth years ago' : ''}.”`, 6500);
     } else if (t.role === 'board' && code === 'KeyE') {
       g.pointer = (g.pointer + 1) % 4;
-    } else if (t.role === 'board' && code === 'KeyF' && traveler?.state === 'waiting') {
+    } else if (t.role === 'board' && code === 'Space' && traveler?.state === 'waiting') {
       const right = g.pointer === traveler.arm, route = ARMS[g.pointer].route.map(([x, z]) => ({ x, z }));
       // A confident guess at the worn arm sends the traveler off for good.
       const guessed = traveler.arm === 2 && !traveler.asked;
@@ -93,7 +93,7 @@ export default class Milion extends SiteActivity {
           t.path = [{ x: 61.6, z: 319.4 }]; this.move(t, dt);
         } else if (t.state === 'walking' || t.state === 'guessed') {
           if (this.move(t, dt)) {
-            if (t.state === 'guessed') { t.state = 'gone'; this.finish('proud', `${t.name} sets off ${ARMS[t.chosen].name} on your word. Basil watches, unsure where the road will take her.`); }
+            if (t.state === 'guessed') { t.state = 'gone'; this.finish('proud', `${t.name} sets off ${ARMS[t.chosen].name} on your word. Zosimos watches, unsure where the road will take her.`); }
             else {
               t.state = 'arrived';
               if (this.arrived() === TRAVELERS.length) {
@@ -111,7 +111,7 @@ export default class Milion extends SiteActivity {
           }
         } else if (t.state === 'thanking' && this.move(t, dt)) {
           t.state = 'thanked';
-          this.finish('humble', `${t.name} returns to thank Basil. All three travelers found their way, and you learned the worn arm from someone who knew.`);
+          this.finish('humble', `${t.name} returns to thank Zosimos. All three travelers found their way, and you learned the worn arm from someone who knew.`);
         }
       });
     }
@@ -130,11 +130,11 @@ export default class Milion extends SiteActivity {
   }
   prompt() {
     const t = this.near(), traveler = this.traveler();
-    if (!t) return 'Walk to the route board under the dome · Basil the porter waits to the east';
-    if (t.role === 'porter') return 'E · ask Basil the way';
+    if (!t) return 'Walk to the route board under the dome · Zosimos the porter waits to the east';
+    if (t.role === 'porter') return 'E · ask Zosimos the way';
     if (!traveler) return 'All three travelers are on their way';
     if (traveler.state !== 'waiting') return `${traveler.name} is walking…`;
-    return `E · turn the pointer     F · point ${traveler.name} ${ARMS[this.game.pointer].name}`;
+    return `E · turn the pointer     Space · point ${traveler.name} ${ARMS[this.game.pointer].name}`;
   }
   snapshot() {
     if (!this.active) return null; const g = this.game;

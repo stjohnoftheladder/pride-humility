@@ -45,7 +45,7 @@ export async function testPalace(browser, newPage, check) {
     const g = window.__game, a = g.activities(), e = a.site.petitioners[2];
     g.teleport(e.x, e.z + 1); g.key('KeyH'); return a.snapshot().helped;
   });
-  check('chalke: helping Eirene first requires hearing her', early === false);
+  check('chalke: helping Photeine first requires hearing her', early === false);
   const kept = await page.evaluate(() => {
     const g = window.__game, a = g.activities(), s = a.site;
     for (const p of s.petitioners) { g.teleport(p.x, p.z + 1); g.key('KeyE'); }
@@ -54,7 +54,7 @@ export async function testPalace(browser, newPage, check) {
     g.teleport(74.6, 321.6); g.key('KeyE');
     return { ...a.snapshot(), grace: g.branch.grace, pride: g.branch.pride };
   });
-  check('chalke: keeping your place and carrying Eirene’s need resolves humbly', kept.outcome === 'humble' && kept.heard === 5 && kept.helped && kept.grace === 4, JSON.stringify(kept));
+  check('chalke: keeping your place and carrying Photeine’s need resolves humbly', kept.outcome === 'humble' && kept.heard === 5 && kept.helped && kept.grace === 4, JSON.stringify(kept));
   await page.keyboard.press('r');
   const alone = await page.evaluate(() => {
     const g = window.__game, a = g.activities();
@@ -63,7 +63,7 @@ export async function testPalace(browser, newPage, check) {
     g.teleport(74.6, 321.6); g.key('KeyE');
     return { ...a.snapshot(), skipped, grace: g.branch.grace, pride: g.branch.pride };
   });
-  check('chalke: the clerk passes Eirene over; a petition for yourself alone changes no meters', alone.outcome === 'unfinished' && alone.skipped && alone.grace === 4 && alone.pride === 0, JSON.stringify(alone));
+  check('chalke: the clerk passes Photeine over; a petition for yourself alone changes no meters', alone.outcome === 'unfinished' && alone.skipped && alone.grace === 4 && alone.pride === 0, JSON.stringify(alone));
   await page.keyboard.press('r');
   await page.evaluate(() => { const g = window.__game; g.teleport(74.6, 321.6); g.key('KeyF'); });
   check('chalke: claiming a connection jumps the queue; replay keeps the saved result', await page.evaluate(() => {
