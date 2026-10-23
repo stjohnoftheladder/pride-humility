@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { FEATURES, SITES } from './config.js';
 import { ACTIVITY_STOPS } from './activitySites.js';
+import { grantKeepsake } from './inventory.js';
 export const ACTIVITIES = ACTIVITY_STOPS;
 
 const CHANNELS = ['Mill lane', 'Hospital', 'Homes', 'Patron’s fountain'];
@@ -178,9 +179,10 @@ export class LocationActivities {
     if (this.game.done) return;
     this.game.done = outcome; this.keys = {}; this.player.clearKeys();
     const key=`activity:${this.active.id}`, reward=outcome!=='unfinished'&&!this.branch.flags[key];
+    const kept = reward ? grantKeepsake(this.branch.inventory, this.active.id, outcome) : null;
     if (reward) { this.branch.setFlag(key,outcome); if(outcome==='humble')this.branch.addGrace(3);else this.branch.addPride(4);this.branch.save();this.onResult(); }
     const text = this.active.id==='aqueduct' ? outcome==='humble'?'Water reaches the mill, hospital and homes. Eudokia nods.':outcome==='proud'?'The patron praises his fountain. Households still wait.':'The reservoir ran short. Ask the keeper and try again.' : outcome==='humble'?'You return the purse and explain the accident. Leontios apologizes; Menas is cleared and Anna is heard.':'The crowd applauds your certainty. Menas protests the accusation.';
-    this.hud.message(`${text} ${outcome==='unfinished'?'Meters unchanged.':reward?outcome==='humble'?'(+3 grace)':'(+4 pride)':'Practice: meters unchanged.'}`, 7500);
+    this.hud.message(`${text} ${outcome==='unfinished'?'Meters unchanged.':reward?outcome==='humble'?'(+3 grace)':'(+4 pride)':'Practice: meters unchanged.'}${kept ? ` Added to your satchel: ${kept}.` : ''}`, 7500);
   }
   close({ walkingAway = false } = {}) {
     this.keys = {};

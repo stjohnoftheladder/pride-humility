@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { Inventory, InventoryRegistry } from '../src/inventory.js';
+import { Inventory, InventoryRegistry, ITEMS, KEEPSAKES, grantKeepsake } from '../src/inventory.js';
 import { Branch } from '../src/branch.js';
 
 const registry = new InventoryRegistry();
@@ -25,6 +25,16 @@ for (const outcome of ['carrying', 'quiet', 'praise']) {
   migrated.provisions--; migrated.save();
   assert.equal(Branch.load().provisions, 1);
 }
+// Keepsakes: one per site and outcome, given once, never for unfinished work.
+const satchel = new Inventory('player:keepsakes');
+for (const site of Object.keys(KEEPSAKES)) {
+  assert.ok(ITEMS[`token:${site}`] && ITEMS[`honor:${site}`], site);
+  assert.equal(grantKeepsake(satchel, site, 'unfinished'), null);
+  assert.equal(typeof grantKeepsake(satchel, site, 'humble'), 'string');
+  assert.equal(grantKeepsake(satchel, site, 'humble'), null);
+}
+assert.equal(satchel.count('token:stoudios'), 1);
+assert.equal(Object.keys(KEEPSAKES).length, 13);
 saved = JSON.stringify({ items: { bread: 1, water: 1 }, flags: {} });
 assert.equal(Branch.load().provisions, 2);
 delete globalThis.localStorage;

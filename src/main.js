@@ -18,6 +18,7 @@ import { Morning, CHURCH_STEPS } from './morning.js';
 import { HagiaSophia } from './hagiaSophia.js';
 import { installTouch, IS_TOUCH } from './touch.js';
 import { InventoryPanel } from './inventoryPanel.js';
+import { grantKeepsake } from './inventory.js';
 import { pictogram, citizenPortrait } from './pictograms.js';
 import { Fellowship } from './multiplayer/fellowship.js';
 
@@ -507,6 +508,9 @@ async function boot() {
       if (r.flag) branch.setFlag(r.flag);
       if (r.pride) { branch.addPride(r.pride); note = `(+${r.pride} pride)`; }
       if (r.grace) { branch.addGrace(r.grace); note = `(+${r.grace} grace)`; }
+      const kept = res.outcome === 'helped' ? 'humble' : res.outcome === 'won' ? 'proud' : null;
+      const keepsake = kept && grantKeepsake(branch.inventory, 'hippodrome', kept);
+      if (keepsake) note += ` Added to your satchel: ${keepsake}.`;
       branch.save();
       hud.setMeters(branch.pride, branch.grace);
       hud.revealMeters();

@@ -41,7 +41,9 @@ const SHAPES = {
   eye: [['M1 12Q12 0 23 12Q12 24 1 12ZM8 12A4 4 0 1 0 16 12A4 4 0 1 0 8 12']],
 };
 const ALIASES = { provision: 'bread', 'parcel:bread': 'parcelBread', 'parcel:cups': 'parcelCups', 'parcel:fruit': 'fruit', monastery: 'church', basilica: 'church', hippodrome: 'arena', forum: 'column', court: 'mosaic', mosaicCourt: 'mosaic', tetrapylon: 'gate', peristyle: 'water', cistern: 'water' };
-const shapes = kind => SHAPES[ALIASES[kind] || kind] || SHAPES.basket;
+// Keepsakes: a heart for a token of someone you stood beside, a wreath for an honor taken.
+const keepsake = kind => kind.startsWith('token:') ? 'heart' : kind.startsWith('honor:') ? 'wreaths' : null;
+const shapes = kind => SHAPES[ALIASES[kind] || keepsake(kind) || kind] || SHAPES.basket;
 
 export function pictogram(kind) {
   const ns = 'http://www.w3.org/2000/svg';

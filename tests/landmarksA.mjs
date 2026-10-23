@@ -59,6 +59,9 @@ export async function testLandmarksA(browser, newPage, check) {
     return { ...a.snapshot(), grace: g.branch.grace, pride: g.branch.pride, flag: g.branch.flags['activity:pantokrator'] };
   });
   check('pantokrator: patron first and claimed credit is proud; replay keeps the saved result', proud.outcome === 'proud' && proud.served[0] === 'patron' && proud.credit === 'claimed' && proud.pride === 0 && proud.flag === 'humble', JSON.stringify(proud));
+  check('pantokrator: the first outcome leaves Theophano’s dressing in the satchel, and a replay adds nothing', await page.evaluate(() => {
+    const inv = window.__game.branch.inventory; return inv.count('token:pantokrator') === 1 && inv.count('honor:pantokrator') === 0;
+  }));
   const early = await page.evaluate(() => {
     const g = window.__game, a = g.activities(); g.key('KeyR');
     g.teleport(66.5, 129); a.update(1 / 60); g.key('KeyH'); return a.snapshot().outcome;

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { SITE_GRACE, SITE_PRIDE } from './siteKit.js';
+import { grantKeepsake } from '../inventory.js';
 import { FEATURES, SITES, CELL } from '../config.js';
 import { ACTIVITY_STOPS } from '../activitySites.js';
 export const ACTIVITIES = ACTIVITY_STOPS.filter(a => a.id === 'augustaion' || a.id === 'chalke');
@@ -246,6 +247,7 @@ export class PalaceActivities {
     if (this.game.done) return;
     this.game.done = outcome; this.keys = {}; this.player.clearKeys();
     const key = `activity:${this.active.id}`, reward = outcome !== 'unfinished' && !this.branch.flags[key];
+    const kept = reward ? grantKeepsake(this.branch.inventory, this.active.id, outcome) : null;
     if (reward) { this.branch.setFlag(key, outcome); if (outcome === 'humble') this.branch.addGrace(SITE_GRACE); else this.branch.addPride(SITE_PRIDE); this.branch.save(); this.onResult(); }
     const text = this.active.id === 'augustaion'
       ? outcome === 'humble' ? 'The procession reaches the palace together. Gerontios takes your arm for the last step.'
@@ -254,7 +256,7 @@ export class PalaceActivities {
       : outcome === 'humble' ? 'The clerk breaks your seal and reads both requests. He calls Photeine back to the gate.'
         : outcome === 'proud' ? 'Your petition is taken first. Behind you, Photeine folds her request away.'
         : 'Your petition is received. Photeine’s request is still unheard.';
-    this.hud.message(`${text} ${outcome === 'unfinished' ? 'Meters unchanged.' : reward ? outcome === 'humble' ? `(+${SITE_GRACE} grace)` : `(+${SITE_PRIDE} pride)` : 'Practice: meters unchanged.'}`, 7500);
+    this.hud.message(`${text} ${outcome === 'unfinished' ? 'Meters unchanged.' : reward ? outcome === 'humble' ? `(+${SITE_GRACE} grace)` : `(+${SITE_PRIDE} pride)` : 'Practice: meters unchanged.'}${kept ? ` Added to your satchel: ${kept}.` : ''}`, 7500);
   }
   close({ walkingAway = false } = {}) {
     this.keys = {};

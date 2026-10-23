@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { FEATURES } from './config.js';
+import { grantKeepsake } from './inventory.js';
 
 const START = { x: 61.5, z: 356.5 };
 const PORTER = { x: 49, z: 354.9 };
@@ -125,9 +126,10 @@ export class HarbourCart {
     this.result=outcome;this.speed=0;this.keys={};
     if(outcome!=='unfinished')this.onDelivery();
     const key='activity:harbour',reward=outcome!=='unfinished'&&!this.branch.flags[key];
+    const kept=reward?grantKeepsake(this.branch.inventory,'harbour',outcome):null;
     if(reward){this.branch.setFlag(key,outcome);if(outcome==='humble')this.branch.addGrace(3);else this.branch.addPride(4);this.branch.save();this.hud.revealMeters();this.hud.setMeters(this.branch.pride,this.branch.grace);}
     const text=outcome==='humble'?'You bring the grain aboard together. The foreman thanks you both.' : outcome==='proud'?'You take the foreman’s praise. Gregorios is still struggling back on the quay.' : 'The bell rings before your delivery. Try again; the meters are unchanged.';
-    this.hud.message(`${text}${outcome==='unfinished'?'':reward?outcome==='humble'?' (+3 grace)':' (+4 pride)':' (Practice: meters unchanged.)'}`,6500);
+    this.hud.message(`${text}${outcome==='unfinished'?'':reward?outcome==='humble'?' (+3 grace)':' (+4 pride)':' (Practice: meters unchanged.)'}${kept ? ` Added to your satchel: ${kept}.` : ''}`,6500);
   }
   status() {
     const distance=Math.round(Math.hypot(this.x-DOCK.x,this.z-DOCK.z));

@@ -84,6 +84,7 @@ export async function testActivities(browser, newPage, check) {
   check('harbour: physical route, braking and porter help deliver the grain together', cart.outcome === 'humble' && cart.helped && cart.cargo > 0 && cart.grace === 6, JSON.stringify(cart));
   const fast = await cartRoute(false);
   check('harbour: skipping the porter resolves the proud route without repeat rewards', fast.outcome === 'proud' && !fast.helped && fast.grace === 6 && fast.pride === 0, JSON.stringify(fast));
+  check('harbour: the humble delivery leaves Gregorios’s cord in the satchel, once', await page.evaluate(() => { const inv = window.__game.branch.inventory; return inv.count('token:harbour') === 1 && inv.count('honor:harbour') === 0; }));
   await page.keyboard.press('q');
   check('harbour: Q restores walking and clears steering', await page.evaluate(() => window.__game.state() === 'explore' && !window.__game.harbourCart.active && Object.keys(window.__game.harbourCart.keys).length === 0));
   await enter('forumConstantine');

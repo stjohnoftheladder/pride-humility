@@ -9,6 +9,7 @@
 // status(), prompt(target), resultText(outcome) and timeoutText().
 import * as THREE from 'three';
 import { FEATURES, SITES, CELL } from '../config.js';
+import { grantKeepsake } from '../inventory.js';
 
 const bodyGeometry = new THREE.CylinderGeometry(0.22, 0.3, 1.05, 6);
 const headGeometry = new THREE.SphereGeometry(0.18, 6, 5);
@@ -179,13 +180,15 @@ export class SiteActivity {
     if (this.game.done) return;
     this.game.done = outcome; this.keys = {}; this.player.clearKeys();
     const key = `activity:${this.active.id}`, reward = outcome !== 'unfinished' && !this.branch.flags[key];
+    let kept = null;
     if (reward) {
       this.branch.setFlag(key, outcome);
+      kept = grantKeepsake(this.branch.inventory, this.active.id, outcome);
       if (outcome === 'humble') this.branch.addGrace(SITE_GRACE); else this.branch.addPride(SITE_PRIDE);
       this.branch.save(); this.onResult();
     }
     const tail = outcome === 'unfinished' ? 'Meters unchanged.' : reward ? outcome === 'humble' ? `(+${SITE_GRACE} grace)` : `(+${SITE_PRIDE} pride)` : 'Practice: meters unchanged.';
-    this.hud.message(`${text} ${tail}`, 8000);
+    this.hud.message(`${text} ${tail}${kept ? ` Added to your satchel: ${kept}.` : ''}`, 8000);
   }
   close({ walkingAway = false } = {}) {
     this.keys = {};
