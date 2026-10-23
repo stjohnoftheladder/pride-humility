@@ -44,6 +44,12 @@ export class Morning {
     if(this.branch.flags['activity:harbour']==='humble')facts.push('You and Gregorios brought the grain aboard together.');
     if(this.branch.flags['activity:aqueduct']==='proud')facts.push('The patron’s fountain received water while households waited.');
     if(this.branch.flags['activity:forumConstantine']==='proud')facts.push('You accused Menas before hearing the evidence.');
+    if(this.branch.flags['activity:pantokrator']==='humble')facts.push('Basil and Maria were cared for first, and Theophano was thanked for her poultice.');
+    if(this.branch.flags['activity:pantokrator']==='proud')facts.push('At the Pantokrator, the patron came first or the credit went to you.');
+    if(this.branch.flags['activity:stoudios']==='humble')facts.push('Your page at Stoudios keeps its honest repair.');
+    if(this.branch.flags['activity:stoudios']==='proud')facts.push('Gold covers the blot on your Stoudios page.');
+    if(this.branch.flags['activity:hagiaEirene']==='humble')facts.push('Kassia’s answer carried through Hagia Eirene.');
+    if(this.branch.flags['activity:hagiaEirene']==='proud')facts.push('You sang over Kassia in Hagia Eirene.');
     if(this.branch.flags['activity:cistern']==='humble')facts.push('You and Theodoros came up from the cistern together, and Pelagia carried the lamp down.');
     if(this.branch.flags['activity:zeuxippus']==='humble')facts.push('Theodora bathed in the basin you prepared.');
     if(this.branch.flags['activity:cistern']==='proud')facts.push('You told the foreman you explored the cistern alone.');

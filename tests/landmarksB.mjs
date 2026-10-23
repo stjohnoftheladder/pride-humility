@@ -56,7 +56,7 @@ export async function testLandmarksB(browser, newPage, check) {
     for (let i = 0; i < 120; i++) a.update(1 / 60);
     return { shared, waited, ...a.snapshot(), grace: g.branch.grace, pride: g.branch.pride, flag: g.branch.flags['activity:cistern'] };
   }, route);
-  check('cistern: sharing the lamp and slowing down brings Theodoros out with grace', guided.shared && guided.outcome === 'humble' && guided.grace === 1 && guided.pride === 0 && guided.flag === 'humble', JSON.stringify(guided));
+  check('cistern: sharing the lamp and slowing down brings Theodoros out with grace', guided.shared && guided.outcome === 'humble' && guided.grace === 2 && guided.pride === 0 && guided.flag === 'humble', JSON.stringify(guided));
   check('cistern: racing ahead leaves him waiting in the dark', guided.waited, JSON.stringify(guided));
   check('cistern: the lamp is passed onward to the next bearer', guided.bearer.x < 43, JSON.stringify(guided.bearer));
   await page.keyboard.press('r');
@@ -67,7 +67,7 @@ export async function testLandmarksB(browser, newPage, check) {
   }));
   check('cistern: running out of oil is retryable without moral change', await page.evaluate(() => {
     const g = window.__game, a = g.siteActivity(); g.key('KeyR'); a.update(91);
-    return a.snapshot().outcome === 'unfinished' && g.branch.grace === 1 && g.branch.pride === 0;
+    return a.snapshot().outcome === 'unfinished' && g.branch.grace === 2 && g.branch.pride === 0;
   }));
   await page.keyboard.press('q');
   check('cistern: Q returns to the road and restores daylight', await page.evaluate(() => {
@@ -102,7 +102,7 @@ export async function testLandmarksB(browser, newPage, check) {
     for (let i = 0; i < 600; i++) a.update(1 / 60);
     return { ...a.snapshot(), changed: cold !== warm, grace: g.branch.grace, pride: g.branch.pride, mats: a.site.mats.every(m => m.visible) };
   });
-  check('baths: warm water and covered tiles let Theodora bathe, with grace', prepared.outcome === 'humble' && prepared.mats && prepared.changed && prepared.grace === 2 && prepared.pride === 0, JSON.stringify(prepared));
+  check('baths: warm water and covered tiles let Theodora bathe, with grace', prepared.outcome === 'humble' && prepared.mats && prepared.changed && prepared.grace === 4 && prepared.pride === 0, JSON.stringify(prepared));
   check('baths: another visitor uses the space you prepared', prepared.guest > 0.5 && prepared.visitor.x < 23, JSON.stringify(prepared));
   await page.keyboard.press('r');
   await page.evaluate(() => {
@@ -116,7 +116,7 @@ export async function testLandmarksB(browser, newPage, check) {
   }));
   check('baths: closing time is retryable without moral change', await page.evaluate(() => {
     const g = window.__game, a = g.siteActivity(); g.key('KeyR'); a.update(151);
-    return a.snapshot().outcome === 'unfinished' && g.branch.grace === 2;
+    return a.snapshot().outcome === 'unfinished' && g.branch.grace === 4;
   }));
   check('baths: walking on into the city releases the activity', await page.evaluate(() => {
     const g = window.__game, a = g.siteActivity(); g.teleport(52, 250); a.update(0);
@@ -144,7 +144,7 @@ export async function testLandmarksB(browser, newPage, check) {
     a.keys.Space = false; g.teleport(21.8, 312.2); a.update(1 / 60);
   });
   await fresh.page.keyboard.press('f');
-  check('baths: first proud resolution grants pride and saves its outcome', await fresh.page.evaluate(() => window.__game.branch.pride === 1 && window.__game.branch.flags['activity:zeuxippus'] === 'proud'));
+  check('baths: first proud resolution grants pride and saves its outcome', await fresh.page.evaluate(() => window.__game.branch.pride === 3 && window.__game.branch.flags['activity:zeuxippus'] === 'proud'));
   await fresh.page.keyboard.press('q');
   await fresh.page.waitForFunction(() => window.__game.state() === 'explore');
   check('baths: Q hides the activity HUD', await fresh.page.locator('#site-activity-hud').isHidden());

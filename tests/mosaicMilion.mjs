@@ -68,7 +68,7 @@ export async function testMosaicMilion(browser, newPage, check) {
       label: a.novice.label.userData.text, shared: a.shared.visible };
   });
   check('mosaic: repairing your tile and naming Irene resolves humbly with a shared pattern',
-    humble.outcome === 'humble' && humble.repaired && humble.grace === 1 && humble.pride === 0 && humble.flag === 'humble'
+    humble.outcome === 'humble' && humble.repaired && humble.grace === 2 && humble.pride === 0 && humble.flag === 'humble'
     && humble.label === 'Irene · Your collaborator' && humble.shared, JSON.stringify(humble));
   const proud = await run(() => {
     const g = window.__game, a = g.activities(); g.key('KeyR');
@@ -78,9 +78,9 @@ export async function testMosaicMilion(browser, newPage, check) {
     return { ...a.snapshot(), grace: g.branch.grace, pride: g.branch.pride, flag: g.branch.flags['activity:mosaicPeristyle'] };
   });
   check('mosaic: claiming the novice border resolves pride; replay keeps the first outcome and meters',
-    proud.outcome === 'proud' && proud.grace === 1 && proud.pride === 0 && proud.flag === 'humble', JSON.stringify(proud));
+    proud.outcome === 'proud' && proud.grace === 2 && proud.pride === 0 && proud.flag === 'humble', JSON.stringify(proud));
   const timeout = await run(() => { const g = window.__game, a = g.activities(); g.key('KeyR'); a.update(121); return { ...a.snapshot(), grace: g.branch.grace }; });
-  check('mosaic: unfinished work is retryable without moral change', timeout.outcome === 'unfinished' && timeout.grace === 1, JSON.stringify(timeout));
+  check('mosaic: unfinished work is retryable without moral change', timeout.outcome === 'unfinished' && timeout.grace === 2, JSON.stringify(timeout));
   await page.keyboard.press('q');
   check('mosaic: Q returns to the road and hides the HUD', await run(() => window.__game.state() === 'explore' && document.getElementById('site-activity-hud').style.display === 'none'));
 
@@ -116,7 +116,7 @@ export async function testMosaicMilion(browser, newPage, check) {
     return { ...a.snapshot(), grace: g.branch.grace, pride: g.branch.pride, flag: g.branch.flags['activity:milion'] };
   }, settle);
   check('milion: asking Basil about the worn arm guides all three; one returns to thank him',
-    thanked.outcome === "humble" && thanked.travelers[2].asked && thanked.travelers[0].state === "thanked" && thanked.grace === 2 && thanked.flag === "humble", JSON.stringify(thanked));
+    thanked.outcome === "humble" && thanked.travelers[2].asked && thanked.travelers[0].state === "thanked" && thanked.grace === 4 && thanked.flag === "humble", JSON.stringify(thanked));
   const guess = await run((settle) => {
     const g = window.__game, a = g.activities(); g.key('KeyR');
     a.game.current = 2; a.game.travelers.forEach((t, i) => { if (i < 2) t.state = 'arrived'; });
@@ -128,7 +128,7 @@ export async function testMosaicMilion(browser, newPage, check) {
   check('milion: a confident guess at the worn arm resolves pride after the traveler leaves; replay is practice',
     guess.walking === 'guessed' && guess.outcome === 'proud' && guess.pride === 0 && guess.flag === 'humble', JSON.stringify(guess));
   await page.evaluate(() => { const g = window.__game; g.key('KeyR'); g.teleport(59, 290); g.activities().update(0); });
-  check('milion: walking away releases the activity without changing meters', await run(() => window.__game.state() === 'explore' && window.__game.branch.grace === 2));
+  check('milion: walking away releases the activity without changing meters', await run(() => window.__game.state() === 'explore' && window.__game.branch.grace === 4));
   await page.reload(); await page.waitForFunction(() => window.__game);
   check('mosaic and milion: first outcomes survive reload', await run(() => ['mosaicPeristyle', 'milion'].every(id => window.__game.branch.flags[`activity:${id}`] === 'humble')));
   check('mosaic and milion: no page or console errors', errors.length === 0, JSON.stringify(errors));
@@ -147,7 +147,7 @@ export async function testMosaicMilion(browser, newPage, check) {
     for (let i = 0; i < 900 && !a.game.done; i++) a.update(1 / 30);
     return { pride: g.branch.pride, flag: g.branch.flags['activity:milion'] };
   });
-  check('milion: a first proud resolution grants pride and saves it', first.pride === 1 && first.flag === 'proud', JSON.stringify(first));
+  check('milion: a first proud resolution grants pride and saves it', first.pride === 3 && first.flag === 'proud', JSON.stringify(first));
   await fresh.page.evaluate(() => { const g = window.__game; g.setFeature('mosaicPeristyle', false); g.key('KeyQ'); });
   await fresh.page.waitForFunction(() => window.__game.state() === 'explore');
   await fresh.page.evaluate(() => { const g = window.__game, s = g.activityStops.find(a => a.id === 'mosaicPeristyle'); g.teleport(s.x, s.z); g.key('KeyE'); });

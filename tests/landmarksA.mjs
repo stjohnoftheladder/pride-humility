@@ -50,7 +50,7 @@ export async function testLandmarksA(browser, newPage, check) {
   await at(ITEM.wine, ITEM_Z, 'KeyE'); await at(69.3, BEDS.patron, 'KeyE');
   s = await at(66.5, 129, 'KeyH');
   const m1 = await meters();
-  check('pantokrator: serving by need and sharing credit is humble (+1 grace)', s.outcome === 'humble' && s.served.join() === 'fever,wound,patron' && s.credit === 'shared' && m1.grace === 1 && m1.pride === 0, JSON.stringify({ s, m1 }));
+  check('pantokrator: serving by need and sharing credit is humble (+2 grace)', s.outcome === 'humble' && s.served.join() === 'fever,wound,patron' && s.credit === 'shared' && m1.grace === 2 && m1.pride === 0, JSON.stringify({ s, m1 }));
   const proud = await page.evaluate(() => {
     const g = window.__game, a = g.activities(); g.key('KeyR');
     const go = (x, z) => { g.teleport(x, z); a.update(1 / 60); g.key('KeyE'); };
@@ -89,7 +89,7 @@ export async function testLandmarksA(browser, newPage, check) {
   for (let i = 0; i < 3; i++) s = await stroke();
   s = await page.evaluate(() => { const g = window.__game; g.teleport(69.5, 193.4); g.activities().update(1 / 60); g.key('KeyE'); return g.activities().snapshot(); });
   const m2 = await meters();
-  check('stoudios: revealing the blot and accepting instruction is humble (+1 grace)', s.outcome === 'humble' && s.revealed && s.repaired && s.stroke === 8 && m2.grace === 2 && m2.pride === 0, JSON.stringify({ s, m2 }));
+  check('stoudios: revealing the blot and accepting instruction is humble (+2 grace)', s.outcome === 'humble' && s.revealed && s.repaired && s.stroke === 8 && m2.grace === 4 && m2.pride === 0, JSON.stringify({ s, m2 }));
   check('stoudios: the finished page keeps its visible repair', await page.evaluate(() => {
     const a = window.__game.activities(); a.update(1 / 60); const [r, g, b] = a.ink.getImageData(108, 135, 1, 1).data; return r === 244 && g === 236 && b === 212;
   }));
@@ -97,7 +97,7 @@ export async function testLandmarksA(browser, newPage, check) {
   for (let i = 0; i < 5; i++) s = await stroke();
   s = await page.evaluate(() => { const a = window.__game.activities(); for (let i = 0; i < 11 * 60; i++) a.update(1 / 60); return a.snapshot(); });
   const m3 = await meters();
-  check('stoudios: ink drying over the blot spoils the page without changing meters', s.outcome === 'unfinished' && s.blot.dried && m3.grace === 2 && m3.pride === 0, JSON.stringify(s));
+  check('stoudios: ink drying over the blot spoils the page without changing meters', s.outcome === 'unfinished' && s.blot.dried && m3.grace === 4 && m3.pride === 0, JSON.stringify(s));
   await page.keyboard.press('r');
   for (let i = 0; i < 5; i++) s = await stroke();
   await page.keyboard.press('f');
@@ -128,11 +128,11 @@ export async function testLandmarksA(browser, newPage, check) {
   const remoteSing = await page.evaluate(() => { const g = window.__game, a = g.activities(); g.teleport(86, 322); a.update(1 / 60); g.key('Space'); return a.snapshot(); });
   check('hagiaEirene: singing needs the pilgrim in their place and the phrase begun', !remoteSing.running && remoteSing.hits === 0);
   s = await sing('humble');
-  check('hagiaEirene: entering on time and leaving Kassia her answer is humble (+1 grace)', s.outcome === 'humble' && s.overs === 0 && s.hits === 18 && s.grace === 3 && s.pride === 0, JSON.stringify(s));
+  check('hagiaEirene: entering on time and leaving Kassia her answer is humble (+2 grace)', s.outcome === 'humble' && s.overs === 0 && s.hits === 18 && s.grace === 6 && s.pride === 0, JSON.stringify(s));
   s = await sing('proud');
   check('hagiaEirene: singing over Kassia dims her lamp and resolves pride; replay keeps the result', s.outcome === 'proud' && s.overs >= 2 && s.kassiaDark && s.pride === 0, JSON.stringify(s));
   s = await sing('silent');
-  check('hagiaEirene: a phrase that falls apart is retryable without changing meters', s.outcome === 'unfinished' && s.grace === 3, JSON.stringify(s));
+  check('hagiaEirene: a phrase that falls apart is retryable without changing meters', s.outcome === 'unfinished' && s.grace === 6, JSON.stringify(s));
   const away = await page.evaluate(() => { const g = window.__game, a = g.activities(); g.teleport(52.5, 300); a.update(0); return { state: g.state(), active: a.snapshot() }; });
   check('hagiaEirene: walking out of the court releases the activity', away.state === 'explore' && away.active === null, JSON.stringify(away));
 
@@ -156,7 +156,7 @@ export async function testLandmarksA(browser, newPage, check) {
     g.teleport(66.5, 129); a.update(1 / 60); g.key('KeyH');
     return { gained: g.branch.pride - before, flag: g.branch.flags['activity:pantokrator'] };
   });
-  check('pantokrator: serving the patron first is proud even when credit is shared (+1 pride)', first.gained === 1 && first.flag === 'proud', JSON.stringify(first));
+  check('pantokrator: serving the patron first is proud even when credit is shared (+3 pride)', first.gained === 3 && first.flag === 'proud', JSON.stringify(first));
   await fresh.page.evaluate(() => { const g = window.__game; g.setFeature('stoudios', false); g.key('KeyQ'); const s = g.activityStops.find((a) => a.id === 'stoudios'); g.setState('explore'); g.teleport(s.x, s.z); g.key('KeyE'); });
   check('landmarks: a disabled site cannot start its activity', await fresh.page.evaluate(() => window.__game.state() === 'explore'));
   check('landmarks: fresh journey has no page or console errors', fresh.errors.length === 0, JSON.stringify(fresh.errors));

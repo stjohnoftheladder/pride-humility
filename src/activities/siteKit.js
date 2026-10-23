@@ -15,6 +15,9 @@ const headGeometry = new THREE.SphereGeometry(0.18, 6, 5);
 const skin = new THREE.MeshLambertMaterial({ color: 0xb68b68 });
 const robes = new Map();
 const robe = (color) => robes.get(color) ?? robes.set(color, new THREE.MeshLambertMaterial({ color })).get(color);
+// A landmark's first resolution weighs like a market errand: less than the
+// aqueduct, harbour and forum (+3 / +4), since twelve sites now share the road.
+export const SITE_GRACE = 2, SITE_PRIDE = 3;
 const KEYS = ['Space', 'KeyE', 'KeyF', 'KeyH', 'KeyQ', 'KeyR', 'Escape'];
 
 /** A floating name. `userData.setText` changes it later. */
@@ -178,10 +181,10 @@ export class SiteActivity {
     const key = `activity:${this.active.id}`, reward = outcome !== 'unfinished' && !this.branch.flags[key];
     if (reward) {
       this.branch.setFlag(key, outcome);
-      if (outcome === 'humble') this.branch.addGrace(1); else this.branch.addPride(1); // TODO balance
+      if (outcome === 'humble') this.branch.addGrace(SITE_GRACE); else this.branch.addPride(SITE_PRIDE);
       this.branch.save(); this.onResult();
     }
-    const tail = outcome === 'unfinished' ? 'Meters unchanged.' : reward ? outcome === 'humble' ? '(+1 grace)' : '(+1 pride)' : 'Practice: meters unchanged.';
+    const tail = outcome === 'unfinished' ? 'Meters unchanged.' : reward ? outcome === 'humble' ? `(+${SITE_GRACE} grace)` : `(+${SITE_PRIDE} pride)` : 'Practice: meters unchanged.';
     this.hud.message(`${text} ${tail}`, 8000);
   }
   close({ walkingAway = false } = {}) {
