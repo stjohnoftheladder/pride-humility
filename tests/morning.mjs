@@ -21,6 +21,10 @@ export async function testMorning(browser,newPage,check){
  }
  const visits=await page.evaluate(titles=>({titles,state:window.__game.state(),people:window.__game.sophia.people.length}),titles);
  check('hagia sophia: each visit Chrysostom preaches the next homily, among a full congregation',visits.titles.length===2&&visits.titles[0]&&visits.titles[1]&&visits.titles[0]!==visits.titles[1]&&visits.people>300,JSON.stringify(visits));
+ await page.reload();await page.waitForFunction(()=>window.__game);
+ check('morning: after a finished morning the title offers to continue or begin anew',await page.evaluate(()=>document.getElementById('start-btn').textContent==='CONTINUE IN THE CITY'&&document.getElementById('new-morning-btn').style.display!=='none'));
+ await page.click('#start-btn');
+ check('morning: continuing a finished morning goes to the city without replaying the arrival card',await page.waitForFunction(()=>window.__game.state()==='explore'&&document.getElementById('ending-screen')?.style.display!=='flex',{},{timeout:5000}).then(()=>true,()=>false),await page.evaluate(()=>JSON.stringify({state:window.__game.state()})));
  check('morning: no page errors',errors.length===0,JSON.stringify(errors));await page.close();
  for(const [elapsed,expected] of [[730,'late'],[901,'missed']]){
  const fresh=await newPage(browser);await fresh.page.evaluate(({elapsed})=>{const g=window.__game;g.setState('explore');g.morning.begin();g.morning.update(elapsed,'explore');g.teleport(52.5,310.5);g.key('KeyE');g.exitSophia();},{elapsed});

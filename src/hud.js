@@ -71,6 +71,7 @@ export class Hud {
     $('start-btn')?.addEventListener('click', () => this.onStart?.());
     $('resume-btn')?.addEventListener('click', () => this.onResume?.());
     $('restart-btn')?.addEventListener('click', () => this.onRestart?.());
+    $('new-morning-btn')?.addEventListener('click', () => this.onRestart?.());
     $('return-city-btn')?.addEventListener('click', () => this.onReturnCity?.());
     $('fall-btn')?.addEventListener('click', () => this.onFallContinue?.());
     $('confess-btn')?.addEventListener('click', () => this.onConfess?.());

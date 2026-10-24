@@ -700,7 +700,8 @@ async function boot() {
 
   hud.onStart = async () => {
     morning.begin();
-    if(morning.run.arrived&&new URLSearchParams(location.search).get('sophia')===null){morning.arrive();return;}
+    // A finished morning continues in the city; its arrival card was already shown.
+    if(morning.run.arrived&&new URLSearchParams(location.search).get('sophia')===null){await hud.onReturnCity();return;}
     audio.resume();
     audio.ensure();
     audio.startAmbient();
@@ -720,6 +721,11 @@ async function boot() {
     if (!locked || !document.pointerLockElement) enterDragFallback(false);
   };
   hud.onRestart = () => { branch.clearSave(); location.reload(); };
+  // After a finished morning the title offers to continue in the city or start over.
+  if (morning.run?.arrived) {
+    document.getElementById('start-btn').textContent = 'CONTINUE IN THE CITY';
+    document.getElementById('new-morning-btn').style.display = '';
+  }
   hud.onReturnCity = async () => {   // the morning is over; the city (and the church) are still open
     state = 'explore'; hud.showExplore();
     audio.resume(); audio.ensure(); audio.startAmbient();
