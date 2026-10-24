@@ -1,7 +1,7 @@
 // Pilgrimage level construction: geometry, collision, candle lights, triggers.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOURS, SITES, FEATURES } from './config.js';
+import { LEVEL, CELL, WALL_H, MAP_W, MAP_H, PALETTE, HARBOURS, SITES, FEATURES, MONASTERY } from './config.js';
 import { HOUSE, HAGIA, HAGIA_MINARETS, HAGIA_NOTE, DOME_CELLS, TOWER_CELLS, roofKind } from './city.js';
 import { Materials } from './textures.js';
 import { AnimatedSprite } from './SpriteSystem.js';
@@ -91,6 +91,7 @@ export class Level {
   /** Give each passion a visual argument before it speaks: abundance without
    * use, a wound made into a room, and eyes that turn every surface inward. */
   addThresholdStorytelling() {
+    const { tempter: tr, brother: br, ladder: lr } = LEVEL.rooms;
     const story = new THREE.Group();
     story.name = 'threshold-storytelling';
 
@@ -106,7 +107,7 @@ export class Level {
           new THREE.CylinderGeometry(0.28, 0.28, 0.055, 10),
           this.mat.get('gold'),
         );
-        coin.position.set((gx + 0.5) * CELL, 0.04 + i * 0.06, (gz + 0.5) * CELL);
+        coin.position.set((gx - 2 + tr.x + 0.5) * CELL, 0.04 + i * 0.06, (gz - 14 + tr.y + 0.5) * CELL);
         coin.rotation.y = (gx * 1.7 + gz) % Math.PI;
         tempter.add(coin);
       }
@@ -116,7 +117,7 @@ export class Level {
 
     const brother = new THREE.Group();
     brother.name = 'brother-wound';
-    const bedAt = this.centerOf(17, 16);
+    const bedAt = this.centerOf(br.x + 6, br.y + 3);
     const bed = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.45, 1.45), this.mat.get('wood_floor'));
     bed.position.set(bedAt.x, 0.32, bedAt.z);
     const pallet = new THREE.Mesh(
@@ -138,7 +139,7 @@ export class Level {
     stain.rotation.x = -Math.PI / 2;
     stain.position.set(bedAt.x + 0.45, 0.74, bedAt.z);
     const stool = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.18, 0.85), this.mat.get('wood_floor'));
-    stool.position.set((22.5) * CELL, 0.25, (17.5) * CELL);
+    stool.position.set((br.x + 1.5) * CELL, 0.25, (br.y + 3.5) * CELL);
     stool.rotation.z = 0.72;
     brother.add(bed, pallet, bandage, stain, stool);
     brother.userData.storytelling = 'The grievance has become furniture.';
@@ -152,7 +153,8 @@ export class Level {
       for (let i = 0; i < 3; i++) {
         const eye = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 8), eyeMat);
         eye.scale.set(0.45, 1, 0.22);
-        eye.position.set(side < 0 ? 81.4 : 95.6, 1.7 + i * 1.45, 46.5 + i * 2.15);
+        // on the Ladder chamber's two side walls, climbing toward the gate
+        eye.position.set(side < 0 ? lr.x * CELL + 0.4 : (lr.x + lr.w) * CELL - 0.4, 1.7 + i * 1.45, (lr.y + 1.5) * CELL + i * 2.15);
         const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 6), pupilMat);
         pupil.position.copy(eye.position);
         pupil.position.x += side < 0 ? 0.14 : -0.14;
@@ -1002,7 +1004,7 @@ export class Level {
 
   build() {
     const { grid, cells } = LEVEL;
-    const wallGeo = [], colGeo = [], woodGeo = [];
+    const wallGeo = [], colGeo = [], woodGeo = [], ceilGeo = [];
     const corniceGeo = [], roofGeo = [], domeGeo = [], domeCrossGeo = [], towerGeo = [], towerCapGeo = [];
 
     const isHouse = (x, z) => x >= HOUSE.x && x < HOUSE.x + HOUSE.w && z >= HOUSE.y && z < HOUSE.y + HOUSE.h;
@@ -1041,6 +1043,7 @@ export class Level {
             // mass left the drum floating over a see-through void, which the
             // lowered sea wall then exposed from the harbour.
             if (inDomeBand(x, z)) break;
+            if (MONASTERY) break;   // indoors: the ceiling covers the mass
             const kind = inSet(DOME_CELLS, x, z) ? 'dome' : inSet(TOWER_CELLS, x, z) ? 'tower' : roofKind(x, z);
             if (kind === 'dome') {
               const drum = new THREE.CylinderGeometry(1.0, 1.0, 0.7, 10);
@@ -1128,7 +1131,14 @@ export class Level {
               g.translate(cx, 0.03, cz);
               woodGeo.push(g);
             }
-            // open air — no ceiling tiles anywhere; the sky dome is the roof
+            // the city is open air under the sky dome; the monastery is roofed
+            // everywhere but its gate court
+            if (MONASTERY && !this.inCourt(x, z)) {
+              const c = new THREE.PlaneGeometry(CELL, CELL);
+              c.rotateX(Math.PI / 2);
+              c.translate(cx, WALL_H, cz);
+              ceilGeo.push(c);
+            }
           }
         }
       }
@@ -1148,6 +1158,11 @@ export class Level {
       const mesh = new THREE.Mesh(mergeGeometries(woodGeo), this.mat.get('wood_floor'));
       this.group.add(mesh);
       woodGeo.forEach((g) => g.dispose());
+    }
+    if (ceilGeo.length) {
+      const mesh = new THREE.Mesh(mergeGeometries(ceilGeo), this.mat.get('stone_wall'));
+      this.group.add(mesh);
+      ceilGeo.forEach((g) => g.dispose());
     }
     if (roofGeo.length) {
       const mesh = new THREE.Mesh(mergeGeometries(roofGeo), this.mat.get('plaster'));
@@ -1190,6 +1205,17 @@ export class Level {
     this.group.add(floor);
     this.mat.get('stone_floor').map.repeat.set(MAP_W, MAP_H);
 
+    if (MONASTERY) {
+      // the city's systems still expect a group per addition; here each is empty and hidden
+      for (const id of Object.keys(FEATURES)) {
+        if (this.featureGroups[id]) continue;
+        const g = new THREE.Group(); g.name = `feature-${id}`; g.visible = false;
+        this.featureGroups[id] = g; this.group.add(g);
+      }
+      this.buildMonasteryLight();
+      return this.buildMonasteryFigures(cells);
+    }
+
     // --- lights: daylight sun + warm sky; no candles — it is broad daylight ----
     const hemi = new THREE.HemisphereLight(0xbfd8ef, 0x8a7a5a, 1.0);
     this.group.add(hemi);
@@ -1217,7 +1243,17 @@ export class Level {
     for (const wing of HARBOURS) this.addHarbour(wing);
     for (const site of SITES) this.addSite(site);
 
-    // --- decor + trigger positions ------------------------------------------------
+    this.placeDecor(cells);
+    return this.spawns;
+  }
+
+  inCourt(x, z) {
+    const c = LEVEL.rooms.court;
+    return x >= c.x && x < c.x + c.w && z >= c.y && z < c.y + c.h;
+  }
+
+  /** Banners and the other decor cells, then every marker's position. */
+  placeDecor(cells) {
     for (const [key, t] of cells) {
       const [x, z] = key.split(',').map(Number);
       const p = this.centerOf(x, z);
@@ -1237,6 +1273,42 @@ export class Level {
       }
     }
 
+  }
+
+  /** The old monastery, lit as it first was: a dim blue night, torches along
+   *  the walls, and candle pools at the elder and the altar. */
+  buildMonasteryLight() {
+    this.group.add(new THREE.HemisphereLight(0x3a4a7a, 0x141008, 0.95));
+    const { mainroad, tempter, brother, ladder, chapel, court } = LEVEL.rooms;
+    const spots = [];
+    for (let y = mainroad.y + 2; y < mainroad.y + mainroad.h; y += 5) spots.push([mainroad.x, y], [mainroad.x + mainroad.w - 1, y]);
+    for (const r of [tempter, brother, ladder, chapel]) spots.push([r.x, r.y], [r.x + r.w - 1, r.y]);
+    spots.push([court.x, court.y + court.h - 1]);
+    for (const [x, y] of spots) {
+      const p = this.centerOf(x, y);
+      const torch = new AnimatedSprite('torch', 1.25);
+      torch.mesh.position.set(p.x, 1.25 / 2 + 0.05, p.z);
+      torch.setAnimation('idle', { fps: 9 });
+      this.group.add(torch.mesh);
+      this.animSprites.push(torch);
+      const light = new THREE.PointLight(0xffa04a, 14, 10, 2);
+      light.position.set(p.x, 1.9, p.z);
+      this.group.add(light);
+      this.trackFlicker(light, 14);
+    }
+    const sign = makeWayfindingLabel('TEST AREA · OLD MONASTERY');
+    sign.name = 'test-area-sign';
+    const s = this.centerOf(court.x + 5, court.y + 1);
+    sign.position.set(s.x, 4.6, s.z);
+    sign.scale.set(9.6, 1.6, 1);
+    this.group.add(sign);
+  }
+
+  /** The monastery's people and thresholds: the decor, the Ladder gate, the
+   *  elder and altar, the three adversaries in their rooms, and the
+   *  storytelling props that belong to each room. */
+  buildMonasteryFigures(cells) {
+    this.placeDecor(cells);
     // gold trim on the Ladder gate (decorative, non-solid)
     const gateLight = new THREE.PointLight(PALETTE.gold, 18, 14, 2);
     gateLight.position.copy(this.spawns.L[0]);
@@ -1317,7 +1389,8 @@ export class Level {
 
     // the three thresholds wait visibly in their rooms, so the pilgrim sees
     // who is coming before stumbling into the encounter
-    const spots = { tempter: [6, 17], brother: [19, 17], pride: [29, 16] };
+    const { tempter: tr, brother: br, ladder: lr } = LEVEL.rooms;
+    const spots = { tempter: [tr.x + 4, tr.y + 3], brother: [br.x + 4, br.y + 3], pride: [lr.x + 2, lr.y + 1] };
     const heights = { tempter: 2.0, brother: 2.2, pride: 3.0 };
     for (const [id, [gx, gz]] of Object.entries(spots)) {
       const p = this.centerOf(gx, gz);

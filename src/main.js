@@ -1,6 +1,6 @@
 // Bootstraps the pilgrimage: explore state + triggers + battle/ending flow.
 import * as THREE from 'three';
-import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, SITES, ADDITIONS, FEATURES } from './config.js';
+import { LEVEL as LEVEL_CFG, validateLevel, HARBOURS, SITES, ADDITIONS, FEATURES, MONASTERY, PALETTE } from './config.js';
 import { Materials } from './textures.js';
 import { Level } from './level.js';
 import { Player } from './player.js';
@@ -84,8 +84,9 @@ async function boot() {
   renderer.toneMappingExposure = 1.3;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x9cc9e8);
-  scene.fog = new THREE.Fog(0xcfe3f2, 18, 62);
+  // The city is open daylight; the monastery test area keeps its first night.
+  scene.background = new THREE.Color(MONASTERY ? PALETTE.nightSky : 0x9cc9e8);
+  scene.fog = MONASTERY ? new THREE.Fog(PALETTE.nightSky, 9, 40) : new THREE.Fog(0xcfe3f2, 18, 62);
 
   const camera = new THREE.PerspectiveCamera(75, 640 / 360, 0.1, 80);
   // First-person look must yaw around the world-up axis before applying local
@@ -112,6 +113,7 @@ async function boot() {
   const level = new Level(scene, materials);
   const spawns = level.build();
   const market = new RoadMarket(level);
+  if (MONASTERY) { market.npcs.length = 0; market.group.visible = false; }   // no street in the monastery
   level.npcs = [...market.npcs];
   // Every addition and landmark the approach card knows about, with positions.
   const landmarks = level.landmarks();
@@ -360,12 +362,34 @@ async function boot() {
   hud.setRoom('The Gate Court');
 
   // ----- trigger positions ----------------------------------------------------------
-  const triggerPos = (key) => spawns[key][0];
+  const triggerPos = (key) => spawns[key]?.[0];
   const TRIGGER_KEY = { tempter: 'K', brother: 'B', pride: 'P' };
 
   /** Pressing E near a figure engages it (enemy threshold, elder, altar). */
+  // A signed passage in the gate court joins the city and the monastery test
+  // area; crossing reloads into the other world, each with its own save.
+  const passageAt = (() => { const c = LEVEL_CFG.rooms.court; return { x: (c.x + 5.5) * 3, z: (c.y + 4.5) * 3 }; })();
+  const nearPassage = () => Math.hypot(player.pos.x - passageAt.x, player.pos.z - passageAt.z) < 2.2;
+  {
+    const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 96;
+    const ink = signCanvas.getContext('2d'); ink.fillStyle = '#20180f'; ink.fillRect(0, 0, 512, 96);
+    ink.strokeStyle = '#f3d276'; ink.lineWidth = 5; ink.strokeRect(3, 3, 506, 90);
+    ink.fillStyle = '#f3d276'; ink.font = '22px monospace'; ink.textAlign = 'center';
+    ink.fillText(MONASTERY ? 'BACK TO CONSTANTINOPLE' : 'TEST AREA · OLD MONASTERY', 256, 38);
+    ink.font = '17px monospace'; ink.fillText('APPROACH · E', 256, 72);
+    const sign = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(signCanvas) }));
+    sign.name = 'world-passage-sign'; sign.position.set(passageAt.x, 2.6, passageAt.z); sign.scale.set(3.4, 0.64, 1);
+    level.group.add(sign);
+  }
+  function crossWorlds() {
+    const q = new URLSearchParams(location.search);
+    if (MONASTERY) q.delete('monastery'); else q.set('monastery', '');
+    location.search = q.toString().replace(/monastery=(&|$)/, 'monastery$1');
+  }
+
   function tryEngage() {
     if (state !== 'explore') return;
+    if (nearPassage()) { crossWorlds(); return; }
     if(nearChurch()){enterSophia();return;}
     if (armed.tempter && near('K', 2.4)) { startEncounter('tempter'); return; }
     if (armed.brother && near('B', 2.4)) { startEncounter('brother'); return; }
@@ -396,6 +420,7 @@ async function boot() {
   }
   const near = (key, r = 1.4) => {
     const p = triggerPos(key);
+    if (!p) return false;
     return Math.hypot(player.pos.x - p.x, player.pos.z - p.z) < r;
   };
 
@@ -699,6 +724,7 @@ async function boot() {
   };
 
   hud.onStart = async () => {
+    if (MONASTERY) { await hud.onReturnCity(); hud.message('TEST AREA · the old monastery: three thresholds, the elder, the altar and the Ladder. The sign in the court leads back to the city.', 7000); return; }
     morning.begin();
     // A finished morning continues in the city; its arrival card was already shown.
     const linked=['sophia','hippodrome'].some(k=>new URLSearchParams(location.search).has(k));
@@ -729,8 +755,15 @@ async function boot() {
     if (!locked || !document.pointerLockElement) enterDragFallback(false);
   };
   hud.onRestart = () => { branch.clearSave(); location.reload(); };
+  // The test area announces itself on its title screen.
+  if (MONASTERY) {
+    document.querySelector('#title-screen h1').textContent = 'TEST AREA · THE OLD MONASTERY';
+    for (const el of document.querySelectorAll('#title-screen > p:not(.verse):not(.hint)')) el.textContent = 'The first version of the pilgrimage, kept for testing: the Tempter, the Wounded Brother and the Demon of Pride, the elder, the confession altar and the Ladder, in the dark monastery where they began. Progress here is saved apart from the city.';
+    document.getElementById('title-timeless').style.display = 'none';
+    document.getElementById('start-btn').textContent = 'ENTER THE MONASTERY';
+  }
   // After a finished morning the title offers to continue in the city or start over.
-  if (morning.run?.arrived) {
+  if (!MONASTERY && morning.run?.arrived) {
     document.getElementById('start-btn').textContent = 'CONTINUE IN THE CITY';
     document.getElementById('new-morning-btn').style.display = '';
   }
@@ -756,6 +789,7 @@ async function boot() {
 
   // ----- update ------------------------------------------------------------------------
   function isInRoom(r) {
+    if (!r) return false;
     const x = Math.floor(player.pos.x / 3), z = Math.floor(player.pos.z / 3);
     return x >= r.x && x < r.x + r.w && z >= r.y && z < r.y + r.h;
   }
@@ -801,18 +835,24 @@ async function boot() {
   // the walk, in order, so a dev can be anywhere in a keystroke.
   const CELL_W = 3;
   const WAYPOINTS = (() => {
-    const { court, ladder } = LEVEL_CFG.rooms;
+    const { court, ladder, tempter, brother, chapel } = LEVEL_CFG.rooms;
     const stop = (name, cx, cy, yaw) => ({ name, x: (cx + 0.5) * CELL_W, z: (cy + 0.5) * CELL_W, yaw });
-    return [
+    if (MONASTERY) return [
       stop('The Gate Court', court.x + 4, court.y + 2),
       stop('The Bottom Spine', 17, 13),
+      stop('The Tempter’s Chamber', tempter.x + 5, tempter.y + 3),
+      stop('The Brother’s Cell', brother.x + 4, brother.y + 3),
+      stop('The Ladder Chamber', ladder.x + 2, ladder.y + 2),
+      stop('The Chapel', chapel.x + 5, chapel.y + 2),
+    ];
+    return [
+      stop('The Gate Court', court.x + 4, court.y + 2),
       stop('The Pilgrim Way', 17, 55),
       ...SITES.filter((s) => s.approach).map((s) =>
         stop(s.label, s.approach.x - 0.5, s.approach.y - 0.5,
           s.area.x < 15 ? Math.PI / 2 : -Math.PI / 2)),
-      stop('The Ladder Chamber', ladder.x + 2, ladder.y + 2),
       stop('Hagia Sophia', 17, 103, -Math.PI / 2),   // looking east, up at the dome
-      stop('The Chapel', 17, 110),
+      stop('The Chapel Square', 17, 110),
       stop('The Port of Theodosius', 17, 118),
     ].sort((a, b) => a.z - b.z);
   })();
@@ -831,7 +871,7 @@ async function boot() {
   function roomLabel() {
     const { court, chapel, tempter, brother, ladder } = LEVEL_CFG.rooms;
     if (isInRoom(court)) return 'The Gate Court';
-    if (isInRoom(chapel)) return 'The Chapel';
+    if (isInRoom(chapel)) return MONASTERY ? 'The Chapel' : 'The Chapel Square';
     if (isInRoom(tempter)) return 'The Tempter\u2019s Chamber';
     if (isInRoom(brother)) return 'The Brother\u2019s Cell';
     if (isInRoom(ladder)) return 'The Ladder Chamber';
@@ -860,16 +900,17 @@ async function boot() {
       const hemi = level.group.children.find((c) => c.isHemisphereLight);
       if (hemi) {
         const prideT = branch.pride / 100;
-        hemi.color.setHex(0xbfd8ef).lerp(new THREE.Color(0x5c2a1e), prideT * 0.55);
-        hemi.intensity = 1.0 - prideT * 0.28;
+        hemi.color.setHex(MONASTERY ? 0x3a4a7a : 0xbfd8ef).lerp(new THREE.Color(0x5c2a1e), prideT * 0.55);
+        hemi.intensity = (MONASTERY ? 0.95 : 1.0) - prideT * 0.28;
       }
-      level.gateLight.intensity = 18 + (branch.grace / 100) * 20;
+      if (level.gateLight) level.gateLight.intensity = 18 + (branch.grace / 100) * 20;
     }
 
     if (state === 'explore') {
       // Figures wait for a deliberate interaction; proximity only teaches E.
       let promptText = null;
-      if(nearChurch())promptText='Enter Hagia Sophia · E';
+      if (nearPassage()) promptText = MONASTERY ? 'Return to Constantinople · E' : 'Enter the old monastery TEST AREA · E';
+      else if(nearChurch())promptText='Enter Hagia Sophia · E';
       else if (armed.tempter && near('K', 2.6)) promptText = 'Face the Tempter — press E';
       else if (armed.brother && near('B', 2.6)) promptText = 'Face the Wounded Brother — press E';
       else if (armed.pride && near('P', 2.6)) promptText = 'Face the Demon of Pride — press E';
@@ -958,6 +999,7 @@ async function boot() {
       showInventory,
       activityStops: ACTIVITY_STOPS,
       activities: () => activities,
+      levelRooms: () => LEVEL_CFG.rooms,
       siteActivity: () => (activities?.active ? activities : null),
       harbourCart,
       morning,

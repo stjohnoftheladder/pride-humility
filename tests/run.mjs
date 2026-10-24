@@ -75,6 +75,9 @@ async function linkPage(browser, query) {
   return { page, errors };
 }
 
+// The old monastery (thresholds, elder, altar, Ladder) is its own test world.
+const monasteryPage = (browser) => linkPage(browser, 'monastery');
+
 async function resetState(page) {
   await page.evaluate(() => {
     const g = window.__game;
@@ -146,7 +149,7 @@ async function fightToKill(page) {
 }
 
 async function runJourney(browser, mode) {
-  const { page, errors } = await newPage(browser);
+  const { page, errors } = await monasteryPage(browser);
   await resetState(page);
   const log = {};
 
@@ -207,9 +210,9 @@ async function runJourney(browser, mode) {
 }
 
 async function runInteractionRegressions(browser) {
-  const { page, errors } = await newPage(browser);
+  let { page, errors } = await monasteryPage(browser);
 
-  await page.getByRole('button', { name: 'BEGIN THE MORNING' }).click();
+  await page.getByRole('button', { name: 'ENTER THE MONASTERY' }).click();
   await sleep(250);
   check('input: rejected pointer lock falls back without page errors', errors.length === 0, JSON.stringify(errors));
   await resetState(page);
@@ -456,6 +459,15 @@ async function runInteractionRegressions(browser) {
     choice.hp === 11 && choice.pride === 6 && choice.forceMomentum === 1,
     JSON.stringify(choice),
   );
+  check('monastery: no console errors', errors.length === 0, JSON.stringify(errors));
+  await page.close();
+  ({ page, errors } = await newPage(browser));
+  // Start the way a browser without mouse capture does, so releasing the lock
+  // below is a real change the rest screen answers.
+  await page.evaluate(() => { HTMLCanvasElement.prototype.requestPointerLock = () => Promise.reject(new Error('denied')); });
+  await page.getByRole('button', { name: 'BEGIN THE MORNING' }).click();
+  await sleep(250);
+
   // ---- the HUD mini-map and the dev feature toggles -------------------------
   // Back to explore: the map only lives there, and the checks below walk around.
   await resetState(page);
@@ -597,7 +609,7 @@ async function runInteractionRegressions(browser) {
   });
   check(
     'transport: the stops run north to south, and PageDown/PageUp walk them',
-    transport.count === 13 && transport.sorted && transport.southward && transport.atPort
+    transport.count === 11 && transport.sorted && transport.southward && transport.atPort
       && /Gate Court/.test(transport.wrapped) && /Port of Theodosius/.test(transport.backNorth),
     JSON.stringify(transport),
   );
@@ -757,14 +769,14 @@ async function runInteractionRegressions(browser) {
     // the pilgrimage start is a spawn, not a trigger
     const start = g.level.spawns.S[0];
     const court = await markerRow(start.x, start.z);
-    const ladder = await markerRow(g.triggers().L.x, g.triggers().L.z);
+    const church = await markerRow(52.5, 310.5);         // the Hagia Sophia steps
     const port = await markerRow(61.5, 355.5);           // the south quay
-    return { court, ladder, port, height: c.height };
+    return { court, church, port, height: c.height };
   });
   check(
     'minimap: walking south moves the pilgrim UP the strip (destination at the top)',
-    orientation.court !== null && orientation.court > orientation.ladder
-      && orientation.ladder > orientation.port && orientation.court > orientation.height * 0.75,
+    orientation.court !== null && orientation.court > orientation.church
+      && orientation.church > orientation.port && orientation.court > orientation.height * 0.75,
     JSON.stringify(orientation),
   );
 
@@ -853,7 +865,7 @@ let aborted = null;
 try {
   await waitForServer(`http://127.0.0.1:${PORT}/`);
   const browser = await chromium.launch();
-  const exits = await newPage(browser);
+  const exits = await monasteryPage(browser);
   // World sprite sheets load asynchronously after the debug hook is installed.
   await exits.page.waitForFunction(() => Object.values(window.__game.level.worldEnemies).every(enemy => enemy.sprite.mesh.visible));
   for (const id of ['tempter', 'brother', 'pride']) {
@@ -886,6 +898,37 @@ try {
   check('escape: an already resolved outcome is not discarded during its animation', await exits.page.evaluate(() => window.__game.state() === 'battle' && window.__game.battle.done.outcome === 'spared'));
   check('escape: no page errors', exits.errors.length === 0, JSON.stringify(exits.errors));
   await exits.page.close();
+  // ---- two worlds: the city, and the old monastery as a test area ---------
+  const city = await newPage(browser);
+  const cityWorld = await city.page.evaluate(() => {
+    const g = window.__game, s = g.level.spawns;
+    return { markers: ['E', 'A', 'K', 'B', 'P', 'L'].filter((k) => s[k].length), enemies: Object.keys(g.level.worldEnemies).length,
+      story: !!g.level.group.getObjectByName('threshold-storytelling'), gate: !!g.level.ladderGate,
+      passage: !!g.level.group.getObjectByName('world-passage-sign') };
+  });
+  check('worlds: the city holds none of the old monastery, and signs the way to it',
+    !cityWorld.markers.length && !cityWorld.enemies && !cityWorld.story && !cityWorld.gate && cityWorld.passage, JSON.stringify(cityWorld));
+  await city.page.close();
+  const old = await monasteryPage(browser);
+  const oldWorld = await old.page.evaluate(() => {
+    const g = window.__game, rooms = g.levelRooms(), cell = (v) => Math.floor(v / 3);
+    const inside = (r, p) => !!r && cell(p.x) >= r.x && cell(p.x) < r.x + r.w && cell(p.z) >= r.y && cell(p.z) < r.y + r.h;
+    const e = g.level.worldEnemies, eyes = g.level.group.getObjectByName('pride-eyes').children;
+    const bed = g.level.group.getObjectByName('brother-wound').children[0].position;
+    return {
+      tempter: inside(rooms.tempter, e.tempter.sprite.mesh.position), brother: inside(rooms.brother, e.brother.sprite.mesh.position),
+      pride: inside(rooms.ladder, e.pride.sprite.mesh.position), eyes: eyes.every((m) => inside(rooms.ladder, m.position)),
+      bed: inside(rooms.brother, bed), elder: inside(rooms.chapel, g.level.spawns.E[0]), altar: inside(rooms.chapel, g.level.spawns.A[0]),
+      gate: inside(rooms.ladder, g.level.spawns.L[0]), city: g.sites().length, crowd: g.market.npcs.length,
+      sign: !!g.level.group.getObjectByName('test-area-sign'), title: document.querySelector('#title-screen h1').textContent,
+    };
+  });
+  check('worlds: ?monastery is a marked test area with every threshold, the elder, the altar and the Ladder in their own rooms',
+    oldWorld.tempter && oldWorld.brother && oldWorld.pride && oldWorld.eyes && oldWorld.bed && oldWorld.elder && oldWorld.altar
+      && oldWorld.gate && !oldWorld.city && !oldWorld.crowd && oldWorld.sign && /TEST AREA/.test(oldWorld.title), JSON.stringify(oldWorld));
+  check('worlds: the monastery keeps its own save', await old.page.evaluate(() => { const g = window.__game; g.branch.grace = 7; g.branch.save(); return !localStorage.getItem('pride-humility-save-v1') && !!localStorage.getItem('pride-humility-monastery-save-v1'); }));
+  check('worlds: no page errors in either world', old.errors.length === 0 && city.errors.length === 0, JSON.stringify([...old.errors, ...city.errors]));
+  await old.page.close();
   const raceLink = await linkPage(browser, 'hippodrome');
   await raceLink.page.click('#start-btn');
   check('link: ?hippodrome starts the morning in the Greens’ chariot', await raceLink.page.waitForFunction(() => window.__game.state() === 'race', {}, { timeout: 5000 }).then(() => true, () => false));

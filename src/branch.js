@@ -1,9 +1,10 @@
 // Branch state: the pride / grace meters and journey flags that persist across
 // encounters and decide the ending. Persisted to localStorage.
-import { PRIDE_MAX, GRACE_MAX, PLAYER_HP_MAX } from './config.js';
+import { PRIDE_MAX, GRACE_MAX, PLAYER_HP_MAX, MONASTERY } from './config.js';
 import { InventoryRegistry } from './inventory.js';
 
-const SAVE_KEY = 'pride-humility-save-v1';
+// The monastery test area keeps its own save, apart from the city's.
+const SAVE_KEY = MONASTERY ? 'pride-humility-monastery-save-v1' : 'pride-humility-save-v1';
 
 export class Branch {
   constructor() {

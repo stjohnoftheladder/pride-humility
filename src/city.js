@@ -12,11 +12,11 @@
 // Every listed cell is a WALL cell (never a walkable floor cell), so the
 // structures never block the route or add colliders.
 
-import { LEVEL } from './config.js';
+import { MAP_H } from './config.js';
 
-// The dome is anchored to the Ladder chamber rather than to a fixed row, so
-// moving the destination along the road moves Hagia Sophia with it.
-const { ladder } = LEVEL.rooms;
+// Hagia Sophia is laid out from where the Ladder chamber stood before the
+// monastery became its own test area (?monastery); the cells stay wall mass.
+const ladder = { x: 27, y: MAP_H - 30, w: 5, h: 5 };
 
 export const HOUSE = { x: 4, y: 0, w: 6, h: 2 };   // nobleman's house, north of the Gate Court
 export const HAGIA = { x: ladder.x + 1, y: ladder.y + ladder.h, w: 5, h: 1 }; // dome band, south of the Ladder chamber

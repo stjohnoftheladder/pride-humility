@@ -67,6 +67,13 @@ export const FEATURES = {
   hippodrome: true,
   mosaicPeristyle: true,
 };
+// The old monastery (the three thresholds, the chapel, the elder and the
+// Ladder) is a test area of its own, reached with ?monastery. That world is
+// built from the same grid code without any of the city's additions.
+export const MONASTERY = typeof location !== 'undefined'
+  && new URLSearchParams(location.search).has('monastery');
+if (MONASTERY) for (const id of Object.keys(FEATURES)) FEATURES[id] = false;
+
 
 // ---------------------------------------------------------------------------
 // The Port of Theodosius — the harbour wing.
@@ -241,19 +248,25 @@ function buildLevelGrid() {
   const g = makeGrid(MAP_W, MAP_H, W);
 
   // --- rooms ---------------------------------------------------------------
+  // The city keeps the gate court, the road and, at its foot, the square the
+  // chapel stood on. The monastery test world keeps the old walk, compact:
+  // court, road, the spine to the Tempter and the Brother, the Ladder chamber,
+  // and the chapel just past it.
   const court    = { x: 2, y: 2, w: 10, h: 5 };            // gate court (open sky)
-  const chapel   = { x: 12, y: MAP_H - 20, w: 11, h: 6 };  // confession + elder, at the road's foot
+  const chapel   = { x: 12, y: MONASTERY ? 30 : MAP_H - 20, w: 11, h: 6 };
   const mainroad = { x: 15, y: 2, w: 5, h: chapel.y - 2 }; // the road from the court south to the chapel
-  const tempter  = { x: 2, y: 14, w: 11, h: 5 };           // encounter 1
-  const brother  = { x: mainroad.x + mainroad.w + 1, y: 14, w: 10, h: 5 }; // encounter 2
-  const ladder   = { x: 27, y: chapel.y - 10, w: 5, h: 5 }; // encounter 3 + Ladder gate
+  const tempter  = MONASTERY ? { x: 2, y: 14, w: 11, h: 5 } : null;           // encounter 1
+  const brother  = MONASTERY ? { x: mainroad.x + mainroad.w + 1, y: 14, w: 10, h: 5 } : null; // encounter 2
+  const ladder   = MONASTERY ? { x: 27, y: 22, w: 5, h: 5 } : null;          // encounter 3 + Ladder gate
 
-  for (const r of [court, chapel, tempter, brother, ladder, mainroad]) carveRoom(g, r.x, r.y, r.w, r.h);
+  for (const r of [court, chapel, tempter, brother, ladder, mainroad]) if (r) carveRoom(g, r.x, r.y, r.w, r.h);
 
   // --- corridors ------------------------------------------------------------
   carveRow(g, 4, 12, 14);                                     // court -> the road
-  carveRow(g, 13, 2, 31);                                     // bottom spine (tempter -> brother -> ladder)
-  carveRow(g, ladder.y, mainroad.x + mainroad.w, ladder.x);   // the road -> Ladder chamber
+  if (MONASTERY) {
+    carveRow(g, 13, 2, 30);                                   // spine: Tempter <- road -> Brother
+    carveRow(g, ladder.y, mainroad.x + mainroad.w, ladder.x); // the road -> Ladder chamber
+  }
 
   // --- the Port of Theodosius (every enabled wing) --------------------------
   // Each wing is carved from its own block: the quay walkable, the stair down
@@ -285,8 +298,8 @@ function buildLevelGrid() {
     if (site.neck) carveRoom(g, site.neck.x, site.neck.y, site.neck.w, site.neck.h);
   }
 
-  // --- wood floors in chapel, brother's cell --------------------------------
-  for (const [rx, ry, rw, rh] of [[chapel.x, chapel.y, chapel.w, chapel.h], [brother.x, brother.y, brother.w, brother.h]]) {
+  // --- wood floors in chapel, brother's cell (monastery only) ---------------
+  for (const [rx, ry, rw, rh] of MONASTERY ? [[chapel.x, chapel.y, chapel.w, chapel.h], [brother.x, brother.y, brother.w, brother.h]] : []) {
     for (let j = ry; j < ry + rh; j++) for (let i = rx; i < rx + rw; i++) if (g[j][i] === F) g[j][i] = '_';
   }
 
@@ -301,12 +314,14 @@ function buildLevelGrid() {
 
   // --- key spots (placed first so decor can't claim their cells) ------------------
   add(court.x + 2, court.y + 3, 'S');                          // pilgrim start
-  add(chapel.x + 2, chapel.y + chapel.h / 2 - 1, 'E');         // elder (NPC)
-  add(chapel.x + 5, chapel.y + 5, 'A');                        // confession altar
-  add(tempter.x + 5, tempter.y + 1, 'K');                      // encounter 1 trigger (Tempter)
-  add(brother.x + 4, brother.y + 1, 'B');                      // encounter 2 trigger (Brother)
-  add(ladder.x + 2, ladder.y + 2, 'P');                        // encounter 3 trigger (Demon of Pride)
-  add(ladder.x + 2, ladder.y + 4, 'L');                        // Ladder gate (goal)
+  if (MONASTERY) {
+    add(chapel.x + 2, chapel.y + chapel.h / 2 - 1, 'E');       // elder (NPC)
+    add(chapel.x + 5, chapel.y + 5, 'A');                      // confession altar
+    add(tempter.x + 5, tempter.y + 1, 'K');                    // encounter 1 trigger (Tempter)
+    add(brother.x + 4, brother.y + 1, 'B');                    // encounter 2 trigger (Brother)
+    add(ladder.x + 2, ladder.y + 2, 'P');                      // encounter 3 trigger (Demon of Pride)
+    add(ladder.x + 2, ladder.y + 4, 'L');                      // Ladder gate (goal)
+  }
 
   // --- icons / columns -----------------------------------------------------------
   // decor codes
@@ -318,7 +333,7 @@ function buildLevelGrid() {
 
   // columns
   add(18, 4, column);
-  add(28, 16, column);
+  if (MONASTERY) add(28, 16, column);
 
   // court decor
   add(court.x + 0, court.y + 0, icon);
@@ -326,7 +341,8 @@ function buildLevelGrid() {
   add(court.x + 3, court.y + 2, column);
   add(court.x + 7, court.y + 2, fountain);
 
-  // chapel decor
+  // chapel decor (monastery only; in the city the chapel's square is open)
+  if (MONASTERY) {
   add(chapel.x + 2, chapel.y + 1, pew);
   add(chapel.x + 3, chapel.y + 1, pew);
   add(chapel.x + 7, chapel.y + 1, pew);
@@ -335,6 +351,7 @@ function buildLevelGrid() {
   add(chapel.x + 3, chapel.y + 3, pew);
   add(chapel.x + 7, chapel.y + 3, pew);
   add(chapel.x + 8, chapel.y + 3, pew);
+  }
 
   return {
     grid: g,
@@ -353,7 +370,7 @@ export function validateLevel() {
   for (let j = 0; j < MAP_H; j++) if (grid[j].length !== MAP_W) problems.push(`row ${j} width ${grid[j].length}`);
   const counts = {};
   for (const row of grid) for (const t of row) counts[t] = (counts[t] || 0) + 1;
-  for (const t of ['S', 'E', 'A', 'K', 'B', 'P', 'L']) if (!counts[t]) problems.push(`missing ${t}`);
+  for (const t of MONASTERY ? ['S', 'E', 'A', 'K', 'B', 'P', 'L'] : ['S']) if (!counts[t]) problems.push(`missing ${t}`);
 
   // Every key spot must be walkable from the pilgrim's start. The map is long
   // and its links are single cells, so a room moved along the road can strand a

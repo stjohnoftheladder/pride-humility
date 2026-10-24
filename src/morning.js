@@ -82,6 +82,9 @@ export class Morning {
     if(this.branch.flags.helpedCharioteer)facts.push('You stopped for the injured charioteer.');
     for(const [id,[humble,proud]] of Object.entries(ARRIVAL_FACTS)){const o=this.branch.flags[`activity:${id}`];if(o==='humble')facts.push(humble);else if(o==='proud')facts.push(proud);}
     facts.push(`You brought ${r.gold} gold${r.boots?' and your swift shoes':''}.`);
+    // The morning's meters close the card: who you were on the way here.
+    const {grace,pride}=this.branch;
+    if(grace||pride)facts.push(grace-pride>=8?'You come in quietly, and find you are not thinking about yourself.':pride-grace>=8?'You come in wanting to be seen, and notice who is watching.':'You come in carrying both: the help you gave and the praise you kept.');
     this.onArrival(r.arrived==='on-time'?'BEFORE THE SERVICE BELL':r.arrived==='late'?'THE SERVICE HAS BEGUN':'AFTER THE SERVICE',`${r.arrived==='on-time'?'You reach Hagia Sophia before the service begins.':r.arrived==='late'?'You enter quietly after the service has begun.':'The service has ended. You sit in the quiet forecourt; tomorrow offers another morning.'} ${facts.join(' ')}`);
   }
 }
