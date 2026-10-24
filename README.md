@@ -46,6 +46,19 @@ npm run build && npx wrangler pages deploy dist --project-name pride-humility --
 
 ## The game
 
+The main game is **one morning in Constantinople**: carry the bread, choose
+what to do along the road, and reach Hagia Sophia before the service bell (see
+MORNING.md and LOCATION-EXPERIENCES.md). The arrival card closes with a line
+shaped by the morning's grace and pride.
+
+### Test area: the old monastery (`?monastery`)
+
+The first version of the game lives on as a separate, clearly marked test area,
+reached with `?monastery` or through the signed passage in the city's gate
+court. It is built from the same grid code without any of the city, roofed and
+torch-lit as it began, and keeps its own save. Everything below in this section
+happens there.
+
 You are a pilgrim at a monastery gate. Three thresholds stand between you and
 the Ladder — **the Tempter** (greed), **the Wounded Brother** (anger), and
 **the Demon of Pride** (the last rung). Each encounter asks the same question
@@ -80,6 +93,8 @@ See **THEOLOGY.md** for the full mechanic→source mapping.
 - `?sophia` goes straight into Hagia Sophia for the next homily; `?sophia=poverty`
   (or any homily name) picks one.
 - `?hippodrome` goes straight to the starting line in the Greens' chariot.
+- `?monastery` opens the old monastery test area (the three thresholds, the
+  elder, the confession altar and the Ladder).
 
 Both take effect after BEGIN on the title screen.
 

@@ -456,11 +456,11 @@ export class Level {
   /** The seaward wall of the city: a crenellated parapet with square towers,
    * pierced by the sea gate. Mirrors the sketch's wall band and its gold rule. */
   addSeaWall(wing, group) {
-    const { id, wall: band, gateX: gateCell } = wing;
+    const { id, wall: band, gate } = wing;
     const z = (band.y + 0.5) * CELL;
     const wallGeo = [], trimGeo = [], merlonGeo = [];
     for (let x = band.x0; x <= band.x1; x++) {
-      if (x === gateCell) continue;   // the sea gate
+      if (x >= gate.x0 && x <= gate.x1) continue;   // the sea gate
       const cx = (x + 0.5) * CELL;
       const wall = new THREE.BoxGeometry(CELL, 5.2, CELL);
       wall.translate(cx, 2.6, z);
@@ -487,15 +487,15 @@ export class Level {
     // flanking the sea gate (the sketch's tower pairs around its wall openings).
     // Derived from the wall band rather than listed, so a narrower harbour gets
     // its own spacing instead of towers left standing out in the city.
-    const gateX = (gateCell + 0.5) * CELL;
+    const gateX = ((gate.x0 + gate.x1 + 1) / 2) * CELL, gateHalf = ((gate.x1 - gate.x0 + 1) / 2) * CELL;
     const x0 = band.x0 * CELL, x1 = (band.x1 + 1) * CELL, span = x1 - x0;
-    const towers = [x0 + 1.5, x1 - 1.5, gateX - 4.0, gateX + 4.0];
+    const towers = [x0 + 1.5, x1 - 1.5, gateX - gateHalf - 1.5, gateX + gateHalf + 1.5];
     const steps = Math.max(0, Math.round(span / 24) - 1);
     for (let i = 1; i <= steps; i++) towers.push(x0 + (span * i) / (steps + 1));
     const placed = [];
     for (const tx of towers.sort((a, b) => a - b)) {
       if (tx < x0 || tx > x1) continue;                          // off the wall band
-      if (Math.abs(tx - gateX) < 3) continue;                    // never in the gate's own opening
+      if (Math.abs(tx - gateX) < gateHalf + 1.3) continue;     // never in the gate's own opening
       if (placed.length && tx - placed[placed.length - 1] < 3) continue;  // too close to the last
       placed.push(tx);
     }
@@ -566,7 +566,7 @@ export class Level {
    * Horrea storehouses against the wall, moored ships, and a wayfinding label
    * at the sea gate. Atmosphere only — no threshold lives here. */
   addHarbourProps(wing, group) {
-    const { id, quay, gateX } = wing;
+    const { id, quay, gate } = wing;
     const qx0 = quay.x * CELL, qx1 = (quay.x + quay.w) * CELL;
     const qz0 = quay.y * CELL, qz1 = (quay.y + quay.h) * CELL;
     const qw = qx1 - qx0;
@@ -622,7 +622,7 @@ export class Level {
     // They line the wall frontage in the spans either side of the sea gate, so
     // no placement can leave one standing across the mouth of the stair (the
     // player collides with every collider regardless of its height).
-    const gateCell0 = gateX * CELL, gateCell1 = (gateX + 1) * CELL;
+    const gateCell0 = gate.x0 * CELL, gateCell1 = (gate.x1 + 1) * CELL;
     for (const [frontage0, frontage1] of [[qx0, gateCell0], [gateCell1, qx1]]) {
       const across = frontage1 - frontage0;
       if (across < 8) continue;                 // no room for a storehouse on this side
@@ -677,6 +677,9 @@ export class Level {
 
     // --- the two moored ships (the sketch's lateen-rigged pair) ---------------
     for (const sx of [fx(0.311), fx(0.689)]) this.addShip(g, sx, qz1 + 2.2);
+    // a third at anchor further out, square in the sea gate, so its mast and
+    // sail close the long view down the Pilgrim Way
+    this.addShip(g, ((gate.x0 + gate.x1 + 1) / 2) * CELL, qz1 + 9);
 
     // --- the port announces itself, standing over its own quay ---------------
     // Sited over the quay's centre rather than at the stair mouth, so when more
@@ -1225,7 +1228,7 @@ export class Level {
 
     // --- sky dome: the open-air roof of the whole walk -----------------------
     const sky = new THREE.Mesh(
-      new THREE.SphereGeometry(75, 24, 12),
+      new THREE.SphereGeometry(250, 24, 12),   // wide enough to hold the whole city, so the long views keep their sky
       new THREE.MeshBasicMaterial({
         map: makeSkyTexture(),
         side: THREE.BackSide,

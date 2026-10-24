@@ -86,9 +86,11 @@ async function boot() {
   const scene = new THREE.Scene();
   // The city is open daylight; the monastery test area keeps its first night.
   scene.background = new THREE.Color(MONASTERY ? PALETTE.nightSky : 0x9cc9e8);
-  scene.fog = MONASTERY ? new THREE.Fog(PALETTE.nightSky, 9, 40) : new THREE.Fog(0xcfe3f2, 18, 62);
+  scene.fog = MONASTERY ? new THREE.Fog(PALETTE.nightSky, 9, 40) : new THREE.Fog(0xcfe3f2, 40, 280);
 
-  const camera = new THREE.PerspectiveCamera(75, 640 / 360, 0.1, 80);
+  // The city draws far enough to see the length of the road; the Pilgrim Way
+  // looks south through the sea gate to the harbour and its ships.
+  const camera = new THREE.PerspectiveCamera(75, 640 / 360, 0.1, MONASTERY ? 80 : 300);
   // First-person look must yaw around the world-up axis before applying local
   // pitch. The default XYZ order couples these rotations and makes the horizon
   // sway diagonally after combined horizontal/vertical mouse movement.
@@ -600,6 +602,11 @@ async function boot() {
     if (['menu', 'explore', 'paused'].includes(state) && e.code === 'KeyF' && !e.repeat) {
       e.preventDefault(); fellowship.show(); return;
     }
+    if (state === 'guide') {
+      if (['Enter', 'Space', 'KeyE', 'Escape', 'NumpadEnter'].includes(e.code)) { e.preventDefault(); if (!e.repeat) closeFirstSteps(); }
+      return;
+    }
+    if (e.code === 'Slash' && debugMode && !e.repeat) { devHintsEl.classList.toggle('open'); return; }
     if (state === 'inventory') { inventoryPanel.key(e); return; }
     if (state === 'explore' && e.code === 'KeyI' && !e.repeat) {
       e.preventDefault(); showInventory(market.nearest(player.pos)); return;
@@ -726,6 +733,8 @@ async function boot() {
   hud.onStart = async () => {
     if (MONASTERY) { await hud.onReturnCity(); hud.message('TEST AREA · the old monastery: three thresholds, the elder, the altar and the Ladder. The sign in the court leads back to the city.', 7000); return; }
     morning.begin();
+    // A first morning in this browser opens on its first steps; the clock waits.
+    if (!morning.run.arrived && !linkedStart() && !guideSeen()) { showFirstSteps(); return; }
     // A finished morning continues in the city; its arrival card was already shown.
     const linked=['sophia','hippodrome'].some(k=>new URLSearchParams(location.search).has(k));
     if(morning.run.arrived&&!linked){await hud.onReturnCity();return;}
@@ -755,6 +764,27 @@ async function boot() {
     if (!locked || !document.pointerLockElement) enterDragFallback(false);
   };
   hud.onRestart = () => { branch.clearSave(); location.reload(); };
+  // ----- first steps: the morning's three asks, once per browser -------------
+  const GUIDE_KEY = 'pride-humility:first-steps-seen';
+  const guideSeen = () => { try { return localStorage.getItem(GUIDE_KEY) === '1'; } catch { return false; } };
+  const linkedStart = () => ['sophia', 'hippodrome'].some((k) => new URLSearchParams(location.search).has(k));
+  const firstSteps = document.getElementById('first-steps');
+  function showFirstSteps() {
+    state = 'guide'; player.clearKeys(); hud.hidePrompt();
+    document.getElementById('title-screen').style.display = 'none';
+    document.body.classList.add('on-title');
+    firstSteps.style.display = 'flex';
+    document.getElementById('first-steps-btn').focus();
+  }
+  async function closeFirstSteps() {
+    try { localStorage.setItem(GUIDE_KEY, '1'); } catch { /* private mode */ }
+    firstSteps.style.display = 'none';
+    await hud.onReturnCity();
+  }
+  document.getElementById('first-steps-btn').addEventListener('click', () => closeFirstSteps());
+  // The dev keys fold into a chip: click it, or press /, to see them.
+  const devHintsEl = document.getElementById('dev-hints');
+  devHintsEl.addEventListener('click', () => devHintsEl.classList.toggle('open'));
   // The test area announces itself on its title screen.
   if (MONASTERY) {
     document.querySelector('#title-screen h1').textContent = 'TEST AREA · THE OLD MONASTERY';
@@ -796,7 +826,7 @@ async function boot() {
 
   /** A wing counts only while it is live: turning it off empties its quay. */
   function wingLive(w) { return FEATURES[w.id] !== false; }
-  const wingGate = (w) => ({ x: w.gateX, y: w.stairY0, w: 1, h: w.wall.y - w.stairY0 + 1 });
+  const wingGate = (w) => ({ x: w.gate.x0, y: w.stairY0, w: w.gate.x1 - w.gate.x0 + 1, h: w.wall.y - w.stairY0 + 1 });
 
   // ----- the approach card, and the dev's instant transport -----------------
   // Walk up to a landmark and it names itself: what it was, for the player.
@@ -879,7 +909,7 @@ async function boot() {
     if (HARBOURS.some((w) => wingLive(w) && isInRoom(w.quay))) return 'The Port of Theodosius';
     if (HARBOURS.some((w) => wingLive(w) && isInRoom(wingGate(w)))) return 'The Sea Gate';
     if (raceOpen() && isInRoom(hippodrome.area)) return 'The Hippodrome';
-    return 'The Pilgrim Way';
+    return MONASTERY ? 'The Cloister' : 'The Pilgrim Way';
   }
 
   function update(dt, time) {
@@ -890,7 +920,15 @@ async function boot() {
     if (state === 'cart') harbourCart.update(dt);
     leaveEncounterButton.style.display = state === 'battle' && !battle.done ? 'block' : 'none';
     if (state === 'activity') activities.update(dt);
-    const objective = state === 'explore' ? market.objective(branch, player.pos) : null;
+    // The bottom line points the way: to the parcel's recipient, then to the church.
+    const toChurch = () => {
+      if (!morning.run || morning.run.arrived) return null;
+      const d = Math.round(Math.hypot(player.pos.x - CHURCH_STEPS.x, player.pos.z - CHURCH_STEPS.z));
+      if (d < 4) return null;
+      const dir = CHURCH_STEPS.z > player.pos.z + 3 ? 'south' : CHURCH_STEPS.z < player.pos.z - 3 ? 'north' : CHURCH_STEPS.x > player.pos.x ? 'east' : 'west';
+      return `Hagia Sophia · ${dir} · ${d} paces · before the service bell`;
+    };
+    const objective = state === 'explore' ? market.objective(branch, player.pos) ?? toChurch() : null;
     errandHud.textContent = objective ?? '';
     errandHud.style.display = objective ? 'block' : 'none';
     if (state === 'explore') market.update(dt, time, player.pos);

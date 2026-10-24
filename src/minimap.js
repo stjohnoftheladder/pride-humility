@@ -71,11 +71,11 @@ export class Minimap {
   /** A wing that is switched off leaves plain city behind, exactly as the
    *  build does — the plan is not carved for it until the next reload. */
   inWing(wing, x, y) {
-    const { quay, wall, gateX, stairY0, sea } = wing;
+    const { quay, wall, gate, stairY0, sea } = wing;
     if (x >= quay.x && x < quay.x + quay.w && y >= quay.y && y < quay.y + quay.h) return true;
     if (y === wall.y && x >= wall.x0 && x <= wall.x1) return true;
     if (y >= sea.y0 && y <= sea.y1 && x >= sea.x0 && x <= sea.x1) return true;
-    return x === gateX && y >= stairY0 && y <= wall.y;
+    return x >= gate.x0 && x <= gate.x1 && y >= stairY0 && y <= wall.y;
   }
 
   inSite(site, x, y) {

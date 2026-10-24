@@ -135,6 +135,7 @@ export class Hud {
   showTitle() {
     this._hideScreens();
     this.el.title.style.display = 'flex';
+    document.body.classList.add('on-title');
     this.battleOff();
   }
 
@@ -172,6 +173,7 @@ export class Hud {
   }
 
   _hideScreens() {
+    document.body.classList.remove('on-title');
     for (const id of ['title-screen', 'pause-screen', 'fall-screen', 'confess-screen', 'ending-screen', 'race-screen']) {
       document.getElementById(id).style.display = 'none';
     }

@@ -110,6 +110,10 @@ const WING_DATA = [
     quay: { x: 2, y: 116, w: 30, h: 5 },        // walkable waterfront -> cells x2..31
     wall: { x0: 0, x1: 33, y: 115 },            // the crenellated sea wall band
     gateX: 20,                                  // the stair drops from the chapel
+    // The sea gate opens across the road's whole width (x15..19) plus the old
+    // stair, so the Pilgrim Way runs straight down to the quay and, from far up
+    // the road, frames the water and a ship at anchor.
+    gate: { x0: 15, x1: 20 },
     stairY0: 114,
     sea: { x0: 0, x1: 33, y0: 121, y1: 127 },   // water to the map's edge
     wrap: { west: 2, east: 2 },                 // cells of water wrapping each quay end
@@ -274,9 +278,9 @@ function buildLevelGrid() {
   // and any quay end flagged in `wrap` turned to water too — so a quay can read
   // as a mole standing out into the Marmara rather than as a walled pond.
   for (const wing of HARBOURS) {
-    const { quay, wall, gateX, stairY0, sea, wrap } = wing;
+    const { quay, wall, gate, stairY0, sea, wrap } = wing;
     carveRoom(g, quay.x, quay.y, quay.w, quay.h);
-    carveCol(g, gateX, stairY0, wall.y);   // the stair + the sea gate
+    for (let x = gate.x0; x <= gate.x1; x++) carveCol(g, x, stairY0, wall.y);   // the sea gate, open to the road
     for (let j = sea.y0; j <= sea.y1; j++) for (let i = sea.x0; i <= sea.x1; i++) g[j][i] = SEA;
     for (let j = quay.y; j < quay.y + quay.h; j++) {
       for (let i = 0; i < wrap.west; i++) g[j][i] = SEA;

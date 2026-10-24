@@ -467,6 +467,20 @@ async function runInteractionRegressions(browser) {
   await page.evaluate(() => { HTMLCanvasElement.prototype.requestPointerLock = () => Promise.reject(new Error('denied')); });
   await page.getByRole('button', { name: 'BEGIN THE MORNING' }).click();
   await sleep(250);
+  const guide = await page.evaluate(() => ({ state: window.__game.state(), shown: document.getElementById('first-steps').style.display }));
+  check('first steps: a new morning opens on its three asks, with the clock waiting', guide.state === 'guide' && guide.shown === 'flex', JSON.stringify(guide));
+  await page.keyboard.press('Enter');
+  await sleep(250);
+  const setOut = await page.evaluate(() => {
+    const g = window.__game;
+    const m = g.market.npcs.find((n) => n.id === 'vendor-5-1'); g.market.errandAction(m, 'deliverQuietly', g.branch);
+    return { state: g.state(), hidden: document.getElementById('first-steps').style.display === 'none',
+      chip: !document.getElementById('dev-hints').classList.contains('open') };
+  });
+  await sleep(300);
+  const pointer = await page.evaluate(() => [...document.querySelectorAll('#hud *')].some((e) => !e.childElementCount && /^Hagia Sophia · south · \d+ paces/.test(e.textContent)));
+  check('first steps: Enter sets out; with the bread delivered the bottom line points to Hagia Sophia; dev keys stay folded',
+    setOut.state === 'explore' && setOut.hidden && setOut.chip && pointer, JSON.stringify({ ...setOut, pointer }));
 
   // ---- the HUD mini-map and the dev feature toggles -------------------------
   // Back to explore: the map only lives there, and the checks below walk around.

@@ -31,7 +31,7 @@ export const ERRANDS = [
   { id: 'cups', from: 'vendor-7--1', to: 'vendor-8--1', parcel: 'a crate of cups', request: 'The soup cook needs cups for weary travelers. Will you take this crate down the road?', received: 'The cups are set out for travelers who cannot afford a meal.' },
   { id: 'fruit', from: 'vendor-4-1', to: 'vendor-6--1', parcel: 'a basket of fruit', request: 'The fishmonger is preparing a meal for the porters. Can you bring this fruit?', received: 'The porters sit together and pass the fruit around.' },
 ];
-const NAMES = ['Martha', 'Anna', 'Stephanos', 'Kale', 'Nikephoros', 'Marina', 'Petros', 'Helena', 'Demetrios', 'Sophia', 'Niketas', 'Eustathios', 'Markos', 'Zoe', 'Leontios', 'Agatha', 'Andreas', 'Paraskeve', 'Alexios', 'Damaris'];
+const NAMES = ['Martha', 'Anna', 'Stephanos', 'Kale', 'Nikephoros', 'Marina', 'Petros', 'Helena', 'Demetrios', 'Sophia', 'Niketas', 'Theodora', 'Markos', 'Zoe', 'Leontios', 'Agatha', 'Andreas', 'Paraskeve', 'Alexios', 'Damaris'];
 const FAMILIES = ['of the quay', 'of the north gate', 'of the mill lane', 'of the orchard', 'of the hillside', 'of the old square'];
 const CITIZENS = [
   ['Pilgrim', 'I am learning to ask the way rather than pretend I know it.'],

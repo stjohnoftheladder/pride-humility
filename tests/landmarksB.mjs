@@ -71,7 +71,7 @@ export async function testLandmarksB(browser, newPage, check) {
   }));
   await page.keyboard.press('q');
   check('cistern: Q returns to the road and restores daylight', await page.evaluate(() => {
-    const g = window.__game; return g.state() === 'explore' && g.scene.fog.far === 62 && g.siteActivity() === null;
+    const g = window.__game; return g.state() === 'explore' && g.scene.fog.far === 280 && g.siteActivity() === null;
   }));
 
   // ----- Baths of Zeuxippus -------------------------------------------------------

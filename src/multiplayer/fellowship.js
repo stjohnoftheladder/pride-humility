@@ -47,6 +47,8 @@ export class Fellowship {
     this.el.append(heading, intro, this.form, this.statusEl, this.controls, this.messageEl, this.conversation, this.list, privacy, this.returnButton);
     parent.appendChild(this.el);
     this.dock = this.button('F · Fellowship', () => this.show()); this.dock.id = 'fellowship-dock'; parent.appendChild(this.dock);
+    // the monastery test area is a single-player test bench
+    if (new URLSearchParams(location.search).has('monastery')) this.dock.style.display = 'none';
     window.addEventListener('pagehide', () => { this.disposeCall(); this.client.disconnect(); });
     this.render();
   }

@@ -49,11 +49,34 @@
     #touch-action { display: none; position: absolute; right: 5%; bottom: 10%; width: 64px; height: 64px; border-radius: 50%;
       border: 2px solid var(--gold); background: rgba(18,13,7,0.85); color: var(--gold); font: 22px 'PixelEmulator', monospace; }
     #touch-rotate { display: none; }
+    /* keyboard hints for keyboards, touch hints for touch screens */
+    .touch-keys { display: none; }
+    body.touch .keyboard-keys { display: none; }
+    body.touch .touch-keys { display: block; }
+    /* the title and the first-steps card own the screen: no HUD behind them */
+    body.on-title #fellowship-dock, body.on-title #top-right, body.on-title #minimap { visibility: hidden; }
+    #title-screen { background: #120d07; overflow-y: auto; justify-content: safe center; }
+    @media (max-height: 520px), (max-width: 520px) {
+      #title-screen { gap: 8px; padding: 14px; }
+      #title-screen h1 { font-size: 19px; }
+      #title-screen p { font-size: 11px; line-height: 1.6; }
+      #title-screen .btn { font-size: 13px; padding: 9px 20px; }
+    }
+    /* the dev keys fold into one small chip until opened (click, or the / key) */
+    #dev-hints { pointer-events: auto; cursor: pointer; }
+    #dev-hints:not(.open) .dev-row { display: none; }
+    #dev-hints:not(.open) { max-width: none; padding: 4px 8px; }
+    /* first steps: what the morning asks, held until the player sets out */
+    #first-steps { z-index: 30; background: rgba(10, 7, 3, 0.94); overflow-y: auto; justify-content: safe center; }
+    #first-steps ol { text-align: left; max-width: 560px; font-size: 13px; line-height: 1.8; color: var(--text); padding-left: 22px; margin: 0; }
+    #first-steps li { margin-bottom: 8px; }
+    #first-steps li b { color: var(--gold); font-weight: normal; }
+    @media (max-height: 520px), (max-width: 520px) { #first-steps ol { font-size: 11px; line-height: 1.6; } #first-steps { gap: 8px; } }
     body.touch #dev-hints, body.touch #title-dev { display: none !important; }
     body.touch #sophia-caption { font-size: 11px !important; bottom: auto !important; top: 46px; width: min(64%, 560px) !important; padding: 6px 10px !important; }
     body.touch #sophia-caption .said { max-height: 4.7em; overflow: hidden; }
     @media (orientation: portrait) {
-      body.touch #touch-rotate:not(.closed) { display: block; position: fixed; left: 8%; right: 8%; bottom: 12%; z-index: 50;
+      body.touch #touch-rotate:not(.closed) { display: block; position: fixed; left: 8%; right: 8%; top: 8%; z-index: 50;
         padding: 14px; text-align: center; font-size: 13px; line-height: 1.6; color: var(--gold);
         background: rgba(18,13,7,0.92); border: 2px solid var(--gold-dim); }
     }
@@ -339,7 +362,7 @@
     #fatal.show { display: flex; }
   </style>
 </head>
-<body>
+<body class="on-title">
   <div id="stage">
     <canvas id="game"></canvas>
     <div id="hud">
@@ -365,7 +388,7 @@
     <!-- The dev keys, for a ?debug build. Bottom right: the map is centred on
          the right, so the bottom of that column is always clear of it. -->
     <div class="panel" id="dev-hints" style="display:none">
-      <div id="dev-hints-title">DEV</div>
+      <div id="dev-hints-title">DEV · / to show keys</div>
       <div class="dev-row"><b>PageDown</b> / <b>PageUp</b> · travel to the next / previous stop</div>
       <div class="dev-row"><b>1</b>–<b>9</b>, <b>Shift+1</b>–<b>Shift+4</b> · toggle additions (original 1–7 unchanged)</div>
       <div class="dev-row"><b>M</b> · map &nbsp;·&nbsp; walk up to a landmark for its card</div>
@@ -417,11 +440,24 @@
     <p class="verse">"Lord Jesus Christ, Son of God, have mercy on me, a sinner."</p>
     <p>Reach Hagia Sophia before the service bell.<br>Carry the bread quietly. The city has other plans for your morning.</p>
     <p class="hint" id="title-timeless">This Constantinople gathers a thousand years into one morning: Constantine’s forum, Justinian’s Great Church, the monasteries of the Komnenoi, and saints who never walked the same street. Each landmark’s card tells you when it stood.</p>
-    <p class="hint">WASD · move &nbsp;·&nbsp; MOUSE · look &nbsp;·&nbsp; E · interact &nbsp;·&nbsp; SHIFT · run &nbsp;·&nbsp; M · map &nbsp;·&nbsp; I · inventory</p>
+    <p class="hint keyboard-keys">WASD · move &nbsp;·&nbsp; MOUSE · look &nbsp;·&nbsp; E · interact &nbsp;·&nbsp; SHIFT · run &nbsp;·&nbsp; M · map &nbsp;·&nbsp; I · inventory</p>
+    <p class="hint touch-keys">Hold the left side to walk &nbsp;·&nbsp; drag to look &nbsp;·&nbsp; tap E when it appears</p>
     <button class="btn" id="start-btn">BEGIN THE MORNING</button>
     <button class="btn" id="new-morning-btn" style="display:none">BEGIN A NEW MORNING</button>
-    <div class="hint">Esc releases the mouse.</div>
+    <div class="hint keyboard-keys">Esc releases the mouse.</div>
     <p class="hint" id="title-dev" style="display:none">DEV · <b>PageDown</b>/<b>PageUp</b> travel the walk · <b>1</b>–<b>9</b> / <b>Shift+1</b>–<b>Shift+4</b> toggle additions · walk up to a landmark for its card</p>
+  </div>
+
+  <div class="screen" id="first-steps" style="display:none" role="dialog" aria-modal="true" aria-labelledby="first-steps-title">
+    <h2 id="first-steps-title">YOUR MORNING</h2>
+    <ol>
+      <li><b>Carry the bread</b> to Theodora, the water carrier. The line at the bottom of the screen gives her direction and distance.</li>
+      <li><b>Reach Hagia Sophia</b> before the service bell. Four bells ring through the morning; the clock rests while you read or talk.</li>
+      <li><b>Signs marked APPROACH · E</b> along the road offer something to do. You cannot do them all before the bell, so choose. What you do, and how, is remembered.</li>
+    </ol>
+    <p class="hint keyboard-keys">E interact · M map · J journal · I satchel · C clock</p>
+    <p class="hint touch-keys">Hold the left side to walk · drag to look · tap E when it appears</p>
+    <button class="btn" id="first-steps-btn">SET OUT · ENTER</button>
   </div>
 
   <div class="screen" id="pause-screen" style="display:none">
