@@ -1206,7 +1206,11 @@ export class Level {
     floor.rotation.x = -Math.PI / 2;
     floor.position.set((MAP_W * CELL) / 2, 0, (MAP_H * CELL) / 2);
     this.group.add(floor);
-    this.mat.get('stone_floor').map.repeat.set(MAP_W, MAP_H);
+    // Tile every map of the floor, not just its colour: a normal, roughness or
+    // AO map left at 1×1 is stretched over the whole city, and a dark seam in
+    // it became a stripe running the length of the Pilgrim Way.
+    const floorMat = this.mat.get('stone_floor');
+    for (const key of ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap']) floorMat[key]?.repeat.set(MAP_W, MAP_H);
 
     if (MONASTERY) {
       // the city's systems still expect a group per addition; here each is empty and hidden

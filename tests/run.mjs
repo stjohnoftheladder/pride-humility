@@ -922,6 +922,11 @@ try {
   });
   check('worlds: the city holds none of the old monastery, and signs the way to it',
     !cityWorld.markers.length && !cityWorld.enemies && !cityWorld.story && !cityWorld.gate && cityWorld.passage, JSON.stringify(cityWorld));
+  check('floor: every texture map of the street is tiled alike, so no stretched map draws a stripe down the road', await city.page.evaluate(() => {
+    const m = window.__game.level.mat.get('stone_floor');
+    const tiling = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap'].map((k) => m[k].repeat.toArray().join('x'));
+    return tiling.every((t) => t === tiling[0]) && tiling[0] !== '1x1';
+  }));
   await city.page.close();
   const old = await monasteryPage(browser);
   const oldWorld = await old.page.evaluate(() => {
