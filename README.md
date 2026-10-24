@@ -75,6 +75,14 @@ move for the first race only.
 
 See **THEOLOGY.md** for the full mechanic→source mapping.
 
+## Direct links
+
+- `?sophia` goes straight into Hagia Sophia for the next homily; `?sophia=poverty`
+  (or any homily name) picks one.
+- `?hippodrome` goes straight to the starting line in the Greens' chariot.
+
+Both take effect after BEGIN on the title screen.
+
 ## Controls
 
 | Context | Input |

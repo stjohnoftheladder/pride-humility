@@ -68,6 +68,13 @@ async function newPage(browser) {
   return { page, errors };
 }
 
+async function linkPage(browser, query) {
+  const { page, errors } = await newPage(browser);
+  await page.goto(`http://127.0.0.1:${PORT}/?debug&${query}`);
+  await page.waitForFunction(() => window.__game);
+  return { page, errors };
+}
+
 async function resetState(page) {
   await page.evaluate(() => {
     const g = window.__game;
@@ -879,6 +886,10 @@ try {
   check('escape: an already resolved outcome is not discarded during its animation', await exits.page.evaluate(() => window.__game.state() === 'battle' && window.__game.battle.done.outcome === 'spared'));
   check('escape: no page errors', exits.errors.length === 0, JSON.stringify(exits.errors));
   await exits.page.close();
+  const raceLink = await linkPage(browser, 'hippodrome');
+  await raceLink.page.click('#start-btn');
+  check('link: ?hippodrome starts the morning in the Greens’ chariot', await raceLink.page.waitForFunction(() => window.__game.state() === 'race', {}, { timeout: 5000 }).then(() => true, () => false));
+  await raceLink.page.close();
   await testActivities(browser, newPage, check);
   await testInventory(browser, newPage, check);
   await testMorning(browser, newPage, check);

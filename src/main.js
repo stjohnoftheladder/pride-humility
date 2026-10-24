@@ -701,7 +701,8 @@ async function boot() {
   hud.onStart = async () => {
     morning.begin();
     // A finished morning continues in the city; its arrival card was already shown.
-    if(morning.run.arrived&&new URLSearchParams(location.search).get('sophia')===null){await hud.onReturnCity();return;}
+    const linked=['sophia','hippodrome'].some(k=>new URLSearchParams(location.search).has(k));
+    if(morning.run.arrived&&!linked){await hud.onReturnCity();return;}
     audio.resume();
     audio.ensure();
     audio.startAmbient();
@@ -714,6 +715,13 @@ async function boot() {
       state = 'explore'; hud.showExplore();
       player.pos.set(CHURCH_STEPS.x, 0, CHURCH_STEPS.z);
       enterSophia({ homilyId: sophiaLink || null });
+    }
+    // ?hippodrome: a link straight into the Greens' chariot at the starting line
+    if (new URLSearchParams(location.search).has('hippodrome') && raceOpen()) {
+      state = 'explore'; hud.showExplore();
+      const x = race.me.x + 1.1, z = race.me.z;
+      player.pos.set(x, 0, z); player.vel.set(0, 0, 0); camera.position.set(x, camera.position.y, z);
+      startRace();
     }
   };
   hud.onResume = async () => {
