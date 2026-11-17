@@ -93,7 +93,19 @@ export class Hud {
     if (visual) this.el.msg.prepend(visual);
     this.el.msg.classList.add('show');
     clearTimeout(this.msgTimer);
-    this.msgTimer = setTimeout(() => this.el.msg.classList.remove('show'), dur);
+    this.msgTimer = setTimeout(() => { this.el.msg.classList.remove('show'); this._nextMessage(); }, dur);
+  }
+
+  /** A message that waits its turn: shown once whatever is on screen (or is
+   *  about to be put there by the same event) has had its time. For news that
+   *  arrives beside a result, such as gold earned, so neither hides the other. */
+  later(text, dur = 2400) {
+    (this.msgQueue ??= []).push([text, dur]);
+    setTimeout(() => { if (!this.el.msg.classList.contains('show')) this._nextMessage(); }, 60);
+  }
+  _nextMessage() {
+    const next = this.msgQueue?.shift();
+    if (next) this.message(...next);
   }
 
   showPrompt(text) {

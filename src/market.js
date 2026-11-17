@@ -233,7 +233,15 @@ export class RoadMarket {
     return true;
   }
 
-  conversation(npc, branch) {
+  /** `handoff` is the errand just delivered here: the screen then holds only
+   *  its thanks, and the stall's own scene waits for the next visit. */
+  conversation(npc, branch, { handoff = null } = {}) {
+    if (handoff) {
+      const praise = branch.flags[`errand:${handoff.id}`] === 'praise';
+      return { choices: [], paragraphs: [praise
+        ? `${handoff.received} Your name was announced, as you asked. The workers have gone back to their tasks.`
+        : `${handoff.received} “Thank you for lending your hands.”`] };
+    }
     const previous = branch.flags[`market:${npc.id}`];
     const paragraphs = [previous ? (previous === 'humble' ? npc.trade.after : npc.trade.boast) : npc.trade.text];
     const choices = previous ? [] : [
@@ -246,7 +254,8 @@ export class RoadMarket {
     }
     const active = this.activeErrand(branch);
     if (active?.to === npc.id) {
-      choices.length = 0;
+      // The delivery is its own moment: the stall's scene and its choice wait.
+      choices.length = 0; paragraphs.length = 0;
       paragraphs.push(`“You brought ${active.parcel}! Shall we put it out for the workers?”`);
       choices.unshift({ label: 'Hand it over quietly and help unpack', action: 'deliverQuietly' }, { label: 'Hand it over; ask them to announce your generosity', action: 'deliverForPraise' });
     } else {

@@ -235,13 +235,14 @@ async function boot() {
   // pilgrim, where Chrysostom preaches the next homily on every visit. The
   // first visit of a morning is the arrival; its card waits until you leave.
   const sophia = new HagiaSophia({ audio });
-  let sophiaFrom = null, sophiaArrival = false;
+  let sophiaFrom = null, sophiaArrival = false, sophiaHeard = false;
   const nearChurch = () => Math.hypot(player.pos.x - CHURCH_STEPS.x, player.pos.z - CHURCH_STEPS.z) < 3;
   async function enterSophia({ homilyId = null } = {}) {
     if (state !== 'explore') return;
     sophiaArrival = !!morning.run && !morning.run.arrived;
     if (sophiaArrival) morning.attend();
     sophiaFrom = { x: player.pos.x, z: player.pos.z, yaw: camera.rotation.y };
+    sophiaHeard = false;
     state = 'sophia';
     player.clearKeys(); hud.hidePrompt(); hud.showSiteCard(false); hud.setRoom('Hagia Sophia');
     audio.stopAmbient();
@@ -303,7 +304,7 @@ async function boot() {
     player.clearKeys();
     await player.lock();
   }
-  function showMarket(npc) {
+  function showMarket(npc, { handoff = null } = {}) {
     activeVendor = npc;
     state = 'market';
     player.clearKeys();
@@ -314,7 +315,7 @@ async function boot() {
     const title = document.createElement('h2');
     title.textContent = npc.name;
     const text = document.createElement('p');
-    const conversation = market.conversation(npc, branch);
+    const conversation = market.conversation(npc, branch, { handoff });
     marketChoices = conversation.choices;
     text.textContent = conversation.paragraphs.join(' ') + (morning.run ? ` Your purse holds ${morning.run.gold} gold.` : '');
     const header=document.createElement('div');header.className='conversation-heading';header.append(portraitOf(npc),title);
@@ -328,11 +329,11 @@ async function boot() {
       marketScreen.appendChild(b); return b;
     };
     for (const [i, choice] of marketChoices.entries()) button(`${i + 1} · ${choice.label}`, () => resolveMarket(choice.action),['accept','deliverQuietly','deliverForPraise'].includes(choice.action)?`parcel:${(errand??ERRANDS.find(e=>e.from===npc.id))?.id}`:null);
-    if(morning.run && !morning.run.boots) {
-      const shoes=button(morning.run.gold>=20?'Buy swift shoes · 20 gold (+15% walking speed)':'Swift shoes · 20 gold required',()=>{
+    // The shoes are offered once they can be bought; earning gold says where.
+    if(morning.run && !morning.run.boots && morning.run.gold>=20 && !handoff) {
+      button('Buy swift shoes · 20 gold (+15% walking speed)',()=>{
         if(morning.buyShoes())showMarket(npc);
       },'swiftShoes');
-      shoes.disabled=morning.run.gold<20;
     }
     button('Leave · Escape', closeMarket);
     button('Inspect belongings', () => showInventory(npc),'basket');
@@ -352,7 +353,9 @@ async function boot() {
     if(choice==='proud') morning.reward(`market:${activeVendor.id}`,5);
     hud.setMeters(branch.pride, branch.grace);
     if (choice !== 'accept') hud.revealMeters();
-    showMarket(activeVendor);
+    const handoff = ['deliverQuietly', 'deliverForPraise'].includes(choice)
+      ? ERRANDS.find((e) => e.to === activeVendor.id && ['quiet', 'praise'].includes(branch.flags[`errand:${e.id}`])) : null;
+    showMarket(activeVendor, { handoff });
   }
 
   player.setStart(spawns.S[0]);
@@ -736,7 +739,7 @@ async function boot() {
 
   hud.onStart = async () => {
     if (MONASTERY) { await hud.onReturnCity(); hud.message('TEST AREA · the old monastery: three thresholds, the elder, the altar and the Ladder. The sign in the court leads back to the city.', 7000); return; }
-    morning.begin();
+    morning.begin({ quiet: !linkedStart() && !guideSeen() });
     // A first morning in this browser opens on its first steps; the clock waits.
     if (!morning.run.arrived && !linkedStart() && !guideSeen()) { showFirstSteps(); return; }
     // A finished morning continues in the city; its arrival card was already shown.
@@ -857,7 +860,8 @@ async function boot() {
       const d = cardDistance(l);
       if (d < best) { best = d; near = l; }
     }
-    if (!near) { hud.showSiteCard(false); cardFor = null; return; }
+    // A conversation at hand outranks the monument across the road.
+    if (!near || market.nearest(player.pos)) { hud.showSiteCard(false); if (!near) cardFor = null; return; }
     if (near !== cardFor) {
       cardFor = near;
       hud.setSiteCard({ label: near.label, note: near.note });
@@ -1011,6 +1015,10 @@ async function boot() {
     if (state === 'sophia') {
       player.update(dt);
       if (sophia.nearDoor(player.pos)) hud.showPrompt('Leave Hagia Sophia · E'); else hud.hidePrompt();
+      // When the homily ends, say that the doors are the way on: the arrival
+      // card waits outside them, and nothing else in the nave points there.
+      if (sophia.speaking) sophiaHeard = true;
+      else if (sophiaHeard) { sophiaHeard = false; hud.message('The homily has ended. Stay as long as you like; the doors lead back to the city.', 8000); }
     }
     if (sophia.inside) sophia.update(dt, time);
     if (state === 'race') {

@@ -23,7 +23,7 @@ export class Morning {
     Object.assign(this,{branch,player,hud,audio,market,onArrival});
     this.clock=false;this.savedAt=0;
     this.el=document.createElement('div');this.el.className='panel';this.el.id='morning-hud';
-    this.el.style.cssText='display:none;top:50px;left:50%;transform:translateX(-50%);font-size:10px;text-align:center;max-width:65%';
+    this.el.style.cssText='display:none;top:10px;left:50%;transform:translateX(-50%);font-size:10px;text-align:center;max-width:65%';
     document.getElementById('hud').appendChild(this.el);
     this.journal=document.createElement('section');this.journal.className='screen';this.journal.id='morning-journal';
     this.journal.style.cssText='display:none;overflow:auto;align-items:stretch;justify-content:flex-start;text-align:left;padding:24px;background:#120d07;z-index:40;gap:12px';
@@ -53,12 +53,13 @@ export class Morning {
     if(errand){const target=this.market.npcs.find(n=>n.id===errand.to);card(`parcel:${errand.id}`,`Carry ${errand.parcel} to ${target?.name??'its recipient'}.`);}
     card('church',this.run?.arrived?'You have reached Hagia Sophia. The church remains open.':'Reach Hagia Sophia before the service bell.');
   }
-  begin(){
+  /** `quiet` when the first-steps card has just said what the morning asks. */
+  begin({quiet=false}={}){
     if(!this.run){this.branch.flags.morning={elapsed:0,bell:0,gold:0,boots:false,rewards:{},arrived:null};
       const sender=this.market.npcs.find(n=>n.id==='vendor-4--1');
       this.market.errandAction(sender,'accept',this.branch);this.branch.save();}
     this.player.travelBoost=this.run.boots?1.15:1;
-    if(this.run.arrived)return;
+    if(this.run.arrived||quiet)return;
     this.hud.message('The service begins after the final bell. Carry the bread to Theodora quietly, then reach Hagia Sophia. J opens the city journal; C shows the clock.',8000);
   }
   near(pos){return !!this.run&&!this.run.arrived&&Math.hypot(pos.x-CHURCH_STEPS.x,pos.z-CHURCH_STEPS.z)<3;}
@@ -72,7 +73,7 @@ export class Morning {
     this.el.textContent=`${r.bell>=4?'Service begun':r.bell===3?'Gathering bell':r.bell===2?'Second bell':r.bell===1?'First bell':'Before the first bell'} · ${r.gold} gold${r.boots?' · Swift shoes':''}${this.clock?` · ${Math.max(0,Math.ceil(SERVICE-r.elapsed))}s to service`:''} · J journal / C clock`;
   }
   soundBell(){const ctx=this.audio.ctx;if(!ctx||ctx.state!=='running')return;const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=440;gain.gain.setValueAtTime(0.15,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+1.8);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+1.8);osc.onended=()=>{osc.disconnect();gain.disconnect();};}
-  reward(id,amount){const r=this.run;if(!r||r.arrived||r.rewards[id])return false;r.rewards[id]=true;r.gold+=amount;this.branch.save();this.hud.message(`${amount} gold earned. Faster shoes cost 20 gold at a market stall. There is always another opportunity—but the bells keep moving.`,5000);return true;}
+  reward(id,amount){const r=this.run;if(!r||r.arrived||r.rewards[id])return false;r.rewards[id]=true;r.gold+=amount;this.branch.save();this.hud.later(`${amount} gold earned. Faster shoes cost 20 gold at a market stall. There is always another opportunity, but the bells keep moving.`,5000);return true;}
   buyShoes(){const r=this.run;if(!r||r.boots||r.gold<20)return false;r.gold-=20;r.boots=true;this.player.travelBoost=1.15;this.branch.save();return true;}
   /** Entering Hagia Sophia is the arrival: remember the time now; the card comes when the pilgrim leaves. */
   attend(){const r=this.run;if(!r)return;r.arrived??=r.elapsed<SERVICE?'on-time':r.elapsed<CLOSE?'late':'missed';this.branch.save();}
