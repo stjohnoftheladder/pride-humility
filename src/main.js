@@ -860,8 +860,7 @@ async function boot() {
       const d = cardDistance(l);
       if (d < best) { best = d; near = l; }
     }
-    // A conversation at hand outranks the monument across the road.
-    if (!near || market.nearest(player.pos)) { hud.showSiteCard(false); if (!near) cardFor = null; return; }
+    if (!near) { hud.showSiteCard(false); cardFor = null; return; }
     if (near !== cardFor) {
       cardFor = near;
       hud.setSiteCard({ label: near.label, note: near.note });
