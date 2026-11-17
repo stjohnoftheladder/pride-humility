@@ -478,7 +478,7 @@ async function runInteractionRegressions(browser) {
       chip: !document.getElementById('dev-hints').classList.contains('open') };
   });
   await sleep(300);
-  const pointer = await page.evaluate(() => [...document.querySelectorAll('#hud *')].some((e) => !e.childElementCount && /^Hagia Sophia · south · \d+ paces/.test(e.textContent)));
+  const pointer = await page.evaluate(() => [...document.querySelectorAll('#hud *')].some((e) => !e.childElementCount && /^Hagia Sophia · ahead · \d+ paces/.test(e.textContent)));
   check('first steps: Enter sets out; with the bread delivered the bottom line points to Hagia Sophia; dev keys stay folded',
     setOut.state === 'explore' && setOut.hidden && setOut.chip && pointer, JSON.stringify({ ...setOut, pointer }));
 
@@ -1085,6 +1085,50 @@ try {
   check('bullets: pride patterns produce finite coordinates', allFinite, `count ${coords.length}`);
   check('bullets: no console errors', bp.errors.length === 0, JSON.stringify(bp.errors));
   await bp.page.close();
+
+  // ---- the way and the phone: the bottom line, the map's ring, touch keys ---
+  const phone = await browser.newContext({ hasTouch: true, isMobile: true, viewport: { width: 812, height: 375 } });
+  const tp = await phone.newPage();
+  const touchErrors = [];
+  tp.on('pageerror', (err) => touchErrors.push(err.message));
+  await tp.goto(`http://127.0.0.1:${PORT}/?debug`);
+  await tp.waitForFunction(() => window.__game);
+  await tp.evaluate(() => { localStorage.setItem('pride-humility:first-steps-seen', '1'); });
+  await tp.tap('#start-btn');
+  await sleep(500);
+  const way = await tp.evaluate(() => {
+    const g = window.__game, line = () => document.getElementById('errand-info').textContent;
+    const atStart = line();
+    g.camera.rotation.y = Math.PI / 2;            // turn to face west, away from the court's door
+    return new Promise((done) => setTimeout(() => done({ atStart, turned: line(), ring: !!g.minimap.goal, state: g.state() }), 200));
+  });
+  check('way: the bottom line speaks from where the pilgrim faces, and the map rings the goal',
+    way.state === 'explore' && /Theodora · Water carrier · ahead · \d+ paces/.test(way.atStart) && /behind you/.test(way.turned) && way.ring, JSON.stringify(way));
+  const touchPlay = await tp.evaluate(async () => {
+    const g = window.__game, wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const stop = g.activityStops.find((s) => s.id === 'aqueduct');
+    g.teleport(stop.x, stop.z); await wait(150);
+    document.getElementById('touch-action').dispatchEvent(new Event('touchstart', { cancelable: true }));
+    for (let i = 0; i < 40 && g.state() !== 'activity'; i++) await wait(100);
+    await wait(150);
+    const during = { state: g.state(), layer: document.getElementById('touch-layer').style.display,
+      keys: [...document.querySelectorAll('#touch-buttons button')].map((b) => b.textContent) };
+    const leave = [...document.querySelectorAll('#touch-buttons button')].find((b) => b.textContent === 'LEAVE');
+    leave?.dispatchEvent(new Event('touchstart', { cancelable: true }));
+    leave?.dispatchEvent(new Event('touchend', { cancelable: true }));
+    await wait(200);
+    return { ...during, after: g.state() };
+  });
+  check('touch: a landmark activity keeps the stick, offers its keys, and LEAVE returns to the road',
+    touchPlay.state === 'activity' && touchPlay.layer === 'block' && ['SPACE', 'F', 'H', 'RETRY', 'LEAVE'].every((k) => touchPlay.keys.includes(k)) && touchPlay.after === 'explore',
+    JSON.stringify(touchPlay));
+  check('touch: no page errors', touchErrors.length === 0, JSON.stringify(touchErrors));
+  await phone.close();
+  const plain = await browser.newPage();
+  await plain.goto(`http://127.0.0.1:${PORT}/`);
+  await sleep(600);
+  check('worlds: without ?debug there is no test hook for the passage to ride on', await plain.evaluate(() => !window.__game));
+  await plain.close();
 
   await browser.close();
   exit = failures === 0 ? 0 : 1;

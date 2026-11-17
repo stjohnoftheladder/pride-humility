@@ -48,6 +48,14 @@
       background: var(--gold); opacity: 0.8; }
     #touch-action { display: none; position: absolute; right: 5%; bottom: 10%; width: 64px; height: 64px; border-radius: 50%;
       border: 2px solid var(--gold); background: rgba(18,13,7,0.85); color: var(--gold); font: 22px 'PixelEmulator', monospace; }
+    /* the keys of whatever the pilgrim is doing, stacked above the E button */
+    #touch-buttons { position: absolute; right: 3%; bottom: calc(10% + 76px); max-height: 62%;
+      display: flex; flex-direction: column-reverse; flex-wrap: wrap-reverse; align-items: flex-end; gap: 6px; }
+    #touch-buttons button { min-width: 64px; min-height: 44px; padding: 0 10px; border-radius: 22px;
+      border: 2px solid var(--gold); background: rgba(18,13,7,0.85); color: var(--gold);
+      font: 12px 'PixelEmulator', monospace; letter-spacing: 1px; touch-action: none; }
+    #touch-buttons button.wide { border-color: var(--gold-dim); color: var(--gold-dim); font-size: 10px; }
+    #touch-buttons button:active { background: var(--accent); color: var(--text); }
     #touch-rotate { display: none; }
     /* keyboard hints for keyboards, touch hints for touch screens */
     .touch-keys { display: none; }

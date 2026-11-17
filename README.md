@@ -54,8 +54,8 @@ shaped by the morning's grace and pride.
 ### Test area: the old monastery (`?monastery`)
 
 The first version of the game lives on as a separate, clearly marked test area,
-reached with `?monastery` or through the signed passage in the city's gate
-court. It is built from the same grid code without any of the city, roofed and
+reached with `?monastery` or, with `?debug` in the address, through the signed
+passage in the city's gate court (players do not see that sign). It is built from the same grid code without any of the city, roofed and
 torch-lit as it began, and keeps its own save. Everything below in this section
 happens there.
 

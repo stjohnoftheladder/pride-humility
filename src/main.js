@@ -371,8 +371,12 @@ async function boot() {
   // A signed passage in the gate court joins the city and the monastery test
   // area; crossing reloads into the other world, each with its own save.
   const passageAt = (() => { const c = LEVEL_CFG.rooms.court; return { x: (c.x + 5.5) * 3, z: (c.y + 4.5) * 3 }; })();
-  const nearPassage = () => Math.hypot(player.pos.x - passageAt.x, player.pos.z - passageAt.z) < 2.2;
-  {
+  // The passage is a dev's door: a player's first sign should not lead out of
+  // the game. It shows with ?debug in the address, and in the monastery itself
+  // (the way back); ?monastery still opens the test area directly.
+  const passageOpen = MONASTERY || new URLSearchParams(location.search).has('debug');
+  const nearPassage = () => passageOpen && Math.hypot(player.pos.x - passageAt.x, player.pos.z - passageAt.z) < 2.2;
+  if (passageOpen) {
     const signCanvas = document.createElement('canvas'); signCanvas.width = 512; signCanvas.height = 96;
     const ink = signCanvas.getContext('2d'); ink.fillStyle = '#20180f'; ink.fillRect(0, 0, 512, 96);
     ink.strokeStyle = '#f3d276'; ink.lineWidth = 5; ink.strokeRect(3, 3, 506, 90);
@@ -898,6 +902,29 @@ async function boot() {
     hud.message(`${w.name}  (${waypoint + 1}/${WAYPOINTS.length})`, 1500);
   }
 
+  // ----- the way: where the bottom line and the map point ----------------------
+  // The pilgrim has no compass, so the bottom line speaks from where he faces.
+  const WAY = ['ahead', 'ahead, right', 'to your right', 'behind, right', 'behind you', 'behind, left', 'to your left', 'ahead, left'];
+  function wayTo(x, z) {
+    // From the gate court a straight line to anything on the road runs through
+    // the wall: lead out by the court's door (row 4), then onto the road.
+    const roadX = LEVEL_CFG.rooms.mainroad.x * CELL_W, courtFoot = 8 * CELL_W;
+    if (player.pos.x < roadX && player.pos.z < courtFoot && z > courtFoot) {
+      x = player.pos.x < 12 * CELL_W ? 12.5 * CELL_W : roadX + 2 * CELL_W;
+      z = 4.5 * CELL_W;
+    }
+    const yaw = camera.rotation.y, fx = -Math.sin(yaw), fz = -Math.cos(yaw);
+    const dx = x - player.pos.x, dz = z - player.pos.z;
+    const turn = Math.atan2(dz * fx - dx * fz, dx * fx + dz * fz);   // + is to the right
+    return WAY[(Math.round(turn / (Math.PI / 4)) + 8) % 8];
+  }
+  /** What the morning asks for next: the parcel's recipient, then the church. */
+  function goal() {
+    const errand = market.activeErrand(branch);
+    if (errand) return market.npcs.find((n) => n.id === errand.to) ?? null;
+    return morning.run && !morning.run.arrived ? CHURCH_STEPS : null;
+  }
+
   function roomLabel() {
     const { court, chapel, tempter, brother, ladder } = LEVEL_CFG.rooms;
     if (isInRoom(court)) return 'The Gate Court';
@@ -925,10 +952,9 @@ async function boot() {
       if (!morning.run || morning.run.arrived) return null;
       const d = Math.round(Math.hypot(player.pos.x - CHURCH_STEPS.x, player.pos.z - CHURCH_STEPS.z));
       if (d < 4) return null;
-      const dir = CHURCH_STEPS.z > player.pos.z + 3 ? 'south' : CHURCH_STEPS.z < player.pos.z - 3 ? 'north' : CHURCH_STEPS.x > player.pos.x ? 'east' : 'west';
-      return `Hagia Sophia · ${dir} · ${d} paces · before the service bell`;
+      return `Hagia Sophia · ${wayTo(CHURCH_STEPS.x, CHURCH_STEPS.z)} · ${d} paces · before the service bell`;
     };
-    const objective = state === 'explore' ? market.objective(branch, player.pos) ?? toChurch() : null;
+    const objective = state === 'explore' ? market.objective(branch, player.pos, wayTo) ?? toChurch() : null;
     errandHud.textContent = objective ?? '';
     errandHud.style.display = objective ? 'block' : 'none';
     if (state === 'explore') market.update(dt, time, player.pos);
@@ -976,7 +1002,7 @@ async function boot() {
     // The map and the index are part of the explore HUD: they go for battle too.
     hud.setMinimap(state === 'explore' && minimapOn);
     if (state === 'explore') {
-      minimap.update(player.pos.x, player.pos.z, camera.rotation.y);
+      minimap.update(player.pos.x, player.pos.z, camera.rotation.y, goal());
       updateSiteCard();
     } else {
       hud.showSiteCard(false);
@@ -1006,8 +1032,29 @@ async function boot() {
     hud.setMeters(branch.pride, branch.grace);
   }
 
-  const touch = installTouch({ player, camera, walking: () => state === 'explore' || state === 'sophia',
-    prompt: () => hud.el.prompt?.style.display === 'block' });
+  // On a touch screen the stick and the buttons stand in for the keyboard in
+  // every state the pilgrim can enter with E, so nothing he taps strands him.
+  const touchKey = (code, label, wide = false) => ({ code, label, wide });
+  const touch = installTouch({
+    playing: () => ['explore', 'sophia', 'activity', 'cart', 'race'].includes(state),
+    prompt: () => hud.el.prompt?.style.display === 'block',
+    look: (dx, dy) => {
+      if (state === 'race') { race.lookBy(dx, dy); return; }
+      if (state === 'cart') { harbourCart.lookBy(dx, dy); return; }
+      camera.rotation.y -= dx;
+      camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x - dy));
+    },
+    buttons: () => {
+      if (state === 'activity') return [
+        touchKey('Space', 'SPACE'), touchKey('KeyF', 'F'), touchKey('KeyH', 'H'),
+        ...(/Shift/.test(activities.controls ?? '') ? [touchKey('ShiftLeft', 'SHIFT')] : []),
+        touchKey('KeyR', 'RETRY', true), touchKey('KeyQ', 'LEAVE', true),
+      ];
+      if (state === 'cart') return [touchKey('KeyE', 'E'), touchKey('KeyR', 'RESTART', true), touchKey('KeyQ', 'LEAVE', true)];
+      if (state === 'race') return [touchKey('KeyE', 'E'), touchKey('ShiftLeft', 'LASH'), touchKey('KeyQ', 'STEP DOWN', true)];
+      return [];
+    },
+  });
   function frame() {
     requestAnimationFrame(frame);
     touch?.update();

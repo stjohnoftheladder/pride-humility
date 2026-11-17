@@ -171,11 +171,25 @@ export class Minimap {
   }
 
   /** Blit the city and put the pilgrim on it, heading and all. */
-  update(px, pz, yaw) {
+  update(px, pz, yaw, goal = null) {
     if (this.paintedFor !== this.liveSignature()) this.paintPlan();
     const { ctx, canvas } = this;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(this.plan, 0, 0);
+
+    // Where the morning asks the pilgrim to go next: a gold ring that breathes,
+    // so it reads as "here" against the still silhouettes of the landmarks.
+    this.goal = goal ? { x: this.cellX(goal.x / CELL), y: this.cellY(goal.z / CELL) } : null;
+    if (this.goal) {
+      const beat = (Math.sin(performance.now() / 320) + 1) / 2;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = COLOURS.shadow;
+      ctx.beginPath(); ctx.arc(this.goal.x, this.goal.y, SCALE * 2.6 + beat * 3 + 1.5, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = COLOURS.player;
+      ctx.beginPath(); ctx.arc(this.goal.x, this.goal.y, SCALE * 2.6 + beat * 3, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = COLOURS.player;
+      ctx.beginPath(); ctx.arc(this.goal.x, this.goal.y, SCALE * 0.9, 0, Math.PI * 2); ctx.fill();
+    }
 
     const cx = this.cellX(px / CELL);
     const cy = this.cellY(pz / CELL);

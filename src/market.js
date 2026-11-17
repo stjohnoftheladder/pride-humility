@@ -202,12 +202,15 @@ export class RoadMarket {
     return ERRANDS.find(e => branch.flags[`errand:${e.id}`] === 'carrying') ?? null;
   }
 
-  objective(branch, pos) {
+  /** The bottom line while a parcel is carried. `way(x, z)` names the direction
+   *  from where the pilgrim faces; without it the line falls back to the compass. */
+  objective(branch, pos, way = null) {
     const errand = this.activeErrand(branch);
     if (!errand) return null;
     const recipient = this.npcs.find(n => n.id === errand.to);
     const distance = Math.round(Math.hypot(pos.x - recipient.x, pos.z - recipient.z));
-    const direction = recipient.z > pos.z + 3 ? 'south' : recipient.z < pos.z - 3 ? 'north' : 'nearby';
+    const direction = distance < 5 ? 'nearby' : way ? way(recipient.x, recipient.z)
+      : recipient.z > pos.z + 3 ? 'south' : recipient.z < pos.z - 3 ? 'north' : 'nearby';
     return `Carrying ${errand.parcel} → ${recipient.name} · ${direction} · ${distance} paces`;
   }
 
