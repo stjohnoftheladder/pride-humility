@@ -212,12 +212,16 @@ async function runJourney(browser, mode) {
 async function runInteractionRegressions(browser) {
   let { page, errors } = await monasteryPage(browser);
 
+  // The first frame's heading, read before anything touches the mouse: the
+  // click below can arrive with a mouse move that turns the view (drag-look),
+  // which on a slow runner made this check fail now and then.
+  const openingYaw = await page.evaluate(() => window.__game.camera.rotation.y);
+
   await page.getByRole('button', { name: 'ENTER THE MONASTERY' }).click();
   await sleep(250);
   check('input: rejected pointer lock falls back without page errors', errors.length === 0, JSON.stringify(errors));
   await resetState(page);
 
-  const openingYaw = await page.evaluate(() => window.__game.camera.rotation.y);
   check(
     'opening: faces into the pilgrimage route',
     Math.abs(openingYaw + Math.PI / 2) < 0.01,
