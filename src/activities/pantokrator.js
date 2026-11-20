@@ -97,7 +97,7 @@ export class PantokratorActivity extends SiteActivity {
       if (g.served.length < 3) { if (code === 'KeyE') this.hud.message('Nikolaos: “See to all three first. Then tell me how it went.”', 4000); return; }
       if (code === 'KeyF') { g.credit = 'claimed'; this.finish('proud'); }
       else if (code === 'KeyH') { g.credit = 'shared'; this.finish(g.served[0] === 'patron' ? 'proud' : 'humble'); }
-      else this.hud.message('Nikolaos: “Fine work. Who prepared the poultice?” F · “I did.” · H · “Theophano did.”', 6000);
+      else this.hud.message('Nikolaos: “Fine work. Who prepared the poultice?” 1 · “Theophano did.” · 2 · “I did.”', 6000);
     }
   }
   tick(dt) {
@@ -137,7 +137,7 @@ export class PantokratorActivity extends SiteActivity {
     if (target.role === 'item') return `E · ${g.tray.includes(target.item) ? 'Return' : 'Put on the tray:'} ${target.name}`;
     if (target.role === 'patient') return `E · ${g.tray.includes(target.need) && !g.served.includes(target.id) ? 'Serve' : 'Ask'} ${target.name.split(' ·')[0]}`;
     if (target.role === 'attendant') return 'E · Ask Theophano what each patient needs';
-    return g.served.length < 3 ? 'E · Speak with Nikolaos' : 'E hear Nikolaos · F “I did it all” · H “Theophano made the poultice”';
+    return g.served.length < 3 ? 'E · Speak with Nikolaos' : 'E hear Nikolaos · [1] “Theophano made the poultice” · [2] “I did it all”';
   }
   resultText(outcome) {
     const g = this.game;

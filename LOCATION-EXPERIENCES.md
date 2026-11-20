@@ -47,11 +47,11 @@ entry, and shares the bottom dock, WASD + mouse look, E, Q / Esc and R.
 - **Pantokrator:** walk to the beds (or ask Theophano) to learn each need, set
   two items on the tray at the table, and walk them over. Running with water
   or wine tilts the tray and spills it onto the floor. Physician Nikolaos asks
-  who made the poultice once all three are cared for: F claims it, H credits
+  who made the poultice once all three are cared for: 2 claims it, 1 credits
   Theophano. Serving the patron first or claiming her work resolves pride.
 - **Stoudios:** press Space at the page as the ring closes on each stroke's
   start; a mistimed stroke wavers and you try it again. On the fifth stroke
-  the quill catches and blots, and the ink stays wet for ten seconds. F gilds
+  the quill catches and blots, and the ink stays wet for ten seconds. 2 gilds
   over it (pride). E shows Brother Ioannikios, then Space lifts the ink and
   the stroke is laid again (humility); the pale scraped patch stays on the
   finished page. If the ink dries first, the page is spoiled and retryable.
@@ -75,13 +75,13 @@ first entry. They reuse the existing `cistern` and `zeuxippus` courts.
   lamp. He follows your footsteps at half a walking pace and stops when he
   loses the light. Reaching the road exit with him resolves humility, and
   Pelagia carries the lamp down for the next shift. At the exit without him,
-  F tells the foreman you explored alone (pride). Empty oil is unfinished.
+  2 tells the foreman you explored alone (pride). Empty oil is unfinished.
 - **Baths:** stand at the warm or cool tap and hold Space; the basin water
   shifts from blue to orange and steams above comfortable. E takes a mat from
   the stack and lays it on a shining wet tile. E offers Anastasia the basin:
   she sways and sits back down on wet tiles, and names cold or scalding water.
   When both are right she crosses on the mats and bathes (humility), and
-  another bather follows the same path. F at a comfortable basin takes it for
+  another bather follows the same path. 2 at a comfortable basin takes it for
   yourself (pride). The basin drains after 150 seconds (unfinished).
 
 ## Mosaic Peristyle and Milion
@@ -92,8 +92,8 @@ Both live in their own modules, `src/activities/mosaicPeristyle.js` and
 - **Mosaic Peristyle:** turn the eight floor tiles around the gold medallion
   until each gold quarter meets its red sinopia line, while Melania, the novice,
   visibly sets the sixteen border tiles. The last tile you set lifts and rocks;
-  hold Space on it to press it flush. At Kosmas, the master, F claims the whole
-  floor (pride) and H names Melania's border as hers (humility, once your loose
+  hold Space on it to press it flush. At Kosmas, the master, 2 claims the whole
+  floor (pride) and 1 names Melania's border as hers (humility, once your loose
   tile is repaired). On humility Melania becomes "Your collaborator" and a "One
   floor, two hands" sign stands over the pattern.
 - **Milion:** E turns the route board's pointer and Space sends the current
@@ -115,16 +115,16 @@ does, and updates only while active.
   north lane toward a gold ring at the palace end. Four bystanders block the
   lane. E beside a bystander asks them to make room; they step aside. E beside
   Sergios, the cross bearer, sets the pace of the slowest walkers, Gerontios and
-  Sophronia. The procession arriving together resolves humbly. F beside a bystander
+  Sophronia. The procession arriving together resolves humbly. 2 beside a bystander
   shoves the whole lane aside and puts you at the front; the cross hurries and
   the slow walkers are left behind (proud). Arriving with people strung out, or
   running out of time, is unfinished and changes no meters.
 - **Chalke** (sign before the bronze doors): a sealed petition and a gold ring
   marking your place behind five petitioners. The clerk calls one name every
   six seconds and the line shuffles forward. E hears each petitioner. The clerk
-  passes over Photeine, who cannot write; after hearing her, H adds her request
+  passes over Photeine, who cannot write; after hearing her, 1 adds her request
   to your petition. At the front, E presents it: with her need included it
-  resolves humbly, without it the result is unfinished. F beside the clerk
+  resolves humbly, without it the result is unfinished. 2 beside the clerk
   claims a connection with the Magistros and jumps the queue (proud).
 
 ## Shared frame and rewards
@@ -162,7 +162,7 @@ Aqueduct and Forum share `src/activities.js`, imported only on first entry (abou
 4 KB compressed). Each site builds its props once on first entry, reuses shared
 geometry and materials, and updates only during play. WASD and mouse look remain
 active. Aqueduct requires approaching a gate before holding Space; E hears the
-keeper. Forum uses E at each witness or the purse, then F to accuse or H to
+keeper. Forum uses E at each witness or the purse, then 2 to accuse or 1 to
 explain at the merchant. The returned purse disappears and filled water remains
 visible until retry. Harbour uses `src/harbourCart.js` with the existing world,
 camera, and collision system. Shared geometry and instanced wheels, sacks, and

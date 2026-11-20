@@ -185,6 +185,16 @@
       padding: 4px 14px; border-radius: 3px; display: none;
     }
 
+    /* A landmark's question: 1 the humble answer, 2 the proud one. Above the
+       touch layer, so a finger can press it. */
+    #choice-card { position: relative; z-index: 7; display: none; flex-wrap: wrap; justify-content: center;
+      gap: 8px; max-width: 100%; pointer-events: auto; }
+    #choice-card .choice { pointer-events: auto; cursor: pointer; display: flex; align-items: center; gap: 8px;
+      min-height: 36px; padding: 5px 12px; font: 11px 'PixelEmulator', monospace; line-height: 1.4; text-align: left;
+      color: var(--text); background: rgba(18, 13, 7, 0.92); border: 2px solid var(--gold-dim); border-radius: 3px; }
+    #choice-card .choice b { color: var(--gold); font-weight: normal; font-size: 13px; }
+    #choice-card .choice:hover { border-color: var(--gold); }
+    body.touch #choice-card .choice { min-height: 44px; }
     #cart-hud { top: 72px; left: 50%; transform: translateX(-50%); max-width: 90%; text-align: center; font-size: 11px; line-height: 1.7; }
     #cart-hud strong { color: var(--gold); }
     #world-play-dock {
@@ -422,6 +432,7 @@
       </div>
       <div id="errand-info" style="display:none"></div>
       <div id="engage-prompt"></div>
+      <div id="choice-card" style="display:none" aria-label="Choices"></div>
     </div>
 
     <!-- battle overlay -->

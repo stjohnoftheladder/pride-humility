@@ -13,7 +13,7 @@ const LANES = [[14, 280], [20, 281], [26, 280], [32, 281], [14, 296], [20, 295],
 export default class CisternActivity extends SiteActivity {
   constructor(options) {
     super(options, { room: 'The Basilica Cistern', title: 'THE LAMP IN THE CISTERN',
-      controls: 'WASD walk · E call / share the lamp · F claim at the exit · Q / Esc leave · R retry' });
+      controls: 'WASD walk · E call / share the lamp · 2 claim at the exit · Q / Esc leave · R retry' });
     this.scene = this.level.scene;
   }
   build(group, site) {
@@ -130,7 +130,7 @@ export default class CisternActivity extends SiteActivity {
     const g = this.game;
     if (target?.role === 'worker' && !g.found) return 'E · Call to Theodoros';
     if (target?.role === 'worker' && !g.sharing) return 'E · Share the lamp with Theodoros';
-    if (g.found && this.atExit() && !(g.sharing && this.workerGap() < 3)) return 'F · Tell Ioannes you explored alone · or go back for Theodoros';
+    if (g.found && this.atExit() && !(g.sharing && this.workerGap() < 3)) return 'Go back for Theodoros · [2] Tell Ioannes you explored alone';
     if (g.sharing) return g.waiting ? 'Slow down: walk back until Theodoros sees the lamp' : 'Walk at his pace to the exit by the road';
     return 'Follow the echoes along the dark rim · Q / Esc leave';
   }

@@ -214,9 +214,9 @@ async function boot() {
     const playing = ['activity', 'cart', 'race'].includes(state)
       || (state === 'paused' && ['activity', 'cart', 'race'].includes(resumeTo));
     playDock.style.display = playing ? 'flex' : 'none';
-    for (const id of ['msg', 'world-activity-hud', 'site-activity-hud', 'palace-activity-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt']) {
+    for (const id of ['msg', 'world-activity-hud', 'site-activity-hud', 'palace-activity-hud', 'cart-hud', 'race-hud', 'race-call', 'engage-prompt', 'choice-card']) {
       const el = document.getElementById(id); if (!el) continue;
-      const parent = playing ? playDock : document.getElementById(id === 'engage-prompt' ? 'explore-info' : 'hud');
+      const parent = playing ? playDock : document.getElementById(['engage-prompt', 'choice-card'].includes(id) ? 'explore-info' : 'hud');
       if (el.parentElement !== parent) parent.appendChild(el);
     }
   }
@@ -1052,9 +1052,9 @@ async function boot() {
       camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x - dy));
     },
     buttons: () => {
+      // a landmark's choices are on the choice card, which a finger can press
       if (state === 'activity') return [
-        touchKey('Space', 'SPACE'), touchKey('KeyF', 'F'), touchKey('KeyH', 'H'),
-        ...(/Shift/.test(activities.controls ?? '') ? [touchKey('ShiftLeft', 'SHIFT')] : []),
+        ...(!activities.controls || /Space/.test(activities.controls) ? [touchKey('Space', 'SPACE')] : []),
         touchKey('KeyR', 'RETRY', true), touchKey('KeyQ', 'LEAVE', true),
       ];
       if (state === 'cart') return [touchKey('KeyE', 'E'), touchKey('KeyR', 'RESTART', true), touchKey('KeyQ', 'LEAVE', true)];

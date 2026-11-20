@@ -14,7 +14,7 @@ const COLD = new THREE.Color(0x3f7fb0), HOT = new THREE.Color(0xd0704a);
 export default class ZeuxippusActivity extends SiteActivity {
   constructor(options) {
     super(options, { room: 'The Baths of Zeuxippus', title: 'THE WARM BASIN',
-      controls: 'WASD walk · hold Space at a tap · E mats / tiles / Anastasia · F take the basin · Q / Esc leave · R retry' });
+      controls: 'WASD walk · hold Space at a tap · E mats / tiles / Anastasia · 2 take the basin · Q / Esc leave · R retry' });
   }
   build(group, site) {
     const { targets } = site, stone = this.level.mat.get('stone_floor'), wood = this.level.mat.get('wood_floor');
@@ -120,7 +120,7 @@ export default class ZeuxippusActivity extends SiteActivity {
     if (target.role === 'stack') return g.carrying ? 'You are carrying a mat' : 'E · Take a bath mat';
     if (target.role === 'tile') return g.carrying ? 'E · Lay the mat on the wet tile' : 'Wet tile · fetch a mat from the stack';
     if (target.role === 'visitor') return g.walking ? 'Anastasia is crossing' : 'E · Offer Anastasia the basin';
-    if (target.role === 'basin') return g.walking ? 'The basin is ready for Anastasia' : 'F · Take the basin for yourself';
+    if (target.role === 'basin') return g.walking ? 'The basin is ready for Anastasia' : '[2] Take the basin for yourself';
     return '';
   }
   snapshot() {

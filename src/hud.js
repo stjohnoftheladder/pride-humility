@@ -108,15 +108,52 @@ export class Hud {
     if (next) this.message(...next);
   }
 
+  /** The line of what E does here. A landmark writes its choices into it as
+   *  "[1] label" and "[2] label"; those leave the line for the choice card. */
   showPrompt(text) {
-    if (this.el.prompt) {
-      this.el.prompt.textContent = text;
-      this.el.prompt.style.display = 'block';
+    if (!this.el.prompt) return;
+    const choices = [], rest = [];
+    for (const part of String(text).split(' · ')) {
+      const m = /^\[([12])\] (.+)$/.exec(part.trim());
+      if (m) choices.push({ n: Number(m[1]), label: m[2] }); else rest.push(part);
     }
+    this.el.prompt.textContent = rest.join(' · ') || 'Choose · 1 or 2';
+    this.el.prompt.style.display = 'block';
+    this.showChoices(choices);
   }
 
   hidePrompt() {
     if (this.el.prompt) this.el.prompt.style.display = 'none';
+    this.showChoices([]);
+  }
+
+  /** One button per choice, numbered as the key that makes it. A press speaks
+   *  to the game as the number key would, so every state handles it alike. */
+  showChoices(list) {
+    const card = document.getElementById('choice-card');
+    if (!card) return;
+    const sorted = [...list].sort((a, b) => a.n - b.n);
+    const signature = sorted.map((c) => `${c.n}${c.label}`).join('|');
+    if (card.dataset.signature !== signature) {
+      card.dataset.signature = signature;
+      card.replaceChildren(...sorted.map(({ n, label }) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'choice'; b.tabIndex = -1; b.dataset.key = String(n);
+        const key = document.createElement('b'); key.textContent = String(n);
+        b.append(key, label);
+        const press = (e) => {
+          e.preventDefault();
+          window.dispatchEvent(new KeyboardEvent('keydown', { code: `Digit${n}` }));
+          window.dispatchEvent(new KeyboardEvent('keyup', { code: `Digit${n}` }));
+        };
+        // never take focus, or a later Space would press the button again
+        b.addEventListener('mousedown', (e) => e.preventDefault());
+        b.addEventListener('click', press);
+        b.addEventListener('touchstart', press, { passive: false });
+        return b;
+      }));
+    }
+    card.style.display = sorted.length ? 'flex' : 'none';
   }
 
   setFps(v) { this.el.fps.textContent = v.toFixed(0); }

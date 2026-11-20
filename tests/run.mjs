@@ -1120,11 +1120,39 @@ try {
     await wait(200);
     return { ...during, after: g.state() };
   });
-  check('touch: a landmark activity keeps the stick, offers its keys, and LEAVE returns to the road',
-    touchPlay.state === 'activity' && touchPlay.layer === 'block' && ['SPACE', 'F', 'H', 'RETRY', 'LEAVE'].every((k) => touchPlay.keys.includes(k)) && touchPlay.after === 'explore',
+  check('touch: a landmark activity keeps the stick, offers SPACE, RETRY and LEAVE, and LEAVE returns to the road',
+    touchPlay.state === 'activity' && touchPlay.layer === 'block' && ['SPACE', 'RETRY', 'LEAVE'].every((k) => touchPlay.keys.includes(k)) && !touchPlay.keys.includes('F') && touchPlay.after === 'explore',
     JSON.stringify(touchPlay));
   check('touch: no page errors', touchErrors.length === 0, JSON.stringify(touchErrors));
   await phone.close();
+  // one key scheme: a landmark's question is 1 (humble) or 2 (proud), on a card
+  const choice = await newPage(browser);
+  await choice.page.evaluate(() => {
+    const g = window.__game, s = g.activityStops.find((a) => a.id === 'forumConstantine');
+    g.setState('explore'); g.teleport(s.x, s.z); g.key('KeyE');
+  });
+  await choice.page.waitForFunction(() => window.__game.state() === 'activity');
+  await choice.page.evaluate(() => window.__game.teleport(30.5, 157.5));
+  await choice.page.waitForFunction(() => document.querySelectorAll('#choice-card .choice').length === 2);
+  const card = await choice.page.evaluate(() => ({
+    prompt: document.getElementById('engage-prompt').textContent,
+    buttons: [...document.querySelectorAll('#choice-card .choice')].map((b) => b.textContent),
+    shown: getComputedStyle(document.getElementById('choice-card')).display,
+  }));
+  await choice.page.evaluate(() => window.__game.key('Digit1'));
+  const early = await choice.page.evaluate(() => window.__game.activities().snapshot().outcome);
+  await choice.page.click('#choice-card .choice[data-key="2"]');
+  const chosen = await choice.page.evaluate(() => ({ outcome: window.__game.activities().snapshot().outcome, flag: window.__game.branch.flags['activity:forumConstantine'] }));
+  await choice.page.evaluate(() => window.__game.key('KeyQ'));
+  await choice.page.waitForFunction(() => window.__game.state() === 'explore');
+  const after = await choice.page.evaluate(() => getComputedStyle(document.getElementById('choice-card')).display);
+  check('choices: the forum asks 1 explain / 2 accuse on a card, 1 waits for the evidence, a click on 2 accuses, and the card leaves with the activity',
+    card.prompt === 'E hear merchant' && card.shown === 'flex' && /^1Explain/.test(card.buttons[0]) && /^2Accuse Menas/.test(card.buttons[1])
+      && early === null && chosen.outcome === 'proud' && chosen.flag === 'proud' && after === 'none',
+    JSON.stringify({ card, early, chosen, after }));
+  check('choices: no page errors', choice.errors.length === 0, JSON.stringify(choice.errors));
+  await choice.page.close();
+
   const plain = await browser.newPage();
   await plain.goto(`http://127.0.0.1:${PORT}/`);
   await sleep(600);

@@ -40,7 +40,7 @@ function tileGeometry(size) {
 export default class MosaicPeristyle extends SiteActivity {
   constructor(options) {
     super(options, { room: ROOM, title: 'THE SHARED FLOOR', center: CENTER, radius: 15, timeLimit: 120,
-      controls: 'WASD walk · E turn tile / speak · Space press tile · F / H at the master · Q / Esc leave · R retry' });
+      controls: 'WASD walk · E turn tile / speak · Space press tile · 1 / 2 at the master · Q / Esc leave · R retry' });
   }
   build(group) {
     this.group = group;
@@ -92,7 +92,7 @@ export default class MosaicPeristyle extends SiteActivity {
     } else if (t.role === 'master') {
       const ready = this.complete() && g.border >= BORDER.length;
       if (code === 'KeyE' || ((code === 'KeyF' || code === 'KeyH') && !ready)) {
-        this.hud.message(!this.complete() ? 'Kosmas: “Finish the eight tiles around the medallion first.”' : g.border < BORDER.length ? 'Kosmas: “Wait for Melania to finish the border, then we will look at the whole floor.”' : 'Kosmas: “The floor is finished. Whose hands made it?” F take the credit · H name Melania', 5000);
+        this.hud.message(!this.complete() ? 'Kosmas: “Finish the eight tiles around the medallion first.”' : g.border < BORDER.length ? 'Kosmas: “Wait for Melania to finish the border, then we will look at the whole floor.”' : 'Kosmas: “The floor is finished. Whose hands made it?” 1 name Melania · 2 take the credit', 5000);
       } else if (code === 'KeyF') {
         this.finish('proud', `Kosmas praises the whole floor as your work. Melania stands back in silence.${g.repaired ? '' : ' Your loose tile still rocks underfoot.'}`);
       } else if (code === 'KeyH') {
@@ -148,7 +148,7 @@ export default class MosaicPeristyle extends SiteActivity {
     if (!t) return 'Walk onto a tile to turn it · Kosmas waits at the west colonnade';
     if (t.role === 'tile') return this.complete() ? t.index === g.loose && !g.repaired ? 'Hold Space · press the rocking tile into the bed' : 'This tile is set' : 'E · turn the tile until gold meets the red line';
     if (t.role === 'novice') return 'E · speak with Melania';
-    return this.complete() && g.border >= BORDER.length ? 'F · present the floor as yours     H · name Melania’s border' : 'E · speak with Kosmas';
+    return this.complete() && g.border >= BORDER.length ? '[1] Name Melania’s border · [2] Present the floor as yours' : 'E · speak with Kosmas';
   }
   snapshot() {
     if (!this.active) return null; const g = this.game;

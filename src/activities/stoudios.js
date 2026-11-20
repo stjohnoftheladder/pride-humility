@@ -22,7 +22,7 @@ export class StoudiosActivity extends SiteActivity {
   listPeople = true;
   title = 'THE SCRIPTORIUM';
   room = 'Saint John of Stoudios';
-  controls = 'WASD walk · Space lay a stroke as the ring closes · E ask / present · F gild over · Q / Esc leave · R retry';
+  controls = 'WASD walk · Space lay a stroke as the ring closes · E ask / present · 2 gild over · Q / Esc leave · R retry';
   intro = 'Copy the exemplar onto the page. Lay each stroke as the ring closes on its start.';
   area = { minX: 54, maxX: 77, minZ: 182, maxZ: 208 };
   build(group) {
@@ -129,7 +129,7 @@ export class StoudiosActivity extends SiteActivity {
     const g = this.game;
     if (!target) return '';
     if (target.role === 'desk') {
-      if (g.blot?.wet) return g.revealed ? 'Space · Lift the wet ink and lay the stroke again' : 'F · Gild over the blot · or show Brother Ioannikios';
+      if (g.blot?.wet) return g.revealed ? 'Space · Lift the wet ink and lay the stroke again' : 'Show the blot to Brother Ioannikios · [2] Gild over the blot';
       return g.stroke >= STROKES.length ? 'The page is finished · present it to Brother Ioannikios' : 'Space · Lay the stroke as the ring closes';
     }
     if (g.blot?.wet && !g.revealed) return 'E · Show Brother Ioannikios the blot';

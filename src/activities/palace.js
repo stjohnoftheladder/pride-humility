@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { SITE_GRACE, SITE_PRIDE } from './siteKit.js';
+import { SITE_GRACE, SITE_PRIDE, asChoice } from './siteKit.js';
 import { grantKeepsake } from '../inventory.js';
 import { FEATURES, SITES, CELL } from '../config.js';
 import { ACTIVITY_STOPS } from '../activitySites.js';
@@ -132,6 +132,7 @@ export class PalaceActivities {
   slotX() { return FRONT_X + Math.max(0, PETITIONERS.length - this.game.served) * STEP; }
   key(e, down) {
     if (!this.active) return;
+    e = asChoice(e);
     this.player.onKey(e, down);
     if (!this.inArea()) { this.close({ walkingAway: true }); return; }
     this.keys[e.code] = down;
@@ -140,7 +141,7 @@ export class PalaceActivities {
     if (e.code === 'KeyQ' || e.code === 'Escape') { this.close(); return; }
     if (e.code === 'KeyR') { this.start(this.active); return; }
     const g = this.game; if (g.done) return;
-    // The clerk answers F even with a petitioner standing closer at the front.
+    // The clerk answers 2 even with a petitioner standing closer at the front.
     const clerk = this.site.clerk, nearClerk = clerk && Math.hypot(this.player.pos.x - clerk.x, this.player.pos.z - clerk.z) < 1.8;
     const t = e.code === 'KeyF' && nearClerk ? clerk : this.nearest(); if (!t) return;
     if (this.active.id === 'augustaion') {
@@ -184,10 +185,10 @@ export class PalaceActivities {
     let prompt;
     if (g.done) prompt = `${g.done.toUpperCase()} · R retry · Q / Esc return to the road`;
     else if (!t) prompt = this.active.id === 'augustaion' ? 'Walk ahead of the cross to the people blocking the lane' : 'Stand at the gold ring; walk up the line to hear those ahead';
-    else if (t.role === 'bystander') prompt = `${t.name} · E ask to make room · F push through to the front`;
+    else if (t.role === 'bystander') prompt = `${t.name} · E ask to make room · [2] Push through to the front`;
     else if (t.role === 'walker') prompt = g.paced ? 'Sergios keeps the pace of the slowest' : 'E · Ask Sergios to keep the pace of the slowest';
-    else if (t.role === 'clerk') prompt = g.served < PETITIONERS.length ? 'E ask the clerk · F claim a connection with the Magistros' : 'E · Present your petition';
-    else prompt = t.neglected && g.heard.has(t.name) && !g.helped ? `E hear ${t.name} · H help her state her request` : `E · Hear ${t.name}`;
+    else if (t.role === 'clerk') prompt = g.served < PETITIONERS.length ? 'E ask the clerk · [2] Claim a connection with the Magistros' : 'E · Present your petition';
+    else prompt = t.neglected && g.heard.has(t.name) && !g.helped ? `E hear ${t.name} · [1] Help her state her request` : `E · Hear ${t.name}`;
     this.hud.showPrompt(prompt);
   }
   updateProcession(dt) {

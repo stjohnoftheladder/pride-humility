@@ -21,6 +21,17 @@ const robe = (color) => robes.get(color) ?? robes.set(color, new THREE.MeshLambe
 export const SITE_GRACE = 2, SITE_PRIDE = 3;
 const KEYS = ['Space', 'KeyE', 'KeyF', 'KeyH', 'KeyQ', 'KeyR', 'Escape'];
 
+// Every landmark asks its moral question the same way: 1 is the humble answer,
+// 2 the proud one, as at the market stalls. The modules were written for H and
+// F, which still work; this turns the number keys into them. The choices are
+// written into a prompt as "[1] label" and "[2] label", and the HUD lifts them
+// out into the choice card, which a mouse or a finger can press as well.
+const CHOICE = { Digit1: 'KeyH', Numpad1: 'KeyH', Digit2: 'KeyF', Numpad2: 'KeyF' };
+export function asChoice(e) {
+  const code = CHOICE[e.code];
+  return code ? { code, repeat: e.repeat, shiftKey: e.shiftKey, preventDefault: () => e.preventDefault?.() } : e;
+}
+
 /** A floating name. `userData.setText` changes it later. */
 export function makeLabel(group, text, x, y, z) {
   const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 64;
@@ -143,6 +154,7 @@ export class SiteActivity {
   }
   key(e, down) {
     if (!this.active) return;
+    e = asChoice(e);
     this.player.onKey(e, down);
     if (!this.inArea()) { this.close({ walkingAway: true }); return; }
     this.keys[e.code] = down;

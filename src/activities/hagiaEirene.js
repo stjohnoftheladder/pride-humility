@@ -16,7 +16,7 @@ export class HagiaEireneActivity extends SiteActivity {
   listPeople = true;
   title = 'THE SHARED PHRASE';
   room = 'Hagia Eirene';
-  controls = 'WASD walk · E begin · Space sing on your beats (Shift sings out) · Q / Esc leave · R retry';
+  controls = 'WASD walk · E begin · Space sing on your beats · 2 sing out · Q / Esc leave · R retry';
   intro = 'Stand in your place between Romanos and Kassia. Listen once, then sing his beats and leave her answer to her.';
   area = { minX: 82, maxX: 99, minZ: 314.5, maxZ: 325 };
   build(group) {
@@ -37,6 +37,8 @@ export class HagiaEireneActivity extends SiteActivity {
   }
   act(code, target, e) {
     const g = this.game;
+    // 2 is Space with the voice raised (Shift + Space still sings out too).
+    const singOut = code === 'KeyF'; if (singOut) code = 'Space';
     if (code === 'KeyE' && (target?.role === 'place' || target?.role === 'cantor') && !g.running) {
       g.running = true; g.time = -BEAT;     // a breath before the first beat
       this.hud.message('Romanos nods: listen once. Then sing with him, and let Kassia answer alone.', 5000);
@@ -47,7 +49,7 @@ export class HagiaEireneActivity extends SiteActivity {
     const index = Math.round(g.time / BEAT), delta = g.time - index * BEAT, cycle = Math.floor(index / CYCLE), part = PART[((index % CYCLE) + CYCLE) % CYCLE];
     if (cycle >= LISTEN + SUNG) return;
     if (cycle < LISTEN || index < 0) { this.hud.message('Listen first: watch the lamps as they sing.', 2500); return; }
-    const loud = !!(e?.shiftKey || this.keys.ShiftLeft || this.keys.ShiftRight);
+    const loud = singOut || !!(e?.shiftKey || this.keys.ShiftLeft || this.keys.ShiftRight);
     if (Math.abs(delta) > WINDOW || g.hit.has(index)) { g.strays++; g.glow.you = -1; this.audio?._t(200, 0.12, 'square', 0.04); return; }
     if (part === 'kassia') {
       g.overs++; g.listeners += loud ? 3 : 2; g.drowned = 1.2; g.hit.add(index);
@@ -98,7 +100,7 @@ export class HagiaEireneActivity extends SiteActivity {
   prompt(target) {
     const g = this.game;
     if (!g.running) return target?.role === 'place' || target?.role === 'cantor' ? 'E · Begin the phrase with Romanos' : 'Walk to your place between the singers';
-    return target?.role === 'place' ? 'Space · Sing on the beat · Shift + Space · Sing out' : 'Step back into your place';
+    return target?.role === 'place' ? 'Space · Sing on the beat · [2] Sing out on the beat' : 'Step back into your place';
   }
   resultText(outcome) {
     const g = this.game;

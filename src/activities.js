@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { FEATURES, SITES } from './config.js';
 import { ACTIVITY_STOPS } from './activitySites.js';
 import { grantKeepsake } from './inventory.js';
+import { asChoice } from './activities/siteKit.js';
 export const ACTIVITIES = ACTIVITY_STOPS;
 
 const CHANNELS = ['Mill lane', 'Hospital', 'Homes', 'Patron’s fountain'];
@@ -124,6 +125,7 @@ export class LocationActivities {
   }
   key(e, down) {
     if (!this.active) return;
+    e = asChoice(e);
     this.player.onKey(e, down);
     if (!this.inArea()) { this.close({ walkingAway: true }); return; }
     this.keys[e.code] = down;
@@ -173,7 +175,7 @@ export class LocationActivities {
       this.site.needle.position.set(49, 0.5+pressure*1.2, 80);
       this.statusEl.textContent = `Reservoir ${Math.ceil(g.water)} · pressure ${Math.round(pressure*100)}% (30–80) · neighborhoods supplied ${g.filled.slice(0,3).filter(n=>n>=18).length}/3`;
     } else this.statusEl.textContent = `${g.seen.size}/4 accounts inspected · ${g.asked?'You asked for time to listen':'The crowd wants a quick answer'}`;
-    this.hud.showPrompt(g.done ? `${g.done.toUpperCase()} · R retry · Q / Esc return to the road` : target ? this.active.id==='aqueduct' ? target.role==='keeper'?'E · Ask Eudokia for advice':`${target.name} · Hold Space to open gate` : target.role==='merchant'?'E hear merchant · F accuse Menas · H explain and return purse':`E · ${target.role==='purse'?'Inspect':'Hear'} ${target.name}` : 'Walk to the labeled gates or witnesses · Q / Esc leave');
+    this.hud.showPrompt(g.done ? `${g.done.toUpperCase()} · R retry · Q / Esc return to the road` : target ? this.active.id==='aqueduct' ? target.role==='keeper'?'E · Ask Eudokia for advice':`${target.name} · Hold Space to open gate` : target.role==='merchant'?'E hear merchant · [1] Explain and return the purse · [2] Accuse Menas':`E · ${target.role==='purse'?'Inspect':'Hear'} ${target.name}` : 'Walk to the labeled gates or witnesses · Q / Esc leave');
   }
   finish(outcome) {
     if (this.game.done) return;

@@ -104,6 +104,7 @@ Both take effect after BEGIN on the title screen.
 |---|---|
 | Explore | `WASD` move · Mouse look (pointer lock, drag-look fallback) · `Shift` run · `E` interact · `M` map · `I` inventory · `F` fellowship |
 | Dev (`?debug`) | `1`–`9`, `Shift+1`–`Shift+4` toggle additions · `PageDown`/`PageUp` travel to the next/previous stop |
+| Landmarks | `WASD` walk · `E` act / ask · `Space` the timed work · `1` the humble answer · `2` the proud one (or press it on the choice card) · `R` retry · `Q`/`Esc` leave |
 | Chariot race | `W` drive on · `S` rein in · `A`/`D` steer · `Shift` lash · `E` help the fallen driver · `Q` step down |
 | Battle dodge | `WASD` move the heart · hold `Space` to pray |
 | Battle choices | `WASD` choose · `Enter`/`Space` act · `X` back |
