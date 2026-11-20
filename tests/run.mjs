@@ -1095,7 +1095,8 @@ try {
   await tp.waitForFunction(() => window.__game);
   await tp.evaluate(() => { localStorage.setItem('pride-humility:first-steps-seen', '1'); });
   await tp.tap('#start-btn');
-  await sleep(500);
+  // a slow runner takes a few frames to write the first bottom line
+  await tp.waitForFunction(() => document.getElementById('errand-info').textContent.length > 0, null, { timeout: 10000 });
   const way = await tp.evaluate(() => {
     const g = window.__game, line = () => document.getElementById('errand-info').textContent;
     const atStart = line();
